@@ -8,12 +8,22 @@ package main
 
 	* Imports and helper variables.
 	* Manual type and name override maps.
+	* Constants for tweaking various morphing functions.
 	* Helper morphing functions.
+	* Morphing functions for each "sub-unit."
 	* Morphing functions for each "unit".
 	* Morphing functions for collections of "units".
+	
+	Units can be thought of as the top-level elements in an XML protocol
+	description file. Namely, structs, xidtypes, imports, enums, unions, etc.
+	Collections of units are simply "all of the UNIT in the XML file."
+	Sub-units can be thought of as recurring bits like struct contents (which
+	is used in events, replies, requests, errors, etc.) and expression
+	evaluation.
 */
 
 import (
+	"log"
 	"strings"
 )
 
@@ -38,6 +48,24 @@ var BaseTypeMap = map[string]string{
 	"BOOL": "bool",
 	"float": "float64",
 	"double": "float64",
+	"char": "byte",
+}
+
+// BaseTypeSizes should have precisely the same keys as in BaseTypeMap,
+// and the values should correspond to the size of the type in bytes.
+var BaseTypeSizes = map[string]uint{
+	"CARD8": 1,
+	"CARD16": 2,
+	"CARD32": 4,
+	"INT8": 1,
+	"INT16": 2,
+	"INT32": 4,
+	"BYTE": 1,
+	"BOOL": 1,
+	"float": 4,
+	"double": 8,
+	"char": 1,
+	"Id": 4,
 }
 
 // TypeMap is a map from types in the XML to type names that is used
@@ -54,12 +82,26 @@ var TypeMap = map[string]string{
 var NameMap = map[string]string{ }
 
 /******************************************************************************/
-// Helper functions that aide in morphing repetive constructs.
-// i.e., "structure contents", expressions, type and identifier names, etc.
+// Constants for changing the semantics of morphing functions.
+// These are mainly used to tweaking the writing of fields.
+// Namely, reading/writing is not exactly the same across events,
+// requests/replies and errors.
+/******************************************************************************/
+const (
+	FieldsEvent = iota
+	FieldsRequestReply
+	FieldsError
+)
+
+/******************************************************************************/
+// Helper functions that aide in morphing repetitive constructs.
+// i.e., type and identifier names, etc.
 /******************************************************************************/
 
 // Morph changes every TYPE (not names) into something suitable
-// for your language.
+// for your language. It also handles adding suffixes like 'Event'
+// and 'Union'. (A 'Union' suffix is used in Go because unions aren't
+// supported at the language level.)
 func (typ Type) Morph(c *Context) string {
 	t := string(typ)
 
@@ -87,7 +129,33 @@ func (typ Type) Morph(c *Context) string {
 
 	// Since there is no namespace, we need to look for a namespace
 	// in the current context.
-	return c.TypePrefix(typ) + splitAndTitle(t)
+	return typ.Prefix(c) + splitAndTitle(t)
+}
+
+// Prefix searches the parsed XML for a type matching 'typ'.
+// It then returns the appropriate prefix to be used in source code.
+// Note that the core X protocol *is* a namespace, but does not have a prefix.
+// Also note that you should probably check the BaseTypeMap and TypeMap
+// before calling this function.
+func (typ Type) Prefix(c *Context) string {
+	// If this is xproto, quit. No prefixes needed.
+	if c.xml.Header == "xproto" {
+		return ""
+	}
+
+	// First check for the type in the current namespace.
+	if c.xml.HasType(typ) {
+		return strings.Title(c.xml.Header)
+	}
+
+	// Now check each of the imports...
+	for _, imp := range c.xml.Imports {
+		if imp.xml.Header != "xproto" && imp.xml.HasType(typ) {
+			return strings.Title(imp.xml.Header)
+		}
+	}
+
+	return ""
 }
 
 // Morph changes every identifier (NOT type) into something suitable
@@ -101,6 +169,147 @@ func (name Name) Morph(c *Context) string {
 	}
 
 	return splitAndTitle(n)
+}
+
+/******************************************************************************/
+// Sub-unit morphing.
+// Below are functions that morph sub-units. Like collections of fields,
+// expressions, etc.
+// Note that collections of fields can be used in three different contexts:
+// definitions, reading from the wire and writing to the wire. Thus, there
+// exists 'MorphDefine', 'MorphRead', 'MorphWrite' defined on Fields.
+/******************************************************************************/
+func (fields Fields) MorphDefine(c *Context) {
+	for _, field := range fields {
+		field.MorphDefine(c)
+	}
+}
+
+func (field *Field) MorphDefine(c *Context) {
+	// We omit 'pad' and 'exprfield'
+	switch field.XMLName.Local {
+	case "field":
+		c.Putln("%s %s", field.Name.Morph(c), field.Type.Morph(c))
+	case "list":
+		c.Putln("%s []%s", field.Name.Morph(c), field.Type.Morph(c))
+	case "localfield":
+		c.Putln("%s %s", field.Name.Morph(c), field.Type.Morph(c))
+	case "valueparam":
+		c.Putln("%s %s", field.ValueMaskName.Morph(c),
+			field.ValueMaskType.Morph(c))
+		c.Putln("%s []%s", field.ValueListName.Morph(c),
+			field.ValueMaskType.Morph(c))
+	case "switch":
+		field.Bitcases.MorphDefine(c)
+	}
+}
+
+func (bitcases Bitcases) MorphDefine(c *Context) {
+	for _, bitcase := range bitcases {
+		bitcase.MorphDefine(c)
+	}
+}
+
+func (bitcase *Bitcase) MorphDefine(c *Context) {
+	bitcase.Fields.MorphDefine(c)
+}
+
+func (fields Fields) MorphRead(c *Context, kind int, evNoSeq bool) {
+	var nextByte uint
+
+	switch kind {
+	case FieldsEvent:
+		nextByte = 1
+	}
+
+	for _, field := range fields {
+		nextByte = field.MorphRead(c, kind, nextByte)
+		switch kind {
+		case FieldsEvent:
+			// Skip the sequence id
+			if !evNoSeq && (nextByte == 2 || nextByte == 3) {
+				nextByte = 4
+			}
+		}
+	}
+}
+
+func (field *Field) MorphRead(c *Context, kind int, byt uint) uint {
+	consumed := uint(0)
+	switch field.XMLName.Local {
+	case "pad":
+		consumed = uint(field.Bytes)
+	case "field":
+		if field.Type == "ClientMessageData" {
+			break
+		}
+		size := field.Type.Size(c)
+		typ := field.Type.Morph(c)
+		name := field.Name.Morph(c)
+		_, isBase := BaseTypeMap[string(field.Type)]
+
+		c.Put("v.%s = ", name)
+		if !isBase {
+			c.Put("%s(", typ)
+		}
+		switch size {
+		case 1:	c.Put("buf[%d]", byt)
+		case 2: c.Put("get16(buf[%d:])", byt)
+		case 4: c.Put("get32(buf[%d:])", byt)
+		case 8: c.Put("get64(buf[%d:])", byt)
+		default:
+			log.Fatalf("Unsupported field size '%d' for field '%s'.",
+				size, field)
+		}
+		if !isBase {
+			c.Put(")")
+		}
+		c.Putln("")
+
+		consumed = size
+	case "list":
+		c.Putln("")
+	}
+	return byt + consumed
+}
+
+func (fields Fields) MorphWrite(c *Context, kind int) {
+	var nextByte uint
+
+	switch kind {
+	case FieldsEvent:
+		nextByte = 1
+	}
+
+	for _, field := range fields {
+		nextByte = field.MorphWrite(c, kind, nextByte)
+	}
+}
+
+func (field *Field) MorphWrite(c *Context, kind int, byt uint) uint {
+	consumed := uint(0)
+	switch field.XMLName.Local {
+	case "pad":
+		consumed = uint(field.Bytes)
+	case "field":
+		size := field.Type.Size(c)
+		typ := field.Type.Morph(c)
+		name := field.Name.Morph(c)
+		switch size {
+		case 1:
+			c.Putln("v.%s = %s(buf[%d])", name, typ, byt)
+		case 2:
+			c.Putln("v.%s = %s(get16(buf[%d:]))", name, typ, byt)
+		case 4:
+			c.Putln("v.%s = %s(get32(buf[%d:]))", name, typ, byt)
+		case 8:
+			c.Putln("v.%s = %s(get64(buf[%d:]))", name, typ, byt)
+		}
+		consumed = size
+	case "list":
+		c.Putln("IDK")
+	}
+	return byt + consumed
 }
 
 /******************************************************************************/
@@ -133,15 +342,23 @@ func (xid *Xid) Morph(c *Context) {
 
 // TypeDef morphing.
 func (typedef *TypeDef) Morph(c *Context) {
-	c.Putln("type %s %s", typedef.Old.Morph(c), typedef.New.Morph(c))
+	c.Putln("type %s %s", typedef.New.Morph(c), typedef.Old.Morph(c))
 }
 
 // Struct morphing.
 func (strct *Struct) Morph(c *Context) {
+	c.Putln("type %s struct {", strct.Name.Morph(c))
+	strct.Fields.MorphDefine(c)
+	c.Putln("}")
+	c.Putln("\n")
 }
 
 // Union morphing.
 func (union *Union) Morph(c *Context) {
+	c.Putln("type %s struct {", union.Name.Morph(c))
+	union.Fields.MorphDefine(c)
+	c.Putln("}")
+	c.Putln("\n")
 }
 
 // Request morphing.
@@ -150,10 +367,54 @@ func (request *Request) Morph(c *Context) {
 
 // Event morphing.
 func (ev *Event) Morph(c *Context) {
+	name := ev.Name.Morph(c)
+
+	c.Putln("const %s = %d", name, ev.Number)
+	c.Putln("")
+	c.Putln("type %sEvent struct {", name)
+	ev.Fields.MorphDefine(c)
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func New%s(buf []byte) %sEvent {", name, name)
+	c.Putln("var v %sEvent", name)
+	ev.Fields.MorphRead(c, FieldsEvent, ev.NoSequence)
+	c.Putln("return v")
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func (err %sEvent) ImplementsEvent() { }", name)
+	c.Putln("")
+	c.Putln("func (ev %sEvent) Bytes() []byte {", name)
+	// ev.Fields.MorphWrite(c, FieldsEvent) 
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func init() {")
+	c.Putln("newEventFuncs[%d] = New%s", ev.Number, name)
+	c.Putln("}")
+	c.Putln("")
 }
 
 // EventCopy morphing.
 func (evcopy *EventCopy) Morph(c *Context) {
+	oldName, newName := evcopy.Ref.Morph(c), evcopy.Name.Morph(c)
+
+	c.Putln("const %s = %d", newName, evcopy.Number)
+	c.Putln("")
+	c.Putln("type %sEvent %sEvent", newName, oldName)
+	c.Putln("")
+	c.Putln("func New%s(buf []byte) %sEvent {", newName, newName)
+	c.Putln("return (%sEvent)(New%s(buf))", newName, oldName)
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func (err %sEvent) ImplementsEvent() { }", newName)
+	c.Putln("")
+	c.Putln("func (ev %sEvent) Bytes() []byte {", newName)
+	c.Putln("return (%sEvent)(ev).Bytes()", oldName)
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func init() {")
+	c.Putln("newEventFuncs[%d] = New%s", evcopy.Number, newName)
+	c.Putln("}")
+	c.Putln("")
 }
 
 // Error morphing.
@@ -162,6 +423,26 @@ func (err *Error) Morph(c *Context) {
 
 // ErrorCopy morphing.
 func (errcopy *ErrorCopy) Morph(c *Context) {
+	oldName, newName := errcopy.Ref.Morph(c), errcopy.Name.Morph(c)
+
+	c.Putln("const Bad%s = %d", newName, errcopy.Number)
+	c.Putln("")
+	c.Putln("type %sError %sError", newName, oldName)
+	c.Putln("")
+	c.Putln("func New%sError(buf []byte) %sError {", newName, newName)
+	c.Putln("return (%sError)(New%sError(buf))", newName, oldName)
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func (err %sError) ImplementsError() { }", newName)
+	c.Putln("")
+	c.Putln("func (err %sError) Bytes() []byte {", newName)
+	c.Putln("return (%sError)(err).Bytes()", oldName)
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func init() {")
+	c.Putln("newErrorFuncs[%d] = New%sError", errcopy.Number, newName)
+	c.Putln("}")
+	c.Putln("")
 }
 
 /******************************************************************************/

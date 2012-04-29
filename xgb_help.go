@@ -85,19 +85,19 @@ func (c *Conn) DefaultScreen() *ScreenInfo { return &c.Setup.Roots[c.defaultScre
 
 // ClientMessageData holds the data from a client message,
 // duplicated in three forms because Go doesn't have unions.
-type ClientMessageData struct {
-	Data8  [20]byte
-	Data16 [10]uint16
-	Data32 [5]uint32
-}
-
-func getClientMessageData(b []byte, v *ClientMessageData) int {
-	copy(v.Data8[:], b)
-	for i := 0; i < 10; i++ {
-		v.Data16[i] = get16(b[i*2:])
-	}
-	for i := 0; i < 5; i++ {
-		v.Data32[i] = get32(b[i*4:])
-	}
-	return 20
-}
+// type ClientMessageData struct { 
+	// Data8  [20]byte 
+	// Data16 [10]uint16 
+	// Data32 [5]uint32 
+// } 
+//  
+// func getClientMessageData(b []byte, v *ClientMessageData) int { 
+	// copy(v.Data8[:], b) 
+	// for i := 0; i < 10; i++ { 
+		// v.Data16[i] = get16(b[i*2:]) 
+	// } 
+	// for i := 0; i < 5; i++ { 
+		// v.Data32[i] = get32(b[i*4:]) 
+	// } 
+	// return 20 
+// } 

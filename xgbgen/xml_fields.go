@@ -23,6 +23,8 @@ import (
 	"strings"
 )
 
+type Fields []*Field
+
 type Field struct {
 	XMLName xml.Name
 
@@ -30,7 +32,7 @@ type Field struct {
 	Bytes int `xml:"bytes,attr"`
 
 	// For 'field', 'list', 'localfield', 'exprfield' and 'switch' elements.
-	Name string `xml:"name,attr"`
+	Name Name `xml:"name,attr"`
 
 	// For 'field', 'list', 'localfield', and 'exprfield' elements.
 	Type Type `xml:"type,attr"`
@@ -40,11 +42,11 @@ type Field struct {
 
 	// For 'valueparm' element.
 	ValueMaskType Type `xml:"value-mask-type,attr"`
-	ValueMaskName string `xml:"value-mask-name,attr"`
-	ValueListName string `xml:"value-list-name,attr"`
+	ValueMaskName Name `xml:"value-mask-name,attr"`
+	ValueListName Name `xml:"value-list-name,attr"`
 
 	// For 'switch' element.
-	Bitcases []*Bitcase `xml:"bitcase"`
+	Bitcases Bitcases `xml:"bitcase"`
 
 	// I don't know which elements these are for. The documentation is vague.
 	// They also seem to be completely optional.
@@ -86,6 +88,8 @@ func (f *Field) String() string {
 	panic("unreachable")
 }
 
+type Bitcases []*Bitcase
+
 // Bitcase represents a single expression followed by any number of fields.
 // Namely, if the switch's expression (all bitcases are inside a switch),
 // and'd with the bitcase's expression is equal to the bitcase expression,
@@ -95,7 +99,7 @@ func (f *Field) String() string {
 // it's the closest thing to a Union I can get to in Go without interfaces.
 // Would an '<expression>' tag have been too much to ask? :-(
 type Bitcase struct {
-	Fields []*Field `xml:",any"`
+	Fields Fields `xml:",any"`
 
 	// All the different expressions.
 	// When it comes time to choose one, use the 'Expr' method.

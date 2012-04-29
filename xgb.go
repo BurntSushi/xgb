@@ -87,9 +87,15 @@ func newCookie(id uint16) *Cookie {
 	}
 }
 
-// Event is an interface that can contain any of the events returned by the server.
-// Use a type assertion switch to extract the Event structs.
-type Event interface{}
+// Event is an interface that can contain any of the events returned by the
+// server. Use a type assertion switch to extract the Event structs.
+type Event interface {
+	ImplementsEvent()
+}
+
+// newEventFuncs is a map from event numbers to functions that create
+// the corresponding event.
+var newEventFuncs map[int]func(buf []byte) Event
 
 // Error contains protocol errors returned to us by the X server.
 type Error struct {
@@ -99,6 +105,16 @@ type Error struct {
 	Cookie uint16
 	Id     Id
 }
+
+// Error2 is an interface that can contain any of the errors returned by
+// the server. Use a type assertion switch to extract the Error structs.
+type Error2 interface {
+	ImplementsError()
+}
+
+// newErrorFuncs is a map from error numbers to functions that create
+// the corresponding error.
+var newErrorFuncs map[int]func(buf []byte) Error2
 
 func (e *Error) Error() string {
 	return fmt.Sprintf("Bad%s (major=%d minor=%d cookie=%d id=0x%x)",

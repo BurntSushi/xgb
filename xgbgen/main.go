@@ -55,6 +55,7 @@ func main() {
 		cmdGofmt := exec.Command("gofmt")
 		cmdGofmt.Stdin = c.out
 		cmdGofmt.Stdout = os.Stdout
+		cmdGofmt.Stderr = os.Stderr
 		err = cmdGofmt.Run()
 		if err != nil {
 			log.Fatal(err)

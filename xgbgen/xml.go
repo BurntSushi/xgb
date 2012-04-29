@@ -71,16 +71,16 @@ func (x *XML) Morph(c *Context) {
 	x.Requests.Morph(c)
 	c.Putln("")
 
-	x.Events.Morph(c)
-	c.Putln("")
-
 	x.Errors.Morph(c)
 	c.Putln("")
 
-	x.EventCopies.Morph(c)
+	x.ErrorCopies.Morph(c)
 	c.Putln("")
 
-	x.ErrorCopies.Morph(c)
+	x.Events.Morph(c)
+	c.Putln("")
+
+	x.EventCopies.Morph(c)
 	c.Putln("")
 }
 
@@ -166,6 +166,38 @@ type Name string
 
 type Type string
 
+// Size is a nifty function that takes any type and digs until it finds
+// its underlying base type. At which point, the size can be determined.
+func (typ Type) Size(c *Context) uint {
+	// If this is a base type, we're done.
+	if size, ok := BaseTypeSizes[string(typ)]; ok {
+		return size
+	}
+
+	// If it's a resource, we're also done.
+	if c.xml.IsResource(typ) {
+		return BaseTypeSizes["Id"]
+	}
+
+	// It's not, so that implies there is *some* typedef declaring it
+	// in terms of another type. Just follow that chain until we get to
+	// a base type. We also need to check imported stuff.
+	for _, typedef := range c.xml.TypeDefs {
+		if typ == typedef.New {
+			return typedef.Old.Size(c)
+		}
+	}
+	for _, imp := range c.xml.Imports {
+		for _, typedef := range imp.xml.TypeDefs {
+			if typ == typedef.New {
+				return typedef.Old.Size(c)
+			}
+		}
+	}
+	log.Panicf("Could not find base size of type '%s'.", typ)
+	panic("unreachable")
+}
+
 type Imports []*Import
 
 func (imports Imports) Eval() {
@@ -239,7 +271,7 @@ type EventCopies []*EventCopy
 
 type EventCopy struct {
 	Name Type `xml:"name,attr"`
-	Number string `xml:"number,attr"`
+	Number int `xml:"number,attr"`
 	Ref Type `xml:"ref,attr"`
 }
 
@@ -247,7 +279,7 @@ type ErrorCopies []*ErrorCopy
 
 type ErrorCopy struct {
 	Name Type `xml:"name,attr"`
-	Number string `xml:"number,attr"`
+	Number int `xml:"number,attr"`
 	Ref Type `xml:"ref,attr"`
 }
 
@@ -255,14 +287,14 @@ type Structs []*Struct
 
 type Struct struct {
 	Name Type `xml:"name,attr"`
-	Fields []*Field `xml:",any"`
+	Fields Fields `xml:",any"`
 }
 
 type Unions []*Union
 
 type Union struct {
 	Name Type `xml:"name,attr"`
-	Fields []*Field `xml:",any"`
+	Fields Fields `xml:",any"`
 }
 
 type Requests []*Request
@@ -271,12 +303,12 @@ type Request struct {
 	Name Type `xml:"name,attr"`
 	Opcode int `xml:"opcode,attr"`
 	Combine bool `xml:"combine-adjacent,attr"`
-	Fields []*Field `xml:",any"`
+	Fields Fields `xml:",any"`
 	Reply *Reply `xml:"reply"`
 }
 
 type Reply struct {
-	Fields []*Field `xml:",any"`
+	Fields Fields `xml:",any"`
 }
 
 type Events []*Event
@@ -285,7 +317,7 @@ type Event struct {
 	Name Type `xml:"name,attr"`
 	Number int `xml:"number,attr"`
 	NoSequence bool `xml:"no-sequence-number,true"`
-	Fields []*Field `xml:",any"`
+	Fields Fields `xml:",any"`
 }
 
 type Errors []*Error
@@ -293,6 +325,6 @@ type Errors []*Error
 type Error struct {
 	Name Type `xml:"name,attr"`
 	Number int `xml:"number,attr"`
-	Fields []*Field `xml:",any"`
+	Fields Fields `xml:",any"`
 }
 

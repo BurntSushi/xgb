@@ -21,6 +21,11 @@ func popCount(mask uint) uint {
 	return n
 }
 
+// pad makes sure 'n' aligns on 4 bytes.
+func pad(n int) int {
+	return (n + 3) & ^3
+}
+
 // splitAndTitle takes a string, splits it by underscores, capitalizes the
 // first letter of each chunk, and smushes'em back together.
 func splitAndTitle(s string) string {
@@ -29,9 +34,9 @@ func splitAndTitle(s string) string {
 		return strings.Title(strings.ToLower(s))
 	}
 
-	// If the string has no underscores, leave it be.
+	// If the string has no underscores, capitalize it and leave it be.
 	if i := strings.Index(s, "_"); i == -1 {
-		return s
+		return strings.Title(s)
 	}
 
 	// Now split the name at underscores, capitalize the first
