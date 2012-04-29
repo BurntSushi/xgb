@@ -23,6 +23,7 @@ package main
 */
 
 import (
+	"fmt"
 	"log"
 	"strings"
 )
@@ -214,16 +215,12 @@ func (bitcase *Bitcase) MorphDefine(c *Context) {
 	bitcase.Fields.MorphDefine(c)
 }
 
-func (fields Fields) MorphRead(c *Context, kind int, evNoSeq bool) {
-	var nextByte uint
+func (fields Fields) MorphRead(c *Context, kind int, evNoSeq bool,
+	prefix string, byt uint) uint {
 
-	switch kind {
-	case FieldsEvent:
-		nextByte = 1
-	}
-
+	nextByte := byt
 	for _, field := range fields {
-		nextByte = field.MorphRead(c, kind, nextByte)
+		nextByte = field.MorphRead(c, kind, nextByte, prefix)
 		switch kind {
 		case FieldsEvent:
 			// Skip the sequence id
@@ -232,45 +229,76 @@ func (fields Fields) MorphRead(c *Context, kind int, evNoSeq bool) {
 			}
 		}
 	}
+	return nextByte
 }
 
-func (field *Field) MorphRead(c *Context, kind int, byt uint) uint {
-	consumed := uint(0)
+func (field *Field) MorphRead(c *Context, kind int, byt uint,
+	prefix string) uint {
+
+	nextByte := byt
 	switch field.XMLName.Local {
 	case "pad":
-		consumed = uint(field.Bytes)
+		nextByte += uint(field.Bytes)
 	case "field":
-		if field.Type == "ClientMessageData" {
-			break
-		}
-		size := field.Type.Size(c)
-		typ := field.Type.Morph(c)
-		name := field.Name.Morph(c)
-		_, isBase := BaseTypeMap[string(field.Type)]
-
-		c.Put("v.%s = ", name)
-		if !isBase {
-			c.Put("%s(", typ)
-		}
-		switch size {
-		case 1:	c.Put("buf[%d]", byt)
-		case 2: c.Put("get16(buf[%d:])", byt)
-		case 4: c.Put("get32(buf[%d:])", byt)
-		case 8: c.Put("get64(buf[%d:])", byt)
-		default:
-			log.Fatalf("Unsupported field size '%d' for field '%s'.",
-				size, field)
-		}
-		if !isBase {
-			c.Put(")")
-		}
-		c.Putln("")
-
-		consumed = size
+		nextByte = field.MorphReadField(c, kind, nextByte, prefix)
 	case "list":
-		c.Putln("")
+		typ := field.Type.Morph(c)
+
+		// Create a temporary Field so we can use MorphReadField.
+		// temp := &Field{ 
+			// XMLName: xml.Name{Local: "field"}, 
+			// Name: field.Name, 
+			// Type: field.Type, 
+		// } 
+
+		// Special case: if the list is just raw bytes, use copy!
+		if typ == "byte" {
+			c.Putln("copy(%s%s, buf[%d:])", prefix, field.Name.Morph(c),
+				byt)
+			nextByte = byt + 20
+		} else {
+			c.Putln("//list!")
+		}
 	}
-	return byt + consumed
+	return nextByte
+}
+
+func (field *Field) MorphReadField(c *Context, kind int, byt uint,
+	prefix string) uint {
+
+	if union := field.Type.Union(c); union != nil {
+		c.Putln("")
+		c.Putln("%s%s = %s{}", prefix, field.Name.Morph(c), field.Type.Morph(c))
+		union.Fields.MorphRead(c, kind, false,
+			fmt.Sprintf("%s%s.", prefix, field.Name.Morph(c)), byt)
+		c.Putln("")
+		return byt
+	}
+
+	size := field.Type.Size(c)
+	typ := field.Type.Morph(c)
+	name := field.Name.Morph(c)
+	_, isBase := BaseTypeMap[string(field.Type)]
+
+	c.Put("%s%s = ", prefix, name)
+	if !isBase {
+		c.Put("%s(", typ)
+	}
+	switch size {
+	case 1:	c.Put("buf[%d]", byt)
+	case 2: c.Put("get16(buf[%d:])", byt)
+	case 4: c.Put("get32(buf[%d:])", byt)
+	case 8: c.Put("get64(buf[%d:])", byt)
+	default:
+		log.Fatalf("Unsupported field size '%d' for field '%s'.",
+			size, field)
+	}
+	if !isBase {
+		c.Put(")")
+	}
+	c.Putln("")
+
+	return byt + size
 }
 
 func (fields Fields) MorphWrite(c *Context, kind int) {
@@ -377,7 +405,7 @@ func (ev *Event) Morph(c *Context) {
 	c.Putln("")
 	c.Putln("func New%s(buf []byte) %sEvent {", name, name)
 	c.Putln("var v %sEvent", name)
-	ev.Fields.MorphRead(c, FieldsEvent, ev.NoSequence)
+	ev.Fields.MorphRead(c, FieldsEvent, ev.NoSequence, "v.", 1)
 	c.Putln("return v")
 	c.Putln("}")
 	c.Putln("")

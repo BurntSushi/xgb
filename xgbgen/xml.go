@@ -166,6 +166,48 @@ type Name string
 
 type Type string
 
+// Union returns the 'Union' struct corresponding to this type, if
+// one exists.
+func (typ Type) Union(c *Context) *Union {
+	// If this is a typedef, use that instead.
+	if oldTyp, ok := typ.TypeDef(c); ok {
+		return oldTyp.Union(c)
+	}
+
+	// Otherwise, just look for a union type with 'typ' name.
+	for _, union := range c.xml.Unions {
+		if typ == union.Name {
+			return union
+		}
+	}
+	for _, imp := range c.xml.Imports {
+		for _, union := range imp.xml.Unions {
+			if typ == union.Name {
+				return union
+			}
+		}
+	}
+	return nil
+}
+
+// TypeDef returns the 'old' type corresponding to this type, if it's found
+// in a type def. If not found, the second return value is false.
+func (typ Type) TypeDef(c *Context) (Type, bool) {
+	for _, typedef := range c.xml.TypeDefs {
+		if typ == typedef.New {
+			return typedef.Old, true
+		}
+	}
+	for _, imp := range c.xml.Imports {
+		for _, typedef := range imp.xml.TypeDefs {
+			if typ == typedef.New {
+				return typedef.Old, true
+			}
+		}
+	}
+	return "", false
+}
+
 // Size is a nifty function that takes any type and digs until it finds
 // its underlying base type. At which point, the size can be determined.
 func (typ Type) Size(c *Context) uint {
