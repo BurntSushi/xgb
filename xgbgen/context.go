@@ -8,13 +8,12 @@ import (
 )
 
 type Context struct {
-	xml *XML
+	protocol *Protocol
 	out *bytes.Buffer
 }
 
 func newContext() *Context {
 	return &Context{
-		xml: &XML{},
 		out: bytes.NewBuffer([]byte{}),
 	}
 }
@@ -32,22 +31,24 @@ func (c *Context) Put(format string, v ...interface{}) {
 	}
 }
 
-
-// Translate is the big daddy of them all. It takes in an XML byte slice
+// Morph is the big daddy of them all. It takes in an XML byte slice,
+// parse it, transforms the XML types into more usable types,
 // and writes Go code to the 'out' buffer.
-func (c *Context) Translate(xmlBytes []byte) {
-	err := xml.Unmarshal(xmlBytes, c.xml)
+func (c *Context) Morph(xmlBytes []byte) {
+	parsedXml := &XML{}
+	err := xml.Unmarshal(xmlBytes, parsedXml)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Parse all imports
-	c.xml.Imports.Eval()
+	parsedXml.Imports.Eval()
 
-	// Make sure all top level enumerations have expressions
-	// (For when there are empty items.)
-	c.xml.Enums.Eval()
+	// Translate XML types to nice types
+	c.protocol = parsedXml.Translate()
 
-	// It's Morphin' Time!
-	c.xml.Morph(c)
+	// Now write Go source code
+	for _, typ := range c.protocol.Types {
+		typ.Define(c)
+	}
 }

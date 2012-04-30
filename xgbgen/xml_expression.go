@@ -7,25 +7,25 @@ import (
 	"strconv"
 )
 
-type Expression struct {
+type XMLExpression struct {
 	XMLName xml.Name
 
-	Exprs []*Expression `xml:",any"`
+	Exprs []*XMLExpression `xml:",any"`
 
 	Data string `xml:",chardata"`
 	Op string `xml:"op,attr"`
 	Ref string `xml:"ref,attr"`
 }
 
-func newValueExpression(v uint) *Expression {
-	return &Expression{
+func newValueExpression(v uint) *XMLExpression {
+	return &XMLExpression{
 		XMLName: xml.Name{Local: "value"},
 		Data: fmt.Sprintf("%d", v),
 	}
 }
 
 // String is for debugging. For actual use, please use 'Morph'.
-func (e *Expression) String() string {
+func (e *XMLExpression) String() string {
 	switch e.XMLName.Local {
 	case "op":
 		return fmt.Sprintf("(%s %s %s)", e.Exprs[0], e.Op, e.Exprs[1])
@@ -55,7 +55,7 @@ func (e *Expression) String() string {
 // empty items in enums.
 // We can't compute a concrete value for expressions that rely on a context,
 // i.e., some field value.
-func (e *Expression) Eval() uint {
+func (e *XMLExpression) Eval() uint {
 	switch e.XMLName.Local {
 	case "op":
 		if len(e.Exprs) != 2 {
@@ -108,7 +108,7 @@ func (e *Expression) Eval() uint {
 	panic("unreachable")
 }
 
-func (e *Expression) BinaryOp(operand1, operand2 *Expression) *Expression {
+func (e *XMLExpression) BinaryOp(oprnd1, oprnd2 *XMLExpression) *XMLExpression {
 	if e.XMLName.Local != "op" {
 		log.Panicf("Cannot perform binary operation on non-op expression: %s",
 			e.XMLName.Local)
@@ -121,17 +121,17 @@ func (e *Expression) BinaryOp(operand1, operand2 *Expression) *Expression {
 	wrap := newValueExpression
 	switch e.Op {
 	case "+":
-		return wrap(operand1.Eval() + operand2.Eval())
+		return wrap(oprnd1.Eval() + oprnd2.Eval())
 	case "-":
-		return wrap(operand1.Eval() + operand2.Eval())
+		return wrap(oprnd1.Eval() + oprnd2.Eval())
 	case "*":
-		return wrap(operand1.Eval() * operand2.Eval())
+		return wrap(oprnd1.Eval() * oprnd2.Eval())
 	case "/":
-		return wrap(operand1.Eval() / operand2.Eval())
+		return wrap(oprnd1.Eval() / oprnd2.Eval())
 	case "&amp;":
-		return wrap(operand1.Eval() & operand2.Eval())
+		return wrap(oprnd1.Eval() & oprnd2.Eval())
 	case "&lt;&lt;":
-		return wrap(operand1.Eval() << operand2.Eval())
+		return wrap(oprnd1.Eval() << oprnd2.Eval())
 	}
 
 	log.Panicf("Invalid binary operator '%s' for '%s' expression.",
@@ -139,7 +139,7 @@ func (e *Expression) BinaryOp(operand1, operand2 *Expression) *Expression {
 	panic("unreachable")
 }
 
-func (e *Expression) UnaryOp(operand *Expression) *Expression {
+func (e *XMLExpression) UnaryOp(oprnd *XMLExpression) *XMLExpression {
 	if e.XMLName.Local != "unop" {
 		log.Panicf("Cannot perform unary operation on non-unop expression: %s",
 			e.XMLName.Local)
@@ -151,7 +151,7 @@ func (e *Expression) UnaryOp(operand *Expression) *Expression {
 
 	switch e.Op {
 	case "~":
-		return newValueExpression(^operand.Eval())
+		return newValueExpression(^oprnd.Eval())
 	}
 
 	log.Panicf("Invalid unary operator '%s' for '%s' expression.",

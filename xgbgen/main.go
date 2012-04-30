@@ -47,7 +47,7 @@ func main() {
 
 	// Initialize the buffer, parse it, and filter it through gofmt.
 	c := newContext()
-	c.Translate(xmlBytes)
+	c.Morph(xmlBytes)
 
 	if !*gofmt {
 		c.out.WriteTo(os.Stdout)

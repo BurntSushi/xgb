@@ -23,40 +23,40 @@ import (
 	"strings"
 )
 
-type Fields []*Field
+type XMLFields []*XMLField
 
-type Field struct {
+type XMLField struct {
 	XMLName xml.Name
 
 	// For 'pad' element
-	Bytes int `xml:"bytes,attr"`
+	Bytes uint `xml:"bytes,attr"`
 
 	// For 'field', 'list', 'localfield', 'exprfield' and 'switch' elements.
-	Name Name `xml:"name,attr"`
+	Name string `xml:"name,attr"`
 
 	// For 'field', 'list', 'localfield', and 'exprfield' elements.
-	Type Type `xml:"type,attr"`
+	Type string `xml:"type,attr"`
 
 	// For 'list', 'exprfield' and 'switch' elements.
-	Expr *Expression `xml:",any"`
+	Expr *XMLExpression `xml:",any"`
 
 	// For 'valueparm' element.
-	ValueMaskType Type `xml:"value-mask-type,attr"`
-	ValueMaskName Name `xml:"value-mask-name,attr"`
-	ValueListName Name `xml:"value-list-name,attr"`
+	ValueMaskType string `xml:"value-mask-type,attr"`
+	ValueMaskName string `xml:"value-mask-name,attr"`
+	ValueListName string `xml:"value-list-name,attr"`
 
 	// For 'switch' element.
-	Bitcases Bitcases `xml:"bitcase"`
+	Bitcases XMLBitcases `xml:"bitcase"`
 
 	// I don't know which elements these are for. The documentation is vague.
 	// They also seem to be completely optional.
-	OptEnum Type `xml:"enum,attr"`
-	OptMask Type `xml:"mask,attr"`
-	OptAltEnum Type `xml:"altenum,attr"`
+	OptEnum string `xml:"enum,attr"`
+	OptMask string `xml:"mask,attr"`
+	OptAltEnum string `xml:"altenum,attr"`
 }
 
 // String is for debugging purposes.
-func (f *Field) String() string {
+func (f *XMLField) String() string {
 	switch f.XMLName.Local {
 	case "pad":
 		return fmt.Sprintf("pad (%d bytes)", f.Bytes)
@@ -88,7 +88,7 @@ func (f *Field) String() string {
 	panic("unreachable")
 }
 
-type Bitcases []*Bitcase
+type XMLBitcases []*XMLBitcase
 
 // Bitcase represents a single expression followed by any number of fields.
 // Namely, if the switch's expression (all bitcases are inside a switch),
@@ -98,24 +98,24 @@ type Bitcases []*Bitcase
 // siblings, we must exhaustively search for one of them. Essentially,
 // it's the closest thing to a Union I can get to in Go without interfaces.
 // Would an '<expression>' tag have been too much to ask? :-(
-type Bitcase struct {
-	Fields Fields `xml:",any"`
+type XMLBitcase struct {
+	Fields XMLFields `xml:",any"`
 
 	// All the different expressions.
 	// When it comes time to choose one, use the 'Expr' method.
-	ExprOp *Expression `xml:"op"`
-	ExprUnOp *Expression `xml:"unop"`
-	ExprField *Expression `xml:"fieldref"`
-	ExprValue *Expression `xml:"value"`
-	ExprBit *Expression `xml:"bit"`
-	ExprEnum *Expression `xml:"enumref"`
-	ExprSum *Expression `xml:"sumof"`
-	ExprPop *Expression `xml:"popcount"`
+	ExprOp *XMLExpression `xml:"op"`
+	ExprUnOp *XMLExpression `xml:"unop"`
+	ExprField *XMLExpression `xml:"fieldref"`
+	ExprValue *XMLExpression `xml:"value"`
+	ExprBit *XMLExpression `xml:"bit"`
+	ExprEnum *XMLExpression `xml:"enumref"`
+	ExprSum *XMLExpression `xml:"sumof"`
+	ExprPop *XMLExpression `xml:"popcount"`
 }
 
 // StringPrefix is for debugging purposes only.
 // StringPrefix takes a string to prefix to every extra line for formatting.
-func (b *Bitcase) StringPrefix(prefix string) string {
+func (b *XMLBitcase) StringPrefix(prefix string) string {
 	fields := make([]string, len(b.Fields))
 	for i, field := range b.Fields {
 		fields[i] = fmt.Sprintf("%s%s", prefix, field)
@@ -126,13 +126,13 @@ func (b *Bitcase) StringPrefix(prefix string) string {
 
 // Expr chooses the only non-nil Expr* field from Bitcase.
 // Panic if there is more than one non-nil expression.
-func (b *Bitcase) Expr() *Expression {
-	choices := []*Expression{
+func (b *XMLBitcase) Expr() *XMLExpression {
+	choices := []*XMLExpression{
 		b.ExprOp, b.ExprUnOp, b.ExprField, b.ExprValue,
 		b.ExprBit, b.ExprEnum, b.ExprSum, b.ExprPop,
 	}
 
-	var choice *Expression = nil
+	var choice *XMLExpression = nil
 	numNonNil := 0
 	for _, c := range choices {
 		if c != nil {
