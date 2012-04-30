@@ -1,4 +1,5 @@
 package main
+
 /*
 	translation.go provides a 'Translate' method on every XML type that converts
 	the XML type into our "better" representation.
@@ -19,14 +20,14 @@ import (
 
 func (xml *XML) Translate() *Protocol {
 	protocol := &Protocol{
-		Name: xml.Header,
-		ExtXName: xml.ExtensionXName,
-		ExtName: xml.ExtensionName,
+		Name:         xml.Header,
+		ExtXName:     xml.ExtensionXName,
+		ExtName:      xml.ExtensionName,
 		MajorVersion: xml.MajorVersion,
 		MinorVersion: xml.MinorVersion,
 
-		Imports: make([]*Protocol, 0),
-		Types: make([]Type, 0),
+		Imports:  make([]*Protocol, 0),
+		Types:    make([]Type, 0),
 		Requests: make([]*Request, len(xml.Requests)),
 	}
 
@@ -40,7 +41,7 @@ func (xml *XML) Translate() *Protocol {
 		newBaseType := &Base{
 			srcName: srcName,
 			xmlName: xmlName,
-			size: newFixedSize(BaseTypeSizes[xmlName]),
+			size:    newFixedSize(BaseTypeSizes[xmlName]),
 		}
 		protocol.Types = append(protocol.Types, newBaseType)
 	}
@@ -105,12 +106,12 @@ func (xml *XML) Translate() *Protocol {
 func (x *XMLEnum) Translate() *Enum {
 	enum := &Enum{
 		xmlName: x.Name,
-		Items: make([]*EnumItem, len(x.Items)),
+		Items:   make([]*EnumItem, len(x.Items)),
 	}
 	for i, item := range x.Items {
 		enum.Items[i] = &EnumItem{
 			xmlName: item.Name,
-			Expr: item.Expr.Translate(),
+			Expr:    item.Expr.Translate(),
 		}
 	}
 	return enum
@@ -125,16 +126,16 @@ func (x *XMLXid) Translate() *Resource {
 func (x *XMLTypeDef) Translate() *TypeDef {
 	return &TypeDef{
 		xmlName: x.New,
-		Old: newTranslation(x.Old),
+		Old:     newTranslation(x.Old),
 	}
 }
 
 func (x *XMLEvent) Translate() *Event {
 	ev := &Event{
-		xmlName: x.Name,
-		Number: x.Number,
+		xmlName:    x.Name,
+		Number:     x.Number,
 		NoSequence: x.NoSequence,
-		Fields: make([]Field, len(x.Fields)),
+		Fields:     make([]Field, len(x.Fields)),
 	}
 	for i, field := range x.Fields {
 		ev.Fields[i] = field.Translate()
@@ -145,16 +146,16 @@ func (x *XMLEvent) Translate() *Event {
 func (x *XMLEventCopy) Translate() *EventCopy {
 	return &EventCopy{
 		xmlName: x.Name,
-		Number: x.Number,
-		Old: newTranslation(x.Ref),
+		Number:  x.Number,
+		Old:     newTranslation(x.Ref),
 	}
 }
 
 func (x *XMLError) Translate() *Error {
 	err := &Error{
 		xmlName: x.Name,
-		Number: x.Number,
-		Fields: make([]Field, len(x.Fields)),
+		Number:  x.Number,
+		Fields:  make([]Field, len(x.Fields)),
 	}
 	for i, field := range x.Fields {
 		err.Fields[i] = field.Translate()
@@ -165,15 +166,15 @@ func (x *XMLError) Translate() *Error {
 func (x *XMLErrorCopy) Translate() *ErrorCopy {
 	return &ErrorCopy{
 		xmlName: x.Name,
-		Number: x.Number,
-		Old: newTranslation(x.Ref),
+		Number:  x.Number,
+		Old:     newTranslation(x.Ref),
 	}
 }
 
 func (x *XMLStruct) Translate() *Struct {
 	s := &Struct{
 		xmlName: x.Name,
-		Fields: make([]Field, len(x.Fields)),
+		Fields:  make([]Field, len(x.Fields)),
 	}
 	for i, field := range x.Fields {
 		s.Fields[i] = field.Translate()
@@ -184,7 +185,7 @@ func (x *XMLStruct) Translate() *Struct {
 func (x *XMLUnion) Translate() *Union {
 	u := &Union{
 		xmlName: x.Name,
-		Fields: make([]Field, len(x.Fields)),
+		Fields:  make([]Field, len(x.Fields)),
 	}
 	for i, field := range x.Fields {
 		u.Fields[i] = field.Translate()
@@ -195,10 +196,10 @@ func (x *XMLUnion) Translate() *Union {
 func (x *XMLRequest) Translate() *Request {
 	r := &Request{
 		xmlName: x.Name,
-		Opcode: x.Opcode,
+		Opcode:  x.Opcode,
 		Combine: x.Combine,
-		Fields: make([]Field, len(x.Fields)),
-		Reply: x.Reply.Translate(),
+		Fields:  make([]Field, len(x.Fields)),
+		Reply:   x.Reply.Translate(),
 	}
 	for i, field := range x.Fields {
 		r.Fields[i] = field.Translate()
@@ -211,7 +212,7 @@ func (x *XMLRequest) Translate() *Request {
 	// (i.e., a parameter in the caller but does not get send over the wire.)
 	stringLenLocal := &LocalField{&SingleField{
 		xmlName: "string_len",
-		Type: newTranslation("CARD16"),
+		Type:    newTranslation("CARD16"),
 	}}
 	r.Fields = append(r.Fields, stringLenLocal)
 
@@ -243,7 +244,7 @@ func (x *XMLExpression) Translate() Expression {
 			log.Panicf("'op' found %d expressions; expected 2.", len(x.Exprs))
 		}
 		return &BinaryOp{
-			Op: x.Op,
+			Op:    x.Op,
 			Expr1: x.Exprs[0].Translate(),
 			Expr2: x.Exprs[1].Translate(),
 		}
@@ -252,7 +253,7 @@ func (x *XMLExpression) Translate() Expression {
 			log.Panicf("'unop' found %d expressions; expected 1.", len(x.Exprs))
 		}
 		return &UnaryOp{
-			Op: x.Op,
+			Op:   x.Op,
 			Expr: x.Exprs[0].Translate(),
 		}
 	case "popcount":
@@ -279,7 +280,7 @@ func (x *XMLExpression) Translate() Expression {
 				x.Data)
 		}
 		if bit < 0 || bit > 31 {
-			log.Panicf("A 'bit' literal must be in the range [0, 31], but " +
+			log.Panicf("A 'bit' literal must be in the range [0, 31], but "+
 				" is %d", bit)
 		}
 		return &Bit{
@@ -300,7 +301,7 @@ func (x *XMLExpression) Translate() Expression {
 		}
 	}
 
-	log.Panicf("Unrecognized tag '%s' in expression context. Expected one of " +
+	log.Panicf("Unrecognized tag '%s' in expression context. Expected one of "+
 		"op, fieldref, value, bit, enumref, unop, sumof or popcount.",
 		x.XMLName.Local)
 	panic("unreachable")
@@ -315,24 +316,24 @@ func (x *XMLField) Translate() Field {
 	case "field":
 		return &SingleField{
 			xmlName: x.Name,
-			Type: newTranslation(x.Type),
+			Type:    newTranslation(x.Type),
 		}
 	case "list":
 		return &ListField{
-			xmlName: x.Name,
-			Type: newTranslation(x.Type),
+			xmlName:    x.Name,
+			Type:       newTranslation(x.Type),
 			LengthExpr: x.Expr.Translate(),
 		}
 	case "localfield":
 		return &LocalField{&SingleField{
 			xmlName: x.Name,
-			Type: newTranslation(x.Type),
+			Type:    newTranslation(x.Type),
 		}}
 	case "exprfield":
 		return &ExprField{
 			xmlName: x.Name,
-			Type: newTranslation(x.Type),
-			Expr: x.Expr.Translate(),
+			Type:    newTranslation(x.Type),
+			Expr:    x.Expr.Translate(),
 		}
 	case "valueparam":
 		return &ValueField{
@@ -342,8 +343,8 @@ func (x *XMLField) Translate() Field {
 		}
 	case "switch":
 		swtch := &SwitchField{
-			Name: x.Name,
-			Expr: x.Expr.Translate(),
+			Name:     x.Name,
+			Expr:     x.Expr.Translate(),
 			Bitcases: make([]*Bitcase, len(x.Bitcases)),
 		}
 		for i, bitcase := range x.Bitcases {
@@ -358,7 +359,7 @@ func (x *XMLField) Translate() Field {
 
 func (x *XMLBitcase) Translate() *Bitcase {
 	b := &Bitcase{
-		Expr: x.Expr().Translate(),
+		Expr:   x.Expr().Translate(),
 		Fields: make([]Field, len(x.Fields)),
 	}
 	for i, field := range x.Fields {

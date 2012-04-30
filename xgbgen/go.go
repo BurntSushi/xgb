@@ -16,37 +16,37 @@ var xgbGenResourceIdName = "Id"
 // XML protocol description will produce an invalid Go program.
 // The types on the left *never* show themselves in the source.
 var BaseTypeMap = map[string]string{
-	"CARD8": "byte",
+	"CARD8":  "byte",
 	"CARD16": "uint16",
 	"CARD32": "uint32",
-	"INT8": "int8",
-	"INT16": "int16",
-	"INT32": "int32",
-	"BYTE": "byte",
-	"BOOL": "bool",
-	"float": "float64",
+	"INT8":   "int8",
+	"INT16":  "int16",
+	"INT32":  "int32",
+	"BYTE":   "byte",
+	"BOOL":   "bool",
+	"float":  "float64",
 	"double": "float64",
-	"char": "byte",
-	"void": "byte",
-	"Id": "Id",
+	"char":   "byte",
+	"void":   "byte",
+	"Id":     "Id",
 }
 
 // BaseTypeSizes should have precisely the same keys as in BaseTypeMap,
 // and the values should correspond to the size of the type in bytes.
 var BaseTypeSizes = map[string]uint{
-	"CARD8": 1,
+	"CARD8":  1,
 	"CARD16": 2,
 	"CARD32": 4,
-	"INT8": 1,
-	"INT16": 2,
-	"INT32": 4,
-	"BYTE": 1,
-	"BOOL": 1,
-	"float": 4,
+	"INT8":   1,
+	"INT16":  2,
+	"INT32":  4,
+	"BYTE":   1,
+	"BOOL":   1,
+	"float":  4,
 	"double": 8,
-	"char": 1,
-	"void": 1,
-	"Id": 4,
+	"char":   1,
+	"void":   1,
+	"Id":     4,
 }
 
 // TypeMap is a map from types in the XML to type names that is used
@@ -54,13 +54,13 @@ var BaseTypeSizes = map[string]uint{
 // type is replaced with the value type.
 var TypeMap = map[string]string{
 	"VISUALTYPE": "VisualInfo",
-	"DEPTH": "DepthInfo",
-	"SCREEN": "ScreenInfo",
-	"Setup": "SetupInfo",
+	"DEPTH":      "DepthInfo",
+	"SCREEN":     "ScreenInfo",
+	"Setup":      "SetupInfo",
 }
 
 // NameMap is the same as TypeMap, but for names.
-var NameMap = map[string]string{ }
+var NameMap = map[string]string{}
 
 // Reading, writing and defining...
 
@@ -151,8 +151,8 @@ func (s *Struct) ReadList(c *Context) {
 	c.Putln("consumed := 0")
 	c.Putln("consumed = 0 + consumed // no-op") // dirty hack for a no-op
 	c.Putln("for i := 0; i < length; i++ {")
-		c.Putln("v[i], consumed = New%s(buf[b:])", s.SrcName())
-		c.Putln("b += consumed")
+	c.Putln("v[i], consumed = New%s(buf[b:])", s.SrcName())
+	c.Putln("b += consumed")
 	c.Putln("}")
 
 	c.Putln("return v, pad(b)")
@@ -347,14 +347,14 @@ func (f *ListField) Read(c *Context) {
 		length := f.LengthExpr.Reduce("v.", "")
 		c.Putln("v.%s = make([]Id, %s)", f.SrcName(), length)
 		c.Putln("for i := 0; i < %s; i++ {", length)
-			ReadSimpleSingleField(c, fmt.Sprintf("v.%s[i]", f.SrcName()), t)
+		ReadSimpleSingleField(c, fmt.Sprintf("v.%s[i]", f.SrcName()), t)
 		c.Putln("}")
 		c.Putln("")
 	case *Base:
 		length := f.LengthExpr.Reduce("v.", "")
 		c.Putln("v.%s = make([]%s, %s)", f.SrcName(), t.SrcName(), length)
 		c.Putln("for i := 0; i < %s; i++ {", length)
-			ReadSimpleSingleField(c, fmt.Sprintf("v.%s[i]", f.SrcName()), t)
+		ReadSimpleSingleField(c, fmt.Sprintf("v.%s[i]", f.SrcName()), t)
 		c.Putln("}")
 		c.Putln("")
 	case *Struct:
@@ -408,4 +408,3 @@ func (f *SwitchField) Define(c *Context) {
 func (f *SwitchField) Read(c *Context) {
 	c.Putln("// reading switch field: %s (%s)", f.Name, f.Expr)
 }
-

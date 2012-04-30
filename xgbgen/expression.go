@@ -14,7 +14,7 @@ type Expression interface {
 }
 
 type BinaryOp struct {
-	Op string
+	Op    string
 	Expr1 Expression
 	Expr2 Expression
 }
@@ -23,7 +23,7 @@ func newBinaryOp(op string, expr1, expr2 Expression) Expression {
 	switch {
 	case expr1 != nil && expr2 != nil:
 		return &BinaryOp{
-			Op: op,
+			Op:    op,
 			Expr1: expr1,
 			Expr2: expr2,
 		}
@@ -79,7 +79,7 @@ func (e *BinaryOp) Initialize(p *Protocol) {
 }
 
 type UnaryOp struct {
-	Op string
+	Op   string
 	Expr Expression
 }
 
@@ -159,7 +159,7 @@ func (e *Value) String() string {
 	return e.Reduce("", "")
 }
 
-func (e *Value) Initialize(p *Protocol) { }
+func (e *Value) Initialize(p *Protocol) {}
 
 type Bit struct {
 	b uint
@@ -181,7 +181,7 @@ func (e *Bit) String() string {
 	return e.Reduce("", "")
 }
 
-func (e *Bit) Initialize(p *Protocol) { }
+func (e *Bit) Initialize(p *Protocol) {}
 
 type FieldRef struct {
 	Name string
@@ -273,4 +273,3 @@ func (e *SumOf) String() string {
 func (e *SumOf) Initialize(p *Protocol) {
 	e.Name = SrcName(e.Name)
 }
-

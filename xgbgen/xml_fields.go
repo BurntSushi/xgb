@@ -1,4 +1,5 @@
 package main
+
 /*
 	A series of fields should be taken as "structure contents", and *not*
 	just the single 'field' elements. Namely, 'fields' subsumes 'field'
@@ -50,8 +51,8 @@ type XMLField struct {
 
 	// I don't know which elements these are for. The documentation is vague.
 	// They also seem to be completely optional.
-	OptEnum string `xml:"enum,attr"`
-	OptMask string `xml:"mask,attr"`
+	OptEnum    string `xml:"enum,attr"`
+	OptMask    string `xml:"mask,attr"`
 	OptAltEnum string `xml:"altenum,attr"`
 }
 
@@ -103,14 +104,14 @@ type XMLBitcase struct {
 
 	// All the different expressions.
 	// When it comes time to choose one, use the 'Expr' method.
-	ExprOp *XMLExpression `xml:"op"`
-	ExprUnOp *XMLExpression `xml:"unop"`
+	ExprOp    *XMLExpression `xml:"op"`
+	ExprUnOp  *XMLExpression `xml:"unop"`
 	ExprField *XMLExpression `xml:"fieldref"`
 	ExprValue *XMLExpression `xml:"value"`
-	ExprBit *XMLExpression `xml:"bit"`
-	ExprEnum *XMLExpression `xml:"enumref"`
-	ExprSum *XMLExpression `xml:"sumof"`
-	ExprPop *XMLExpression `xml:"popcount"`
+	ExprBit   *XMLExpression `xml:"bit"`
+	ExprEnum  *XMLExpression `xml:"enumref"`
+	ExprSum   *XMLExpression `xml:"sumof"`
+	ExprPop   *XMLExpression `xml:"popcount"`
 }
 
 // StringPrefix is for debugging purposes only.

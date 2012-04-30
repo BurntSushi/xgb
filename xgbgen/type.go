@@ -77,7 +77,7 @@ func (t *Translation) Initialize(p *Protocol) {
 type Base struct {
 	srcName string
 	xmlName string
-	size Size
+	size    Size
 }
 
 func (b *Base) SrcName() string {
@@ -99,13 +99,13 @@ func (b *Base) Initialize(p *Protocol) {
 type Enum struct {
 	srcName string
 	xmlName string
-	Items []*EnumItem
+	Items   []*EnumItem
 }
 
 type EnumItem struct {
 	srcName string
 	xmlName string
-	Expr Expression
+	Expr    Expression
 }
 
 func (enum *Enum) SrcName() string {
@@ -154,7 +154,7 @@ func (r *Resource) Initialize(p *Protocol) {
 type TypeDef struct {
 	srcName string
 	xmlName string
-	Old Type
+	Old     Type
 }
 
 func (t *TypeDef) SrcName() string {
@@ -175,11 +175,11 @@ func (t *TypeDef) Initialize(p *Protocol) {
 }
 
 type Event struct {
-	srcName string
-	xmlName string
-	Number int
+	srcName    string
+	xmlName    string
+	Number     int
 	NoSequence bool
-	Fields []Field
+	Fields     []Field
 }
 
 func (e *Event) SrcName() string {
@@ -208,8 +208,8 @@ func (e *Event) EvType() string {
 type EventCopy struct {
 	srcName string
 	xmlName string
-	Old Type
-	Number int
+	Old     Type
+	Number  int
 }
 
 func (e *EventCopy) SrcName() string {
@@ -239,8 +239,8 @@ func (e *EventCopy) EvType() string {
 type Error struct {
 	srcName string
 	xmlName string
-	Number int
-	Fields []Field
+	Number  int
+	Fields  []Field
 }
 
 func (e *Error) SrcName() string {
@@ -270,8 +270,8 @@ func (e *Error) ErrType() string {
 type ErrorCopy struct {
 	srcName string
 	xmlName string
-	Old Type
-	Number int
+	Old     Type
+	Number  int
 }
 
 func (e *ErrorCopy) SrcName() string {
@@ -305,7 +305,7 @@ func (e *ErrorCopy) ErrType() string {
 type Struct struct {
 	srcName string
 	xmlName string
-	Fields []Field
+	Fields  []Field
 }
 
 func (s *Struct) SrcName() string {
@@ -334,7 +334,7 @@ func (s *Struct) Initialize(p *Protocol) {
 type Union struct {
 	srcName string
 	xmlName string
-	Fields []Field
+	Fields  []Field
 }
 
 func (u *Union) SrcName() string {

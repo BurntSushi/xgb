@@ -19,4 +19,3 @@ func (s1 Size) Add(s2 Size) Size {
 func (s1 Size) Multiply(s2 Size) Size {
 	return Size{newBinaryOp("*", s1, s2)}
 }
-

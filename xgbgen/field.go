@@ -31,7 +31,7 @@ func (p *PadField) Size() Size {
 type SingleField struct {
 	srcName string
 	xmlName string
-	Type Type
+	Type    Type
 }
 
 func (f *SingleField) Initialize(p *Protocol) {
@@ -52,9 +52,9 @@ func (f *SingleField) Size() Size {
 }
 
 type ListField struct {
-	srcName string
-	xmlName string
-	Type Type
+	srcName    string
+	xmlName    string
+	Type       Type
 	LengthExpr Expression
 }
 
@@ -85,8 +85,8 @@ type LocalField struct {
 type ExprField struct {
 	srcName string
 	xmlName string
-	Type Type
-	Expr Expression
+	Type    Type
+	Expr    Expression
 }
 
 func (f *ExprField) SrcName() string {
@@ -132,8 +132,8 @@ func (f *ValueField) Initialize(p *Protocol) {
 }
 
 type SwitchField struct {
-	Name string
-	Expr Expression
+	Name     string
+	Expr     Expression
 	Bitcases []*Bitcase
 }
 
@@ -165,6 +165,5 @@ func (f *SwitchField) Initialize(p *Protocol) {
 
 type Bitcase struct {
 	Fields []Field
-	Expr Expression
+	Expr   Expression
 }
-

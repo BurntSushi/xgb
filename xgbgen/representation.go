@@ -1,14 +1,14 @@
 package main
 
 type Protocol struct {
-	Name string
-	ExtXName string
-	ExtName string
+	Name         string
+	ExtXName     string
+	ExtName      string
 	MajorVersion string
 	MinorVersion string
 
-	Imports []*Protocol
-	Types []Type
+	Imports  []*Protocol
+	Types    []Type
 	Requests []*Request
 }
 
@@ -28,10 +28,10 @@ func (p *Protocol) Initialize() {
 type Request struct {
 	srcName string
 	xmlName string
-	Opcode int
+	Opcode  int
 	Combine bool
-	Fields []Field
-	Reply *Reply
+	Fields  []Field
+	Reply   *Reply
 }
 
 func (r *Request) Initialize(p *Protocol) {
@@ -53,4 +53,3 @@ func (r *Reply) Initialize(p *Protocol) {
 		field.Initialize(p)
 	}
 }
-

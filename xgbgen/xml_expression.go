@@ -13,14 +13,14 @@ type XMLExpression struct {
 	Exprs []*XMLExpression `xml:",any"`
 
 	Data string `xml:",chardata"`
-	Op string `xml:"op,attr"`
-	Ref string `xml:"ref,attr"`
+	Op   string `xml:"op,attr"`
+	Ref  string `xml:"ref,attr"`
 }
 
 func newValueExpression(v uint) *XMLExpression {
 	return &XMLExpression{
 		XMLName: xml.Name{Local: "value"},
-		Data: fmt.Sprintf("%d", v),
+		Data:    fmt.Sprintf("%d", v),
 	}
 }
 
@@ -87,22 +87,22 @@ func (e *XMLExpression) Eval() uint {
 				e.Data)
 		}
 		if bit < 0 || bit > 31 {
-			log.Panicf("A 'bit' literal must be in the range [0, 31], but " +
+			log.Panicf("A 'bit' literal must be in the range [0, 31], but "+
 				" is %d", bit)
 		}
 		return 1 << uint(bit)
 	case "fieldref":
-		log.Panicf("Cannot compute concrete value of 'fieldref' in " +
+		log.Panicf("Cannot compute concrete value of 'fieldref' in "+
 			"expression '%s'.", e)
 	case "enumref":
-		log.Panicf("Cannot compute concrete value of 'enumref' in " +
+		log.Panicf("Cannot compute concrete value of 'enumref' in "+
 			"expression '%s'.", e)
 	case "sumof":
-		log.Panicf("Cannot compute concrete value of 'sumof' in " +
+		log.Panicf("Cannot compute concrete value of 'sumof' in "+
 			"expression '%s'.", e)
 	}
 
-	log.Panicf("Unrecognized tag '%s' in expression context. Expected one of " +
+	log.Panicf("Unrecognized tag '%s' in expression context. Expected one of "+
 		"op, fieldref, value, bit, enumref, unop, sumof or popcount.",
 		e.XMLName.Local)
 	panic("unreachable")

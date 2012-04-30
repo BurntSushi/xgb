@@ -9,7 +9,7 @@ import (
 
 type Context struct {
 	protocol *Protocol
-	out *bytes.Buffer
+	out      *bytes.Buffer
 }
 
 func newContext() *Context {
@@ -20,7 +20,7 @@ func newContext() *Context {
 
 // Putln calls put and adds a new line to the end of 'format'.
 func (c *Context) Putln(format string, v ...interface{}) {
-	c.Put(format + "\n", v...)
+	c.Put(format+"\n", v...)
 }
 
 // Put is a short alias to write to 'out'.
