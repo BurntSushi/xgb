@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"log"
+)
+
 type Field interface {
 	Initialize(p *Protocol)
 	SrcName() string
@@ -8,6 +13,7 @@ type Field interface {
 
 	Define(c *Context)
 	Read(c *Context)
+	Write(c *Context)
 }
 
 func (pad *PadField) Initialize(p *Protocol) {}
@@ -66,8 +72,31 @@ func (f *ListField) XmlName() string {
 	return f.xmlName
 }
 
+// func (f *ListField) Size() Size { 
+	// return newExpressionSize(f.LengthExpr).Multiply(f.Type.Size()) 
+// } 
+
 func (f *ListField) Size() Size {
-	return newExpressionSize(f.LengthExpr).Multiply(f.Type.Size())
+	simpleLen := &Function{
+		Name: "pad",
+		Expr: newBinaryOp("*", f.LengthExpr, f.Type.Size().Expression),
+	}
+
+	switch f.Type.(type) {
+	case *Struct:
+		sizeFun := &Function{
+			Name: fmt.Sprintf("%sListSize", f.Type.SrcName()),
+			Expr: &FieldRef{Name: f.SrcName()},
+		}
+		return newExpressionSize(sizeFun)
+	case *Base:
+		return newExpressionSize(simpleLen)
+	case *Resource:
+		return newExpressionSize(simpleLen)
+	default:
+		log.Fatalf("Cannot compute list size with type '%T'.", f.Type)
+	}
+	panic("unreachable")
 }
 
 func (f *ListField) Initialize(p *Protocol) {

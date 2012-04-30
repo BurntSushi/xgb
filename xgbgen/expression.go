@@ -13,6 +13,34 @@ type Expression interface {
 	Initialize(p *Protocol)
 }
 
+// Function is a custom expression not found in the XML. It's simply used
+// to apply a function named in 'Name' to the Expr expression.
+type Function struct {
+	Name string
+	Expr Expression
+}
+
+func (e *Function) Concrete() bool {
+	return false
+}
+
+func (e *Function) Eval() uint {
+	log.Fatalf("Cannot evaluate a 'Function'. It is not concrete.")
+	panic("unreachable")
+}
+
+func (e *Function) Reduce(prefix, fun string) string {
+	return fmt.Sprintf("%s(%s)", e.Name, e.Expr.Reduce(prefix, fun))
+}
+
+func (e *Function) String() string {
+	return e.Reduce("", "")
+}
+
+func (e *Function) Initialize(p *Protocol) {
+	e.Expr.Initialize(p)
+}
+
 type BinaryOp struct {
 	Op    string
 	Expr1 Expression
