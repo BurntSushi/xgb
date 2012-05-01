@@ -14,7 +14,8 @@ I like to release my code under the WTFPL, but since I'm starting with someone
 else's work, I'm leaving the original license/contributor/author information
 in tact.
 
-I suppose I can legitimately release xgbgen under the WTFPL.
+I suppose I can legitimately release xgbgen under the WTFPL. To be fair, it is
+at least as complex as XGB itself. *sigh*
 
 What follows is the original README:
 
