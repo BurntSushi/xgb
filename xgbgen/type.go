@@ -191,7 +191,7 @@ func (e *Event) XmlName() string {
 }
 
 func (e *Event) Size() Size {
-	panic("Cannot take size of Event type.")
+	return newExpressionSize(&Value{v: 32})
 }
 
 func (e *Event) Initialize(p *Protocol) {
@@ -358,7 +358,7 @@ func (u *Union) Size() Size {
 }
 
 func (u *Union) Initialize(p *Protocol) {
-	u.srcName = TypeSrcName(p, u)
+	u.srcName = fmt.Sprintf("%sUnion", TypeSrcName(p, u))
 	for _, field := range u.Fields {
 		field.Initialize(p)
 	}

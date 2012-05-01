@@ -9,6 +9,7 @@ type Field interface {
 	Initialize(p *Protocol)
 	SrcName() string
 	XmlName() string
+	SrcType() string
 	Size() Size
 
 	Define(c *Context)
@@ -28,6 +29,10 @@ func (p *PadField) SrcName() string {
 
 func (p *PadField) XmlName() string {
 	panic("illegal to take XML name of a pad field")
+}
+
+func (f *PadField) SrcType() string {
+	panic("it is illegal to call SrcType on a SwitchField field")
 }
 
 func (p *PadField) Size() Size {
@@ -53,6 +58,10 @@ func (f *SingleField) XmlName() string {
 	return f.xmlName
 }
 
+func (f *SingleField) SrcType() string {
+	return f.Type.SrcName()
+}
+
 func (f *SingleField) Size() Size {
 	return f.Type.Size()
 }
@@ -72,9 +81,9 @@ func (f *ListField) XmlName() string {
 	return f.xmlName
 }
 
-// func (f *ListField) Size() Size { 
-	// return newExpressionSize(f.LengthExpr).Multiply(f.Type.Size()) 
-// } 
+func (f *ListField) SrcType() string {
+	return fmt.Sprintf("[]%s", f.Type.SrcName())
+}
 
 func (f *ListField) Size() Size {
 	simpleLen := &Function{
@@ -126,6 +135,10 @@ func (f *ExprField) XmlName() string {
 	return f.xmlName
 }
 
+func (f *ExprField) SrcType() string {
+	return f.Type.SrcName()
+}
+
 func (f *ExprField) Size() Size {
 	return f.Type.Size()
 }
@@ -150,6 +163,10 @@ func (f *ValueField) XmlName() string {
 	panic("it is illegal to call XmlName on a ValueField field")
 }
 
+func (f *ValueField) SrcType() string {
+	return f.MaskType.SrcName()
+}
+
 func (f *ValueField) Size() Size {
 	return f.MaskType.Size()
 }
@@ -172,6 +189,10 @@ func (f *SwitchField) SrcName() string {
 
 func (f *SwitchField) XmlName() string {
 	panic("it is illegal to call XmlName on a SwitchField field")
+}
+
+func (f *SwitchField) SrcType() string {
+	panic("it is illegal to call SrcType on a SwitchField field")
 }
 
 // XXX: This is a bit tricky. The size has to be represented as a non-concrete

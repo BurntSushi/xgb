@@ -25,6 +25,16 @@ func ReadSimpleSingleField(c *Context, name string, typ Type) {
 			c.Putln("%s = %s(get64(buf[b:]))", name, t.SrcName())
 		}
 	case *Base:
+		// If this is a bool, stop short and do something special.
+		if t.SrcName() == "bool" {
+			c.Putln("if buf[b] == 1 {")
+			c.Putln("%s = true", name)
+			c.Putln("} else {")
+			c.Putln("%s = false", name)
+			c.Putln("}")
+			break
+		}
+
 		var val string
 		switch t.Size().Eval() {
 		case 1:
@@ -44,7 +54,7 @@ func ReadSimpleSingleField(c *Context, name string, typ Type) {
 		}
 		c.Putln("%s = %s", name, val)
 	default:
-		log.Fatalf("Cannot read field '%s' as a simple field with %T type.",
+		log.Panicf("Cannot read field '%s' as a simple field with %T type.",
 			name, typ)
 	}
 
@@ -62,9 +72,11 @@ func (f *SingleField) Read(c *Context) {
 	case *Struct:
 		c.Putln("v.%s = %s{}", f.SrcName(), t.SrcName())
 		c.Putln("b += Read%s(buf[b:], &v.%s)", t.SrcName(), f.SrcName())
-		c.Putln("")
+	case *Union:
+		c.Putln("v.%s = %s{}", f.SrcName(), t.SrcName())
+		c.Putln("b += Read%s(buf[b:], &v.%s)", t.SrcName(), f.SrcName())
 	default:
-		log.Fatalf("Cannot read field '%s' with %T type.", f.XmlName(), f.Type)
+		log.Panicf("Cannot read field '%s' with %T type.", f.XmlName(), f.Type)
 	}
 }
 
@@ -84,6 +96,16 @@ func WriteSimpleSingleField(c *Context, name string, typ Type) {
 			c.Putln("put64(buf[b:], uint64(%s))", name)
 		}
 	case *Base:
+		// If this is a bool, stop short and do something special.
+		if t.SrcName() == "bool" {
+			c.Putln("if %s {", name)
+			c.Putln("buf[b] = 1")
+			c.Putln("} else {")
+			c.Putln("buf[b] = 0")
+			c.Putln("}")
+			break
+		}
+
 		switch t.Size().Eval() {
 		case 1:
 			if t.SrcName() != "byte" {
@@ -126,11 +148,17 @@ func (f *SingleField) Write(c *Context) {
 		ReadSimpleSingleField(c, fmt.Sprintf("v.%s", f.SrcName()), t)
 	case *Base:
 		ReadSimpleSingleField(c, fmt.Sprintf("v.%s", f.SrcName()), t)
+	case *Union:
+		c.Putln("{")
+		c.Putln("unionBytes := v.%s.Bytes()", f.SrcName())
+		c.Putln("copy(buf[b:], unionBytes)")
+		c.Putln("b += pad(len(unionBytes))")
+		c.Putln("}")
 	case *Struct:
 		c.Putln("{")
 		c.Putln("structBytes := v.%s.Bytes()", f.SrcName())
 		c.Putln("copy(buf[b:], structBytes)")
-		c.Putln("b += len(structBytes)")
+		c.Putln("b += pad(len(structBytes))")
 		c.Putln("}")
 	default:
 		log.Fatalf("Cannot read field '%s' with %T type.", f.XmlName(), f.Type)

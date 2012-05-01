@@ -12,8 +12,6 @@ func (f *ListField) Define(c *Context) {
 }
 
 func (f *ListField) Read(c *Context) {
-	c.Putln("")
-
 	switch t := f.Type.(type) {
 	case *Resource:
 		length := f.LengthExpr.Reduce("v.", "")
@@ -34,6 +32,10 @@ func (f *ListField) Read(c *Context) {
 			c.Putln("}")
 			c.Putln("b = pad(b)")
 		}
+	case *Union:
+		c.Putln("v.%s = make([]%s, %s)",
+			f.SrcName(), t.SrcName(), f.LengthExpr.Reduce("v.", ""))
+		c.Putln("b += Read%sList(buf[b:], v.%s)", t.SrcName(), f.SrcName())
 	case *Struct:
 		c.Putln("v.%s = make([]%s, %s)",
 			f.SrcName(), t.SrcName(), f.LengthExpr.Reduce("v.", ""))
@@ -45,8 +47,6 @@ func (f *ListField) Read(c *Context) {
 }
 
 func (f *ListField) Write(c *Context) {
-	c.Putln("")
-
 	switch t := f.Type.(type) {
 	case *Resource:
 		length := f.LengthExpr.Reduce("v.", "")
@@ -65,6 +65,8 @@ func (f *ListField) Write(c *Context) {
 			c.Putln("}")
 			c.Putln("b = pad(b)")
 		}
+	case *Union:
+		c.Putln("b += %sListBytes(buf[b:], v.%s)", t.SrcName(), f.SrcName())
 	case *Struct:
 		c.Putln("b += %sListBytes(buf[b:], v.%s)", t.SrcName(), f.SrcName())
 	default:

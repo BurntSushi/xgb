@@ -13,7 +13,7 @@ func (s *Struct) Define(c *Context) {
 	// Write function that reads bytes and produces this struct.
 	s.Read(c)
 
-	// Write function that reads a list of this structs.
+	// Write function that reads bytes and produces a list of this struct.
 	s.ReadList(c)
 
 	// Write function that writes bytes given this struct.
@@ -68,7 +68,7 @@ func (s *Struct) ReadList(c *Context) {
 func (s *Struct) Write(c *Context) {
 	c.Putln("// Struct write %s", s.SrcName())
 	c.Putln("func (v %s) Bytes() []byte {", s.SrcName())
-	c.Putln("buf := make([]byte, %s)", s.Size().Reduce("s.", ""))
+	c.Putln("buf := make([]byte, %s)", s.Size().Reduce("v.", ""))
 	c.Putln("b := 0")
 	c.Putln("")
 	for _, field := range s.Fields {
@@ -88,10 +88,11 @@ func (s *Struct) WriteList(c *Context) {
 	c.Putln("for _, item := range list {")
 	c.Putln("structBytes = item.Bytes()")
 	c.Putln("copy(buf[b:], len(structBytes))")
-	c.Putln("b += len(structBytes)")
+	c.Putln("b += pad(len(structBytes))")
 	c.Putln("}")
 	c.Putln("return b")
 	c.Putln("}")
+	c.Putln("")
 }
 
 func (s *Struct) WriteListSize(c *Context) {
@@ -101,7 +102,7 @@ func (s *Struct) WriteListSize(c *Context) {
 	c.Putln("for _, item := range list {")
 	c.Putln("size += %s", s.Size().Reduce("item.", ""))
 	c.Putln("}")
-	c.Putln("return pad(size)")
+	c.Putln("return size")
 	c.Putln("}")
 	c.Putln("")
 }
