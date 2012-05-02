@@ -102,8 +102,10 @@ func (f *ListField) Size() Size {
 		return newExpressionSize(simpleLen)
 	case *Resource:
 		return newExpressionSize(simpleLen)
+	case *TypeDef:
+		return newExpressionSize(simpleLen)
 	default:
-		log.Fatalf("Cannot compute list size with type '%T'.", f.Type)
+		log.Panicf("Cannot compute list size with type '%T'.", f.Type)
 	}
 	panic("unreachable")
 }

@@ -4,8 +4,13 @@ package main
 func (e *Event) Define(c *Context) {
 	c.Putln("// Event definition %s (%d)", e.SrcName(), e.Number)
 	c.Putln("// Size: %s", e.Size())
+	c.Putln("")
+	c.Putln("const %s = %d", e.SrcName(), e.Number)
+	c.Putln("")
 	c.Putln("type %s struct {", e.EvType())
-	c.Putln("Sequence uint16")
+	if !e.NoSequence {
+		c.Putln("Sequence uint16")
+	}
 	for _, field := range e.Fields {
 		field.Define(c)
 	}
@@ -16,7 +21,7 @@ func (e *Event) Define(c *Context) {
 	// event struct.
 	e.Read(c)
 
-	// Write defines a function that transoforms this event struct into
+	// Write defines a function that transforms this event struct into
 	// a byte slice.
 	e.Write(c)
 
@@ -26,14 +31,14 @@ func (e *Event) Define(c *Context) {
 
 	// Let's the XGB event loop read this event.
 	c.Putln("func init() {")
-	c.Putln("newEventFuncs[%d] = New%s", e.Number, e.SrcName())
+	c.Putln("newEventFuncs[%d] = New%s", e.Number, e.EvType())
 	c.Putln("}")
 	c.Putln("")
 }
 
 func (e *Event) Read(c *Context) {
 	c.Putln("// Event read %s", e.SrcName())
-	c.Putln("func New%s(buf []byte) %s {", e.SrcName(), e.EvType())
+	c.Putln("func New%s(buf []byte) %s {", e.EvType(), e.EvType())
 	c.Putln("v := %s{}", e.EvType())
 	c.Putln("b := 1 // don't read event number")
 	c.Putln("")
@@ -97,21 +102,21 @@ func (e *EventCopy) Define(c *Context) {
 
 	// Let's the XGB event loop read this event.
 	c.Putln("func init() {")
-	c.Putln("newEventFuncs[%d] = New%s", e.Number, e.SrcName())
+	c.Putln("newEventFuncs[%d] = New%s", e.Number, e.EvType())
 	c.Putln("}")
 	c.Putln("")
 }
 
 func (e *EventCopy) Read(c *Context) {
-	c.Putln("func New%s(buf []byte) %s {", e.SrcName(), e.EvType())
-	c.Putln("return (%s)(New%s(buf))", e.EvType(), e.Old.SrcName())
+	c.Putln("func New%s(buf []byte) %s {", e.EvType(), e.EvType())
+	c.Putln("return %s(New%s(buf))", e.EvType(), e.Old.(*Event).EvType())
 	c.Putln("}")
 	c.Putln("")
 }
 
 func (e *EventCopy) Write(c *Context) {
 	c.Putln("func (v %s) Bytes() []byte {", e.EvType())
-	c.Putln("return (%s)(ev).Bytes()", e.Old.(*Event).EvType())
+	c.Putln("return %s(ev).Bytes()", e.Old.(*Event).EvType())
 	c.Putln("}")
 	c.Putln("")
 }

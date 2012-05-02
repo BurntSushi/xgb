@@ -210,11 +210,13 @@ func (x *XMLRequest) Translate() *Request {
 	// computation of the 'odd_length' field. However, 'string_len' is not
 	// defined. Therefore, let's forcefully add it as a 'local field'.
 	// (i.e., a parameter in the caller but does not get send over the wire.)
-	stringLenLocal := &LocalField{&SingleField{
-		xmlName: "string_len",
-		Type:    newTranslation("CARD16"),
-	}}
-	r.Fields = append(r.Fields, stringLenLocal)
+	if x.Name == "QueryTextExtents" {
+		stringLenLocal := &LocalField{&SingleField{
+			xmlName: "string_len",
+			Type:    newTranslation("CARD16"),
+		}}
+		r.Fields = append(r.Fields, stringLenLocal)
+	}
 
 	return r
 }

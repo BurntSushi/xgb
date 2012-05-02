@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"log"
+)
+
 type Protocol struct {
 	Name         string
 	ExtXName     string
@@ -44,8 +49,56 @@ func (r *Request) Initialize(p *Protocol) {
 	}
 }
 
+func (r *Request) SrcName() string {
+	return r.srcName
+}
+
+func (r *Request) XmlName() string {
+	return r.xmlName
+}
+
+func (r *Request) ReplyName() string {
+	if r.Reply == nil {
+		log.Panicf("Cannot call 'ReplyName' on request %s, which has no reply.",
+			r.SrcName())
+	}
+	return fmt.Sprintf("%sReply", r.SrcName())
+}
+
+// Size for Request needs a context.
+// Namely, if this is an extension, we need to account for *four* bytes
+// of a header (extension opcode, request opcode, and the sequence number).
+// If it's a core protocol request, then we only account for *three*
+// bytes of the header (remove the extension opcode).
+func (r *Request) Size(c *Context) Size {
+	size := newFixedSize(0)
+
+	if c.protocol.Name == "xproto" {
+		size = size.Add(newFixedSize(3))
+	} else {
+		size = size.Add(newFixedSize(4))
+	}
+
+	for _, field := range r.Fields {
+		size = size.Add(field.Size())
+	}
+	return size
+}
+
 type Reply struct {
 	Fields []Field
+}
+
+func (r *Reply) Size() Size {
+	size := newFixedSize(0)
+
+	// Account for reply discriminant, sequence number and reply length
+	size = size.Add(newFixedSize(7))
+
+	for _, field := range r.Fields {
+		size = size.Add(field.Size())
+	}
+	return size
 }
 
 func (r *Reply) Initialize(p *Protocol) {

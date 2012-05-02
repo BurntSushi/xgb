@@ -105,57 +105,48 @@ func (f *PadField) Write(c *Context) {
 // Local fields
 func (f *LocalField) Define(c *Context) {
 	c.Putln("// local field: %s %s", f.SrcName(), f.Type.SrcName())
-	panic("todo")
 }
 
 func (f *LocalField) Read(c *Context) {
 	c.Putln("// reading local field: %s (%s) :: %s",
 		f.SrcName(), f.Size(), f.Type.SrcName())
-	panic("todo")
 }
 
 func (f *LocalField) Write(c *Context) {
 	c.Putln("// writing local field: %s (%s) :: %s",
 		f.SrcName(), f.Size(), f.Type.SrcName())
-	panic("todo")
 }
 
 // Expr fields
 func (f *ExprField) Define(c *Context) {
 	c.Putln("// expression field: %s %s (%s)",
 		f.SrcName(), f.Type.SrcName(), f.Expr)
-	panic("todo")
 }
 
 func (f *ExprField) Read(c *Context) {
 	c.Putln("// reading expression field: %s (%s) (%s) :: %s",
 		f.SrcName(), f.Size(), f.Expr, f.Type.SrcName())
-	panic("todo")
 }
 
 func (f *ExprField) Write(c *Context) {
 	c.Putln("// writing expression field: %s (%s) (%s) :: %s",
 		f.SrcName(), f.Size(), f.Expr, f.Type.SrcName())
-	panic("todo")
 }
 
 // Value field
 func (f *ValueField) Define(c *Context) {
 	c.Putln("// valueparam field: type: %s, mask name: %s, list name: %s",
 		f.MaskType.SrcName(), f.MaskName, f.ListName)
-	panic("todo")
 }
 
 func (f *ValueField) Read(c *Context) {
 	c.Putln("// reading valueparam: type: %s, mask name: %s, list name: %s",
 		f.MaskType.SrcName(), f.MaskName, f.ListName)
-	panic("todo")
 }
 
 func (f *ValueField) Write(c *Context) {
 	c.Putln("// writing valueparam: type: %s, mask name: %s, list name: %s",
 		f.MaskType.SrcName(), f.MaskName, f.ListName)
-	panic("todo")
 }
 
 // Switch field

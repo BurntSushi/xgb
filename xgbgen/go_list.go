@@ -41,7 +41,7 @@ func (f *ListField) Read(c *Context) {
 			f.SrcName(), t.SrcName(), f.LengthExpr.Reduce("v.", ""))
 		c.Putln("b += Read%sList(buf[b:], v.%s)", t.SrcName(), f.SrcName())
 	default:
-		log.Fatalf("Cannot read list field '%s' with %T type.",
+		log.Panicf("Cannot read list field '%s' with %T type.",
 			f.XmlName(), f.Type)
 	}
 }
@@ -70,7 +70,7 @@ func (f *ListField) Write(c *Context) {
 	case *Struct:
 		c.Putln("b += %sListBytes(buf[b:], v.%s)", t.SrcName(), f.SrcName())
 	default:
-		log.Fatalf("Cannot read list field '%s' with %T type.",
+		log.Panicf("Cannot read list field '%s' with %T type.",
 			f.XmlName(), f.Type)
 	}
 }

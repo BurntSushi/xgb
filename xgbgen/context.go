@@ -51,4 +51,7 @@ func (c *Context) Morph(xmlBytes []byte) {
 	for _, typ := range c.protocol.Types {
 		typ.Define(c)
 	}
+	for _, req := range c.protocol.Requests {
+		req.Define(c)
+	}
 }

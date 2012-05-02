@@ -221,7 +221,7 @@ func (e *EventCopy) XmlName() string {
 }
 
 func (e *EventCopy) Size() Size {
-	panic("Cannot take size of EventCopy type.")
+	return newExpressionSize(&Value{v: 32})
 }
 
 func (e *EventCopy) Initialize(p *Protocol) {
@@ -252,11 +252,14 @@ func (e *Error) XmlName() string {
 }
 
 func (e *Error) Size() Size {
-	panic("Cannot take size of Error type.")
+	return newExpressionSize(&Value{v: 32})
 }
 
 func (e *Error) Initialize(p *Protocol) {
 	e.srcName = TypeSrcName(p, e)
+	for _, field := range e.Fields {
+		field.Initialize(p)
+	}
 }
 
 func (e *Error) ErrConst() string {
@@ -283,7 +286,7 @@ func (e *ErrorCopy) XmlName() string {
 }
 
 func (e *ErrorCopy) Size() Size {
-	panic("Cannot take size of ErrorCopy type.")
+	return newExpressionSize(&Value{v: 32})
 }
 
 func (e *ErrorCopy) Initialize(p *Protocol) {

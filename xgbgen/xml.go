@@ -135,7 +135,7 @@ type XMLEvents []*XMLEvent
 type XMLEvent struct {
 	Name       string    `xml:"name,attr"`
 	Number     int       `xml:"number,attr"`
-	NoSequence bool      `xml:"no-sequence-number,true"`
+	NoSequence bool      `xml:"no-sequence-number,attr"`
 	Fields     XMLFields `xml:",any"`
 }
 
