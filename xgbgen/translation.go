@@ -138,7 +138,7 @@ func (x *XMLEvent) Translate() *Event {
 		Fields:     make([]Field, len(x.Fields)),
 	}
 	for i, field := range x.Fields {
-		ev.Fields[i] = field.Translate()
+		ev.Fields[i] = field.Translate(ev)
 	}
 	return ev
 }
@@ -158,7 +158,7 @@ func (x *XMLError) Translate() *Error {
 		Fields:  make([]Field, len(x.Fields)),
 	}
 	for i, field := range x.Fields {
-		err.Fields[i] = field.Translate()
+		err.Fields[i] = field.Translate(err)
 	}
 	return err
 }
@@ -177,7 +177,7 @@ func (x *XMLStruct) Translate() *Struct {
 		Fields:  make([]Field, len(x.Fields)),
 	}
 	for i, field := range x.Fields {
-		s.Fields[i] = field.Translate()
+		s.Fields[i] = field.Translate(s)
 	}
 	return s
 }
@@ -188,7 +188,7 @@ func (x *XMLUnion) Translate() *Union {
 		Fields:  make([]Field, len(x.Fields)),
 	}
 	for i, field := range x.Fields {
-		u.Fields[i] = field.Translate()
+		u.Fields[i] = field.Translate(u)
 	}
 	return u
 }
@@ -202,7 +202,7 @@ func (x *XMLRequest) Translate() *Request {
 		Reply:   x.Reply.Translate(),
 	}
 	for i, field := range x.Fields {
-		r.Fields[i] = field.Translate()
+		r.Fields[i] = field.Translate(r)
 	}
 
 	// Address bug (or legacy code) in QueryTextExtents.
@@ -230,7 +230,7 @@ func (x *XMLReply) Translate() *Reply {
 		Fields: make([]Field, len(x.Fields)),
 	}
 	for i, field := range x.Fields {
-		r.Fields[i] = field.Translate()
+		r.Fields[i] = field.Translate(r)
 	}
 	return r
 }
@@ -309,7 +309,7 @@ func (x *XMLExpression) Translate() Expression {
 	panic("unreachable")
 }
 
-func (x *XMLField) Translate() Field {
+func (x *XMLField) Translate(parent interface{}) Field {
 	switch x.XMLName.Local {
 	case "pad":
 		return &PadField{
@@ -339,6 +339,7 @@ func (x *XMLField) Translate() Field {
 		}
 	case "valueparam":
 		return &ValueField{
+			Parent: parent,
 			MaskType: newTranslation(x.ValueMaskType),
 			MaskName: x.ValueMaskName,
 			ListName: x.ValueListName,
@@ -365,7 +366,7 @@ func (x *XMLBitcase) Translate() *Bitcase {
 		Fields: make([]Field, len(x.Fields)),
 	}
 	for i, field := range x.Fields {
-		b.Fields[i] = field.Translate()
+		b.Fields[i] = field.Translate(b)
 	}
 	return b
 }

@@ -65,6 +65,10 @@ func (r *Request) ReplyName() string {
 	return fmt.Sprintf("%sReply", r.SrcName())
 }
 
+func (r *Request) ReqName() string {
+	return fmt.Sprintf("%sRequest", r.SrcName())
+}
+
 // Size for Request needs a context.
 // Namely, if this is an extension, we need to account for *four* bytes
 // of a header (extension opcode, request opcode, and the sequence number).
@@ -80,7 +84,20 @@ func (r *Request) Size(c *Context) Size {
 	}
 
 	for _, field := range r.Fields {
-		size = size.Add(field.Size())
+		switch field.(type) {
+		case *LocalField:
+			continue
+		case *SingleField:
+			// mofos!!!
+			if r.SrcName() == "ConfigureWindow" &&
+				field.SrcName() == "ValueMask" {
+
+				continue
+			}
+			size = size.Add(field.Size())
+		default:
+			size = size.Add(field.Size())
+		}
 	}
 	return size
 }

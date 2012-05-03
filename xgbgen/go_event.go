@@ -38,17 +38,17 @@ func (e *Event) Define(c *Context) {
 
 func (e *Event) Read(c *Context) {
 	c.Putln("// Event read %s", e.SrcName())
-	c.Putln("func New%s(buf []byte) %s {", e.EvType(), e.EvType())
+	c.Putln("func New%s(buf []byte) Event {", e.EvType())
 	c.Putln("v := %s{}", e.EvType())
 	c.Putln("b := 1 // don't read event number")
 	c.Putln("")
 	for i, field := range e.Fields {
 		if i == 1 && !e.NoSequence {
-			c.Putln("v.Sequence = get16(buf[b:])")
+			c.Putln("v.Sequence = Get16(buf[b:])")
 			c.Putln("b += 2")
 			c.Putln("")
 		}
-		field.Read(c)
+		field.Read(c, "v.")
 		c.Putln("")
 	}
 	c.Putln("return v")
@@ -71,7 +71,7 @@ func (e *Event) Write(c *Context) {
 			c.Putln("b += 2 // skip sequence number")
 			c.Putln("")
 		}
-		field.Write(c)
+		field.Write(c, "v.")
 		c.Putln("")
 	}
 	c.Putln("return buf")
@@ -108,15 +108,16 @@ func (e *EventCopy) Define(c *Context) {
 }
 
 func (e *EventCopy) Read(c *Context) {
-	c.Putln("func New%s(buf []byte) %s {", e.EvType(), e.EvType())
-	c.Putln("return %s(New%s(buf))", e.EvType(), e.Old.(*Event).EvType())
+	c.Putln("func New%s(buf []byte) Event {", e.EvType())
+	c.Putln("return %s(New%s(buf).(%s))",
+		e.EvType(), e.Old.(*Event).EvType(), e.Old.(*Event).EvType())
 	c.Putln("}")
 	c.Putln("")
 }
 
 func (e *EventCopy) Write(c *Context) {
 	c.Putln("func (v %s) Bytes() []byte {", e.EvType())
-	c.Putln("return %s(ev).Bytes()", e.Old.(*Event).EvType())
+	c.Putln("return %s(v).Bytes()", e.Old.(*Event).EvType())
 	c.Putln("}")
 	c.Putln("")
 }

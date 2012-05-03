@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 // Error types
 func (e *Error) Define(c *Context) {
 	c.Putln("// Error definition %s (%d)", e.SrcName(), e.Number)
@@ -20,9 +24,8 @@ func (e *Error) Define(c *Context) {
 	// error struct.
 	e.Read(c)
 
-	// Makes sure that this error type is an Error interface.
-	c.Putln("func (v %s) ImplementsError() { }", e.ErrType())
-	c.Putln("")
+	// Makes sure this error type implements the xgb.Error interface.
+	e.ImplementsError(c)
 
 	// Let's the XGB event loop read this error.
 	c.Putln("func init() {")
@@ -33,21 +36,39 @@ func (e *Error) Define(c *Context) {
 
 func (e *Error) Read(c *Context) {
 	c.Putln("// Error read %s", e.SrcName())
-	c.Putln("func New%s(buf []byte) %s {", e.ErrType(), e.ErrType())
+	c.Putln("func New%s(buf []byte) Error {", e.ErrType())
 	c.Putln("v := %s{}", e.ErrType())
 	c.Putln("v.NiceName = \"%s\"", e.SrcName())
 	c.Putln("")
 	c.Putln("b := 1 // skip error determinant")
 	c.Putln("b += 1 // don't read error number")
 	c.Putln("")
-	c.Putln("v.Sequence = get16(buf[b:])")
+	c.Putln("v.Sequence = Get16(buf[b:])")
 	c.Putln("b += 2")
 	c.Putln("")
 	for _, field := range e.Fields {
-		field.Read(c)
+		field.Read(c, "v.")
 		c.Putln("")
 	}
 	c.Putln("return v")
+	c.Putln("}")
+	c.Putln("")
+}
+
+// ImplementsError writes functions to implement the XGB Error interface.
+func (e *Error) ImplementsError(c *Context) {
+	c.Putln("func (err %s) ImplementsError() { }", e.ErrType())
+	c.Putln("")
+	c.Putln("func (err %s) SequenceId() uint16 {", e.ErrType())
+	c.Putln("return err.Sequence")
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func (err %s) BadId() Id {", e.ErrType())
+	c.Putln("return Id(err.BadValue)")
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func (err %s) Error() string {", e.ErrType())
+	FieldString(c, e.Fields, e.ErrConst())
 	c.Putln("}")
 	c.Putln("")
 }
@@ -65,9 +86,8 @@ func (e *ErrorCopy) Define(c *Context) {
 	// error struct.
 	e.Read(c)
 
-	// Makes sure that this error type is an Error interface.
-	c.Putln("func (err %s) ImplementsError() { }", e.ErrType())
-	c.Putln("")
+	// Makes sure this error type implements the xgb.Error interface.
+	e.ImplementsError(c)
 
 	// Let's the XGB know how to read this error.
 	c.Putln("func init() {")
@@ -77,8 +97,54 @@ func (e *ErrorCopy) Define(c *Context) {
 }
 
 func (e *ErrorCopy) Read(c *Context) {
-	c.Putln("func New%s(buf []byte) %s {", e.ErrType(), e.ErrType())
-	c.Putln("return %s(New%s(buf))", e.ErrType(), e.Old.(*Error).ErrType())
+	c.Putln("func New%s(buf []byte) Error {", e.ErrType())
+	c.Putln("v := %s(New%s(buf).(%s))",
+		e.ErrType(), e.Old.(*Error).ErrType(), e.Old.(*Error).ErrType())
+	c.Putln("v.NiceName = \"%s\"", e.SrcName())
+	c.Putln("return v")
 	c.Putln("}")
 	c.Putln("")
+}
+
+// ImplementsError writes functions to implement the XGB Error interface.
+func (e *ErrorCopy) ImplementsError(c *Context) {
+	c.Putln("func (err %s) ImplementsError() { }", e.ErrType())
+	c.Putln("")
+	c.Putln("func (err %s) SequenceId() uint16 {", e.ErrType())
+	c.Putln("return err.Sequence")
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func (err %s) BadId() Id {", e.ErrType())
+	c.Putln("return Id(err.BadValue)")
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func (err %s) Error() string {", e.ErrType())
+	FieldString(c, e.Old.(*Error).Fields, e.ErrConst())
+	c.Putln("}")
+	c.Putln("")
+}
+
+// FieldString works for both Error and ErrorCopy. It assembles all of the
+// fields in an error and formats them into a single string.
+func FieldString(c *Context, fields []Field, errName string) {
+	c.Putln("fieldVals := make([]string, 0, %d)", len(fields))
+	c.Putln("fieldVals = append(fieldVals, \"NiceName: \" + err.NiceName)")
+	c.Putln("fieldVals = append(fieldVals, " +
+		"sprintf(\"Sequence: %s\", err.Sequence))", "%d")
+	for _, field := range fields {
+		switch field.(type) {
+		case *PadField:
+			continue
+		default:
+			if field.SrcType() == "string" {
+				c.Putln("fieldVals = append(fieldVals, \"%s: \" + err.%s)",
+					field.SrcName(), field.SrcName())
+			} else {
+				format := fmt.Sprintf("sprintf(\"%s: %s\", err.%s)",
+					field.SrcName(), "%d", field.SrcName())
+				c.Putln("fieldVals = append(fieldVals, %s)", format)
+			}
+		}
+	}
+	c.Putln("return \"%s {\" + stringsJoin(fieldVals, \", \") + \"}\"", errName)
 }

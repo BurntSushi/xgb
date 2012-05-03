@@ -12,17 +12,17 @@ func (f *SingleField) Define(c *Context) {
 func ReadSimpleSingleField(c *Context, name string, typ Type) {
 	switch t := typ.(type) {
 	case *Resource:
-		c.Putln("%s = get32(buf[b:])", name)
+		c.Putln("%s = Id(Get32(buf[b:]))", name)
 	case *TypeDef:
 		switch t.Size().Eval() {
 		case 1:
 			c.Putln("%s = %s(buf[b])", name, t.SrcName())
 		case 2:
-			c.Putln("%s = %s(get16(buf[b:]))", name, t.SrcName())
+			c.Putln("%s = %s(Get16(buf[b:]))", name, t.SrcName())
 		case 4:
-			c.Putln("%s = %s(get32(buf[b:]))", name, t.SrcName())
+			c.Putln("%s = %s(Get32(buf[b:]))", name, t.SrcName())
 		case 8:
-			c.Putln("%s = %s(get64(buf[b:]))", name, t.SrcName())
+			c.Putln("%s = %s(Get64(buf[b:]))", name, t.SrcName())
 		}
 	case *Base:
 		// If this is a bool, stop short and do something special.
@@ -40,11 +40,11 @@ func ReadSimpleSingleField(c *Context, name string, typ Type) {
 		case 1:
 			val = fmt.Sprintf("buf[b]")
 		case 2:
-			val = fmt.Sprintf("get16(buf[b:])")
+			val = fmt.Sprintf("Get16(buf[b:])")
 		case 4:
-			val = fmt.Sprintf("get32(buf[b:])")
+			val = fmt.Sprintf("Get32(buf[b:])")
 		case 8:
-			val = fmt.Sprintf("get64(buf[b:])")
+			val = fmt.Sprintf("Get64(buf[b:])")
 		}
 
 		// We need to convert base types if they aren't uintXX or byte
@@ -61,20 +61,20 @@ func ReadSimpleSingleField(c *Context, name string, typ Type) {
 	c.Putln("b += %s", typ.Size())
 }
 
-func (f *SingleField) Read(c *Context) {
+func (f *SingleField) Read(c *Context, prefix string) {
 	switch t := f.Type.(type) {
 	case *Resource:
-		ReadSimpleSingleField(c, fmt.Sprintf("v.%s", f.SrcName()), t)
+		ReadSimpleSingleField(c, fmt.Sprintf("%s%s", prefix, f.SrcName()), t)
 	case *TypeDef:
-		ReadSimpleSingleField(c, fmt.Sprintf("v.%s", f.SrcName()), t)
+		ReadSimpleSingleField(c, fmt.Sprintf("%s%s", prefix, f.SrcName()), t)
 	case *Base:
-		ReadSimpleSingleField(c, fmt.Sprintf("v.%s", f.SrcName()), t)
+		ReadSimpleSingleField(c, fmt.Sprintf("%s%s", prefix, f.SrcName()), t)
 	case *Struct:
-		c.Putln("v.%s = %s{}", f.SrcName(), t.SrcName())
-		c.Putln("b += Read%s(buf[b:], &v.%s)", t.SrcName(), f.SrcName())
+		c.Putln("%s%s = %s{}", prefix, f.SrcName(), t.SrcName())
+		c.Putln("b += Read%s(buf[b:], &%s%s)", t.SrcName(), prefix, f.SrcName())
 	case *Union:
-		c.Putln("v.%s = %s{}", f.SrcName(), t.SrcName())
-		c.Putln("b += Read%s(buf[b:], &v.%s)", t.SrcName(), f.SrcName())
+		c.Putln("%s%s = %s{}", prefix, f.SrcName(), t.SrcName())
+		c.Putln("b += Read%s(buf[b:], &%s%s)", t.SrcName(), prefix, f.SrcName())
 	default:
 		log.Panicf("Cannot read field '%s' with %T type.", f.XmlName(), f.Type)
 	}
@@ -83,17 +83,17 @@ func (f *SingleField) Read(c *Context) {
 func WriteSimpleSingleField(c *Context, name string, typ Type) {
 	switch t := typ.(type) {
 	case *Resource:
-		c.Putln("put32(buf[b:], uint32(%s))", name)
+		c.Putln("Put32(buf[b:], uint32(%s))", name)
 	case *TypeDef:
 		switch t.Size().Eval() {
 		case 1:
 			c.Putln("buf[b] = byte(%s)", name)
 		case 2:
-			c.Putln("put16(buf[b:], uint16(%s))", name)
+			c.Putln("Put16(buf[b:], uint16(%s))", name)
 		case 4:
-			c.Putln("put32(buf[b:], uint32(%s))", name)
+			c.Putln("Put32(buf[b:], uint32(%s))", name)
 		case 8:
-			c.Putln("put64(buf[b:], uint64(%s))", name)
+			c.Putln("Put64(buf[b:], uint64(%s))", name)
 		}
 	case *Base:
 		// If this is a bool, stop short and do something special.
@@ -115,21 +115,21 @@ func WriteSimpleSingleField(c *Context, name string, typ Type) {
 			}
 		case 2:
 			if t.SrcName() != "uint16" {
-				c.Putln("put16(buf[b:], uint16(%s))", name)
+				c.Putln("Put16(buf[b:], uint16(%s))", name)
 			} else {
-				c.Putln("put16(buf[b:], %s)", name)
+				c.Putln("Put16(buf[b:], %s)", name)
 			}
 		case 4:
 			if t.SrcName() != "uint32" {
-				c.Putln("put32(buf[b:], uint32(%s))", name)
+				c.Putln("Put32(buf[b:], uint32(%s))", name)
 			} else {
-				c.Putln("put32(buf[b:], %s)", name)
+				c.Putln("Put32(buf[b:], %s)", name)
 			}
 		case 8:
 			if t.SrcName() != "uint64" {
-				c.Putln("put64(buf[b:], uint64(%s))", name)
+				c.Putln("Put64(buf[b:], uint64(%s))", name)
 			} else {
-				c.Putln("put64(buf[b:], %s)", name)
+				c.Putln("Put64(buf[b:], %s)", name)
 			}
 		}
 	default:
@@ -140,23 +140,23 @@ func WriteSimpleSingleField(c *Context, name string, typ Type) {
 	c.Putln("b += %s", typ.Size())
 }
 
-func (f *SingleField) Write(c *Context) {
+func (f *SingleField) Write(c *Context, prefix string) {
 	switch t := f.Type.(type) {
 	case *Resource:
-		ReadSimpleSingleField(c, fmt.Sprintf("v.%s", f.SrcName()), t)
+		WriteSimpleSingleField(c, fmt.Sprintf("%s%s", prefix, f.SrcName()), t)
 	case *TypeDef:
-		ReadSimpleSingleField(c, fmt.Sprintf("v.%s", f.SrcName()), t)
+		WriteSimpleSingleField(c, fmt.Sprintf("%s%s", prefix, f.SrcName()), t)
 	case *Base:
-		ReadSimpleSingleField(c, fmt.Sprintf("v.%s", f.SrcName()), t)
+		WriteSimpleSingleField(c, fmt.Sprintf("%s%s", prefix, f.SrcName()), t)
 	case *Union:
 		c.Putln("{")
-		c.Putln("unionBytes := v.%s.Bytes()", f.SrcName())
+		c.Putln("unionBytes := %s%s.Bytes()", prefix, f.SrcName())
 		c.Putln("copy(buf[b:], unionBytes)")
 		c.Putln("b += pad(len(unionBytes))")
 		c.Putln("}")
 	case *Struct:
 		c.Putln("{")
-		c.Putln("structBytes := v.%s.Bytes()", f.SrcName())
+		c.Putln("structBytes := %s%s.Bytes()", prefix, f.SrcName())
 		c.Putln("copy(buf[b:], structBytes)")
 		c.Putln("b += pad(len(structBytes))")
 		c.Putln("}")

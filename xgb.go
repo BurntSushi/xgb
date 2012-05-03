@@ -95,31 +95,20 @@ type Event interface {
 
 // newEventFuncs is a map from event numbers to functions that create
 // the corresponding event.
-var newEventFuncs map[int]func(buf []byte) Event
+var newEventFuncs = map[int]func(buf []byte) Event{}
 
-// Error contains protocol errors returned to us by the X server.
-type Error struct {
-	Detail uint8
-	Major  uint8
-	Minor  uint16
-	Cookie uint16
-	Id     Id
-}
-
-// Error2 is an interface that can contain any of the errors returned by
+// Error is an interface that can contain any of the errors returned by
 // the server. Use a type assertion switch to extract the Error structs.
-type Error2 interface {
+type Error interface {
 	ImplementsError()
+	SequenceId() uint16
+	BadId() Id
+	Error() string
 }
 
 // newErrorFuncs is a map from error numbers to functions that create
 // the corresponding error.
-var newErrorFuncs map[int]func(buf []byte) Error2
-
-func (e *Error) Error() string {
-	return fmt.Sprintf("Bad%s (major=%d minor=%d cookie=%d id=0x%x)",
-		errorNames[e.Detail], e.Major, e.Minor, e.Cookie, e.Id)
-}
+var newErrorFuncs = map[int]func(buf []byte) Error{}
 
 // NewID generates a new unused ID for use with requests like CreateWindow.
 func (c *Conn) NewId() Id {
@@ -136,7 +125,7 @@ func (c *Conn) NewId() Id {
 // the extensions map.
 func (c *Conn) RegisterExtension(name string) error {
 	nameUpper := strings.ToUpper(name)
-	reply, err := c.QueryExtension(nameUpper)
+	reply, err := c.QueryExtension(uint16(len(nameUpper)), nameUpper)
 
 	switch {
 	case err != nil:
@@ -253,25 +242,26 @@ func (c *Conn) newReadChannels() {
 
 			switch buf[0] {
 			case 0:
-				err := &Error{
-					Detail: buf[1],
-					Cookie: uint16(get16(buf[2:])),
-					Id:     Id(get32(buf[4:])),
-					Minor:  get16(buf[8:]),
-					Major:  buf[10],
-				}
-				if cookie, ok := c.cookies[err.Cookie]; ok {
+				// err := &Error{ 
+					// Detail: buf[1], 
+					// Cookie: uint16(get16(buf[2:])), 
+					// Id:     Id(get32(buf[4:])), 
+					// Minor:  get16(buf[8:]), 
+					// Major:  buf[10], 
+				// } 
+				err := newErrorFuncs[int(buf[1])](buf)
+				if cookie, ok := c.cookies[err.SequenceId()]; ok {
 					cookie.errorChan <- err
 				} else {
 					fmt.Fprintf(os.Stderr, "x protocol error: %s\n", err)
 				}
 			case 1:
-				seq := uint16(get16(buf[2:]))
+				seq := uint16(Get16(buf[2:]))
 				if _, ok := c.cookies[seq]; !ok {
 					continue
 				}
 
-				size := get32(buf[4:])
+				size := Get32(buf[4:])
 				if size > 0 {
 					bigbuf := make([]byte, 32+size*4, 32+size*4)
 					copy(bigbuf[0:32], buf)
@@ -317,7 +307,8 @@ func (c *Conn) waitForReply(cookie *Cookie) ([]byte, error) {
 func (c *Conn) WaitForEvent() (Event, error) {
 	for {
 		if reply := c.events.dequeue(c); reply != nil {
-			return parseEvent(reply)
+			evCode := reply[0] & 0x7f
+			return newEventFuncs[int(evCode)](reply), nil
 		}
 		if !<-c.eventChan {
 			return nil, errors.New("Event channel has been closed.")
@@ -331,7 +322,8 @@ func (c *Conn) WaitForEvent() (Event, error) {
 // Only use this function to empty the queue without blocking.
 func (c *Conn) PollForEvent() (Event, error) {
 	if reply := c.events.dequeue(c); reply != nil {
-		return parseEvent(reply)
+		evCode := reply[0] & 0x7f
+		return newEventFuncs[int(evCode)](reply), nil
 	}
 	return nil, nil
 }
@@ -369,11 +361,11 @@ func Dial(display string) (*Conn, error) {
 	buf := make([]byte, 12+pad(len(authName))+pad(len(authData)))
 	buf[0] = 0x6c
 	buf[1] = 0
-	put16(buf[2:], 11)
-	put16(buf[4:], 0)
-	put16(buf[6:], uint16(len(authName)))
-	put16(buf[8:], uint16(len(authData)))
-	put16(buf[10:], 0)
+	Put16(buf[2:], 11)
+	Put16(buf[4:], 0)
+	Put16(buf[6:], uint16(len(authName)))
+	Put16(buf[8:], uint16(len(authData)))
+	Put16(buf[10:], 0)
 	copy(buf[12:], []byte(authName))
 	copy(buf[12+pad(len(authName)):], authData)
 	if _, err = c.conn.Write(buf); err != nil {
@@ -386,9 +378,9 @@ func Dial(display string) (*Conn, error) {
 	}
 	code := head[0]
 	reasonLen := head[1]
-	major := get16(head[2:])
-	minor := get16(head[4:])
-	dataLen := get16(head[6:])
+	major := Get16(head[2:])
+	minor := Get16(head[4:])
+	dataLen := Get16(head[6:])
 
 	if major != 11 || minor != 0 {
 		return nil, errors.New(fmt.Sprintf("x protocol version mismatch: %d.%d", major, minor))
@@ -405,7 +397,7 @@ func Dial(display string) (*Conn, error) {
 		return nil, errors.New(fmt.Sprintf("x protocol authentication refused: %s", string(reason)))
 	}
 
-	getSetupInfo(buf, &c.Setup)
+	ReadSetupInfo(buf, &c.Setup)
 
 	if c.defaultScreen >= len(c.Setup.Roots) {
 		c.defaultScreen = 0

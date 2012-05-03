@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 // xgbResourceIdName is the name of the type used for all resource identifiers.
 // As of right now, it needs to be declared somewhere manually.
 var xgbGenResourceIdName = "Id"
@@ -94,26 +98,28 @@ func (f *PadField) Define(c *Context) {
 	c.Putln("// padding: %d bytes", f.Bytes)
 }
 
-func (f *PadField) Read(c *Context) {
+func (f *PadField) Read(c *Context, prefix string) {
 	c.Putln("b += %s // padding", f.Size())
 }
 
-func (f *PadField) Write(c *Context) {
+func (f *PadField) Write(c *Context, prefix string) {
 	c.Putln("b += %s // padding", f.Size())
 }
 
 // Local fields
 func (f *LocalField) Define(c *Context) {
 	c.Putln("// local field: %s %s", f.SrcName(), f.Type.SrcName())
+	panic("unreachable")
 }
 
-func (f *LocalField) Read(c *Context) {
+func (f *LocalField) Read(c *Context, prefix string) {
 	c.Putln("// reading local field: %s (%s) :: %s",
 		f.SrcName(), f.Size(), f.Type.SrcName())
+	panic("unreachable")
 }
 
-func (f *LocalField) Write(c *Context) {
-	c.Putln("// writing local field: %s (%s) :: %s",
+func (f *LocalField) Write(c *Context, prefix string) {
+	c.Putln("// skip writing local field: %s (%s) :: %s",
 		f.SrcName(), f.Size(), f.Type.SrcName())
 }
 
@@ -121,32 +127,49 @@ func (f *LocalField) Write(c *Context) {
 func (f *ExprField) Define(c *Context) {
 	c.Putln("// expression field: %s %s (%s)",
 		f.SrcName(), f.Type.SrcName(), f.Expr)
+	panic("unreachable")
 }
 
-func (f *ExprField) Read(c *Context) {
+func (f *ExprField) Read(c *Context, prefix string) {
 	c.Putln("// reading expression field: %s (%s) (%s) :: %s",
 		f.SrcName(), f.Size(), f.Expr, f.Type.SrcName())
+	panic("unreachable")
 }
 
-func (f *ExprField) Write(c *Context) {
-	c.Putln("// writing expression field: %s (%s) (%s) :: %s",
-		f.SrcName(), f.Size(), f.Expr, f.Type.SrcName())
+func (f *ExprField) Write(c *Context, prefix string) {
+	// Special case for bools, grrr.
+	if f.Type.SrcName() == "bool" {
+		c.Putln("buf[b] = byte(%s)", f.Expr.Reduce(prefix))
+		c.Putln("b += 1")
+	} else {
+		WriteSimpleSingleField(c, f.Expr.Reduce(prefix), f.Type)
+	}
 }
 
 // Value field
 func (f *ValueField) Define(c *Context) {
 	c.Putln("// valueparam field: type: %s, mask name: %s, list name: %s",
 		f.MaskType.SrcName(), f.MaskName, f.ListName)
+	panic("todo")
 }
 
-func (f *ValueField) Read(c *Context) {
+func (f *ValueField) Read(c *Context, prefix string) {
 	c.Putln("// reading valueparam: type: %s, mask name: %s, list name: %s",
 		f.MaskType.SrcName(), f.MaskName, f.ListName)
+	panic("todo")
 }
 
-func (f *ValueField) Write(c *Context) {
-	c.Putln("// writing valueparam: type: %s, mask name: %s, list name: %s",
-		f.MaskType.SrcName(), f.MaskName, f.ListName)
+func (f *ValueField) Write(c *Context, prefix string) {
+	// big time mofos
+	if rq, ok := f.Parent.(*Request); !ok || rq.SrcName() != "ConfigureWindow" {
+		WriteSimpleSingleField(c,
+			fmt.Sprintf("%s%s", prefix, f.MaskName), f.MaskType)
+	}
+	c.Putln("for i := 0; i < %s; i++ {", f.ListLength().Reduce(prefix))
+	c.Putln("Put32(buf[b:], %s%s[i])", prefix, f.ListName)
+	c.Putln("b += 4")
+	c.Putln("}")
+	c.Putln("b = pad(b)")
 }
 
 // Switch field
@@ -155,12 +178,12 @@ func (f *SwitchField) Define(c *Context) {
 	panic("todo")
 }
 
-func (f *SwitchField) Read(c *Context) {
+func (f *SwitchField) Read(c *Context, prefix string) {
 	c.Putln("// reading switch field: %s (%s)", f.Name, f.Expr)
 	panic("todo")
 }
 
-func (f *SwitchField) Write(c *Context) {
+func (f *SwitchField) Write(c *Context, prefix string) {
 	c.Putln("// writing switch field: %s (%s)", f.Name, f.Expr)
 	panic("todo")
 }

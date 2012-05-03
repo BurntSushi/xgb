@@ -8,7 +8,7 @@ import (
 type Expression interface {
 	Concrete() bool
 	Eval() uint
-	Reduce(prefix, fun string) string
+	Reduce(prefix string) string
 	String() string
 	Initialize(p *Protocol)
 }
@@ -29,12 +29,12 @@ func (e *Function) Eval() uint {
 	panic("unreachable")
 }
 
-func (e *Function) Reduce(prefix, fun string) string {
-	return fmt.Sprintf("%s(%s)", e.Name, e.Expr.Reduce(prefix, fun))
+func (e *Function) Reduce(prefix string) string {
+	return fmt.Sprintf("%s(%s)", e.Name, e.Expr.Reduce(prefix))
 }
 
 func (e *Function) String() string {
-	return e.Reduce("", "")
+	return e.Reduce("")
 }
 
 func (e *Function) Initialize(p *Protocol) {
@@ -89,16 +89,34 @@ func (e *BinaryOp) Eval() uint {
 	panic("unreachable")
 }
 
-func (e *BinaryOp) Reduce(prefix, fun string) string {
+func (e *BinaryOp) Reduce(prefix string) string {
 	if e.Concrete() {
 		return fmt.Sprintf("%d", e.Eval())
 	}
+
+	// An incredibly dirty hack to make sure any time we perform an operation
+	// on a field, we're dealing with ints...
+	expr1, expr2 := e.Expr1, e.Expr2
+	switch expr1.(type) {
+	case *FieldRef:
+		expr1 = &Function{
+			Name: "int",
+			Expr: expr1,
+		}
+	}
+	switch expr2.(type) {
+	case *FieldRef:
+		expr2 = &Function{
+			Name: "int",
+			Expr: expr2,
+		}
+	}
 	return fmt.Sprintf("(%s %s %s)",
-		e.Expr1.Reduce(prefix, fun), e.Op, e.Expr2.Reduce(prefix, fun))
+		expr1.Reduce(prefix), e.Op, expr2.Reduce(prefix))
 }
 
 func (e *BinaryOp) String() string {
-	return e.Reduce("", "")
+	return e.Reduce("")
 }
 
 func (e *BinaryOp) Initialize(p *Protocol) {
@@ -125,15 +143,15 @@ func (e *UnaryOp) Eval() uint {
 	panic("unreachable")
 }
 
-func (e *UnaryOp) Reduce(prefix, fun string) string {
+func (e *UnaryOp) Reduce(prefix string) string {
 	if e.Concrete() {
 		return fmt.Sprintf("%d", e.Eval())
 	}
-	return fmt.Sprintf("(%s (%s))", e.Op, e.Expr.Reduce(prefix, fun))
+	return fmt.Sprintf("(%s (%s))", e.Op, e.Expr.Reduce(prefix))
 }
 
 func (e *UnaryOp) String() string {
-	return e.Reduce("", "")
+	return e.Reduce("")
 }
 
 func (e *UnaryOp) Initialize(p *Protocol) {
@@ -152,15 +170,15 @@ func (e *PopCount) Eval() uint {
 	return popCount(e.Expr.Eval())
 }
 
-func (e *PopCount) Reduce(prefix, fun string) string {
+func (e *PopCount) Reduce(prefix string) string {
 	if e.Concrete() {
 		return fmt.Sprintf("%d", e.Eval())
 	}
-	return fmt.Sprintf("popCount(%s)", e.Expr.Reduce(prefix, fun))
+	return fmt.Sprintf("popCount(%s)", e.Expr.Reduce(prefix))
 }
 
 func (e *PopCount) String() string {
-	return e.Reduce("", "")
+	return e.Reduce("")
 }
 
 func (e *PopCount) Initialize(p *Protocol) {
@@ -179,12 +197,12 @@ func (e *Value) Eval() uint {
 	return e.v
 }
 
-func (e *Value) Reduce(prefix, fun string) string {
+func (e *Value) Reduce(prefix string) string {
 	return fmt.Sprintf("%d", e.v)
 }
 
 func (e *Value) String() string {
-	return e.Reduce("", "")
+	return e.Reduce("")
 }
 
 func (e *Value) Initialize(p *Protocol) {}
@@ -201,12 +219,12 @@ func (e *Bit) Eval() uint {
 	return 1 << e.b
 }
 
-func (e *Bit) Reduce(prefix, fun string) string {
+func (e *Bit) Reduce(prefix string) string {
 	return fmt.Sprintf("%d", e.Eval())
 }
 
 func (e *Bit) String() string {
-	return e.Reduce("", "")
+	return e.Reduce("")
 }
 
 func (e *Bit) Initialize(p *Protocol) {}
@@ -224,19 +242,16 @@ func (e *FieldRef) Eval() uint {
 	panic("unreachable")
 }
 
-func (e *FieldRef) Reduce(prefix, fun string) string {
+func (e *FieldRef) Reduce(prefix string) string {
 	val := e.Name
 	if len(prefix) > 0 {
 		val = fmt.Sprintf("%s%s", prefix, val)
-	}
-	if len(fun) > 0 {
-		val = fmt.Sprintf("%s(%s)", fun, val)
 	}
 	return val
 }
 
 func (e *FieldRef) String() string {
-	return e.Reduce("", "")
+	return e.Reduce("")
 }
 
 func (e *FieldRef) Initialize(p *Protocol) {
@@ -257,16 +272,12 @@ func (e *EnumRef) Eval() uint {
 	panic("unreachable")
 }
 
-func (e *EnumRef) Reduce(prefix, fun string) string {
-	val := fmt.Sprintf("%s%s", e.EnumKind, e.EnumItem)
-	if len(fun) > 0 {
-		val = fmt.Sprintf("%s(%s)", fun, val)
-	}
-	return val
+func (e *EnumRef) Reduce(prefix string) string {
+	return fmt.Sprintf("%s%s", e.EnumKind, e.EnumItem)
 }
 
 func (e *EnumRef) String() string {
-	return e.Reduce("", "")
+	return e.Reduce("")
 }
 
 func (e *EnumRef) Initialize(p *Protocol) {
@@ -287,7 +298,7 @@ func (e *SumOf) Eval() uint {
 	panic("unreachable")
 }
 
-func (e *SumOf) Reduce(prefix, fun string) string {
+func (e *SumOf) Reduce(prefix string) string {
 	if len(prefix) > 0 {
 		return fmt.Sprintf("sum(%s%s)", prefix, e.Name)
 	}
@@ -295,7 +306,7 @@ func (e *SumOf) Reduce(prefix, fun string) string {
 }
 
 func (e *SumOf) String() string {
-	return e.Reduce("", "")
+	return e.Reduce("")
 }
 
 func (e *SumOf) Initialize(p *Protocol) {

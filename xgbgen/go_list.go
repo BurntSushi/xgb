@@ -3,74 +3,107 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 )
 
 // List fields
 func (f *ListField) Define(c *Context) {
-	c.Putln("%s []%s // size: %s",
-		f.SrcName(), f.Type.SrcName(), f.Size())
+	c.Putln("%s %s // size: %s",
+		f.SrcName(), f.SrcType(), f.Size())
 }
 
-func (f *ListField) Read(c *Context) {
+func (f *ListField) Read(c *Context, prefix string) {
 	switch t := f.Type.(type) {
 	case *Resource:
-		length := f.LengthExpr.Reduce("v.", "")
-		c.Putln("v.%s = make([]Id, %s)", f.SrcName(), length)
-		c.Putln("for i := 0; i < %s; i++ {", length)
-		ReadSimpleSingleField(c, fmt.Sprintf("v.%s[i]", f.SrcName()), t)
+		length := f.LengthExpr.Reduce(prefix)
+		c.Putln("%s%s = make([]Id, %s)", prefix, f.SrcName(), length)
+		c.Putln("for i := 0; i < int(%s); i++ {", length)
+		ReadSimpleSingleField(c, fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
 		c.Putln("}")
 		c.Putln("b = pad(b)")
 	case *Base:
-		length := f.LengthExpr.Reduce("v.", "")
-		c.Putln("v.%s = make([]%s, %s)", f.SrcName(), t.SrcName(), length)
-		if t.SrcName() == "byte" {
-			c.Putln("copy(v.%s[:%s], buf[b:])", f.SrcName(), length)
-			c.Putln("b += pad(%s)", length)
+		length := f.LengthExpr.Reduce(prefix)
+		if strings.ToLower(t.XmlName()) == "char" {
+			c.Putln("{")
+			c.Putln("byteString := make([]%s, %s)", t.SrcName(), length)
+			c.Putln("copy(byteString[:%s], buf[b:])", length)
+			c.Putln("%s%s = string(byteString)", prefix, f.SrcName())
+			c.Putln("b += pad(int(%s))", length)
+			c.Putln("}")
+		} else if t.SrcName() == "byte" {
+			c.Putln("%s%s = make([]%s, %s)",
+				prefix, f.SrcName(), t.SrcName(), length)
+			c.Putln("copy(%s%s[:%s], buf[b:])", prefix, f.SrcName(), length)
+			c.Putln("b += pad(int(%s))", length)
 		} else {
-			c.Putln("for i := 0; i < %s; i++ {", length)
-			ReadSimpleSingleField(c, fmt.Sprintf("v.%s[i]", f.SrcName()), t)
+			c.Putln("%s%s = make([]%s, %s)",
+				prefix, f.SrcName(), t.SrcName(), length)
+			c.Putln("for i := 0; i < int(%s); i++ {", length)
+			ReadSimpleSingleField(c,
+				fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
 			c.Putln("}")
 			c.Putln("b = pad(b)")
 		}
+	case *TypeDef:
+		length := f.LengthExpr.Reduce(prefix)
+		c.Putln("%s%s = make([]%s, %s)",
+			prefix, f.SrcName(), t.SrcName(), length)
+		c.Putln("for i := 0; i < int(%s); i++ {", length)
+		ReadSimpleSingleField(c, fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
+		c.Putln("}")
+		c.Putln("b = pad(b)")
 	case *Union:
-		c.Putln("v.%s = make([]%s, %s)",
-			f.SrcName(), t.SrcName(), f.LengthExpr.Reduce("v.", ""))
-		c.Putln("b += Read%sList(buf[b:], v.%s)", t.SrcName(), f.SrcName())
+		c.Putln("%s%s = make([]%s, %s)",
+			prefix, f.SrcName(), t.SrcName(), f.LengthExpr.Reduce(prefix))
+		c.Putln("b += Read%sList(buf[b:], %s%s)",
+			t.SrcName(), prefix, f.SrcName())
 	case *Struct:
-		c.Putln("v.%s = make([]%s, %s)",
-			f.SrcName(), t.SrcName(), f.LengthExpr.Reduce("v.", ""))
-		c.Putln("b += Read%sList(buf[b:], v.%s)", t.SrcName(), f.SrcName())
+		c.Putln("%s%s = make([]%s, %s)",
+			prefix, f.SrcName(), t.SrcName(), f.LengthExpr.Reduce(prefix))
+		c.Putln("b += Read%sList(buf[b:], %s%s)",
+			t.SrcName(), prefix, f.SrcName())
 	default:
 		log.Panicf("Cannot read list field '%s' with %T type.",
 			f.XmlName(), f.Type)
 	}
 }
 
-func (f *ListField) Write(c *Context) {
+func (f *ListField) Write(c *Context, prefix string) {
 	switch t := f.Type.(type) {
 	case *Resource:
-		length := f.LengthExpr.Reduce("v.", "")
-		c.Putln("for i := 0; i < %s; i++", length)
-		WriteSimpleSingleField(c, fmt.Sprintf("v.%s[i]", f.SrcName()), t)
+		length := f.Length().Reduce(prefix)
+		c.Putln("for i := 0; i < int(%s); i++ {", length)
+		WriteSimpleSingleField(c,
+			fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
 		c.Putln("}")
 		c.Putln("b = pad(b)")
 	case *Base:
-		length := f.LengthExpr.Reduce("v.", "")
+		length := f.Length().Reduce(prefix)
 		if t.SrcName() == "byte" {
-			c.Putln("copy(buf[b:], v.%s[:%s])", f.SrcName(), length)
-			c.Putln("b += pad(%s)", length)
+			c.Putln("copy(buf[b:], %s%s[:%s])", prefix, f.SrcName(), length)
+			c.Putln("b += pad(int(%s))", length)
 		} else {
-			c.Putln("for i := 0; i < %s; i++ {", length)
-			WriteSimpleSingleField(c, fmt.Sprintf("v.%s[i]", f.SrcName()), t)
+			c.Putln("for i := 0; i < int(%s); i++ {", length)
+			WriteSimpleSingleField(c,
+				fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
 			c.Putln("}")
 			c.Putln("b = pad(b)")
 		}
+	case *TypeDef:
+		length := f.Length().Reduce(prefix)
+		c.Putln("for i := 0; i < int(%s); i++ {", length)
+		WriteSimpleSingleField(c,
+			fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
+		c.Putln("}")
+		c.Putln("b = pad(b)")
 	case *Union:
-		c.Putln("b += %sListBytes(buf[b:], v.%s)", t.SrcName(), f.SrcName())
+		c.Putln("b += %sListBytes(buf[b:], %s%s)",
+			t.SrcName(), prefix, f.SrcName())
 	case *Struct:
-		c.Putln("b += %sListBytes(buf[b:], v.%s)", t.SrcName(), f.SrcName())
+		c.Putln("b += %sListBytes(buf[b:], %s%s)",
+			t.SrcName(), prefix, f.SrcName())
 	default:
-		log.Panicf("Cannot read list field '%s' with %T type.",
+		log.Panicf("Cannot write list field '%s' with %T type.",
 			f.XmlName(), f.Type)
 	}
 }

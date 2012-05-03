@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 )
 
 type Field interface {
@@ -13,8 +14,8 @@ type Field interface {
 	Size() Size
 
 	Define(c *Context)
-	Read(c *Context)
-	Write(c *Context)
+	Read(c *Context, prefix string)
+	Write(c *Context, prefix string)
 }
 
 func (pad *PadField) Initialize(p *Protocol) {}
@@ -32,7 +33,7 @@ func (p *PadField) XmlName() string {
 }
 
 func (f *PadField) SrcType() string {
-	panic("it is illegal to call SrcType on a SwitchField field")
+	panic("it is illegal to call SrcType on a PadField field")
 }
 
 func (p *PadField) Size() Size {
@@ -82,22 +83,48 @@ func (f *ListField) XmlName() string {
 }
 
 func (f *ListField) SrcType() string {
+	if strings.ToLower(f.Type.XmlName()) == "char" {
+		return fmt.Sprintf("string")
+	}
 	return fmt.Sprintf("[]%s", f.Type.SrcName())
+}
+
+func (f *ListField) Length() Size {
+	if f.LengthExpr == nil {
+		return newExpressionSize(&Function{
+			Name: "len",
+			Expr: &FieldRef{
+				Name: f.SrcName(),
+			},
+		})
+	}
+	return newExpressionSize(f.LengthExpr)
 }
 
 func (f *ListField) Size() Size {
 	simpleLen := &Function{
 		Name: "pad",
-		Expr: newBinaryOp("*", f.LengthExpr, f.Type.Size().Expression),
+		Expr: newBinaryOp("*", f.Length().Expression, f.Type.Size().Expression),
 	}
 
-	switch f.Type.(type) {
+	switch field := f.Type.(type) {
 	case *Struct:
-		sizeFun := &Function{
-			Name: fmt.Sprintf("%sListSize", f.Type.SrcName()),
-			Expr: &FieldRef{Name: f.SrcName()},
+		if field.HasList() {
+			sizeFun := &Function{
+				Name: fmt.Sprintf("%sListSize", f.Type.SrcName()),
+				Expr: &FieldRef{Name: f.SrcName()},
+			}
+			return newExpressionSize(sizeFun)
+		} else {
+			return newExpressionSize(simpleLen)
 		}
-		return newExpressionSize(sizeFun)
+	case *Union:
+		return newExpressionSize(simpleLen)
+		// sizeFun := &Function{ 
+			// Name: fmt.Sprintf("%sListSize", f.Type.SrcName()), 
+			// Expr: &FieldRef{Name: f.SrcName()}, 
+		// } 
+		// return newExpressionSize(sizeFun) 
 	case *Base:
 		return newExpressionSize(simpleLen)
 	case *Resource:
@@ -152,6 +179,7 @@ func (f *ExprField) Initialize(p *Protocol) {
 }
 
 type ValueField struct {
+	Parent interface{}
 	MaskType Type
 	MaskName string
 	ListName string
@@ -170,7 +198,34 @@ func (f *ValueField) SrcType() string {
 }
 
 func (f *ValueField) Size() Size {
-	return f.MaskType.Size()
+	maskSize := f.MaskType.Size()
+	listSize := newExpressionSize(&Function{
+		Name: "pad",
+		Expr: &BinaryOp{
+			Op: "*",
+			Expr1: &Value{v: 4},
+			Expr2: &PopCount{
+				Expr: &Function{
+					Name: "int",
+					Expr: &FieldRef{
+						Name: f.MaskName,
+					},
+				},
+			},
+		},
+	})
+	return maskSize.Add(listSize)
+}
+
+func (f *ValueField) ListLength() Size {
+	return newExpressionSize(&PopCount{
+		Expr: &Function{
+			Name: "int",
+			Expr: &FieldRef{
+				Name: f.MaskName,
+			},
+		},
+	})
 }
 
 func (f *ValueField) Initialize(p *Protocol) {

@@ -334,6 +334,18 @@ func (s *Struct) Initialize(p *Protocol) {
 	}
 }
 
+// HasList returns whether there is a field in this struct that is a list.
+// When true, a more involved calculation is necessary to compute this struct's
+// size.
+func (s *Struct) HasList() bool {
+	for _, field := range s.Fields {
+		if _, ok := field.(*ListField); ok {
+			return true
+		}
+	}
+	return false
+}
+
 type Union struct {
 	srcName string
 	xmlName string
