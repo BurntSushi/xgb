@@ -12,7 +12,6 @@ import (
 	"io"
 	"net"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -23,11 +22,9 @@ const (
 )
 
 // A Conn represents a connection to an X server.
-// Only one goroutine should use a Conn's methods at a time.
 type Conn struct {
 	host          string
 	conn          net.Conn
-	nextId        Id
 	nextCookie    uint16
 	cookies       map[uint16]*Cookie
 	events        queue
@@ -44,11 +41,57 @@ type Conn struct {
 	eventChan         chan bool
 	errorChan         chan bool
 
+	xidChan chan xid
 	newIdLock   sync.Mutex
 	writeLock   sync.Mutex
 	dequeueLock sync.Mutex
 	cookieLock  sync.Mutex
 	extLock     sync.Mutex
+}
+
+// NewConn creates a new connection instance. It initializes locks, data
+// structures, and performs the initial handshake. (The code for the handshake
+// has been relegated to conn.go.)
+func NewConn() (*Conn, error) {
+	return NewConnDisplay("")
+}
+
+// NewConnDisplay is just like NewConn, but allows a specific DISPLAY
+// string to be used.
+// If 'display' is empty it will be taken from os.Getenv("DISPLAY").
+//
+// Examples:
+//	NewConn(":1") -> net.Dial("unix", "", "/tmp/.X11-unix/X1")
+//	NewConn("/tmp/launch-123/:0") -> net.Dial("unix", "", "/tmp/launch-123/:0")
+//	NewConn("hostname:2.1") -> net.Dial("tcp", "", "hostname:6002")
+//	NewConn("tcp/hostname:1.0") -> net.Dial("tcp", "", "hostname:6001")
+func NewConnDisplay(display string) (*Conn, error) {
+	conn := &Conn{}
+
+	// First connect. This reads authority, checks DISPLAY environment
+	// variable, and loads the initial Setup info.
+	err := conn.connect(display)
+	if err != nil {
+		return nil, err
+	}
+
+	conn.xidChan = make(chan xid, 5)
+	go conn.generateXids()
+
+	conn.nextCookie = 1
+	conn.cookies = make(map[uint16]*Cookie)
+	conn.events = queue{make([][]byte, 100), 0, 0}
+	conn.extensions = make(map[string]byte)
+
+	conn.newReadChannels()
+	conn.newRequestChannels()
+
+	return conn, nil
+}
+
+// Close closes the connection to the X server.
+func (c *Conn) Close() {
+	c.conn.Close()
 }
 
 // Id is used for all X identifiers, such as windows, pixmaps, and GCs.
@@ -111,14 +154,46 @@ type Error interface {
 var newErrorFuncs = map[int]func(buf []byte) Error{}
 
 // NewID generates a new unused ID for use with requests like CreateWindow.
-func (c *Conn) NewId() Id {
-	c.newIdLock.Lock()
-	defer c.newIdLock.Unlock()
+// If no new ids can be generated, the id returned is 0 and error is non-nil.
+func (c *Conn) NewId() (Id, error) {
+	xid := <-c.xidChan
+	if xid.err != nil {
+		return 0, xid.err
+	}
+	return xid.id, nil
+}
 
-	id := c.nextId
-	// TODO: handle ID overflow
-	c.nextId++
-	return id
+// xid encapsulates a resource identifier being sent over the Conn.xidChan
+// channel. If no new resource id can be generated, id is set to -1 and a
+// non-nil error is set in xid.err.
+type xid struct {
+	id Id
+	err error
+}
+
+// generateXids sends new Ids down the channel for NewId to use.
+// This needs to be updated to use the XC Misc extension once we run out of
+// new ids.
+func (conn *Conn) generateXids() {
+	inc := conn.Setup.ResourceIdMask & -conn.Setup.ResourceIdMask
+	max := conn.Setup.ResourceIdMask
+	last := uint32(0)
+	for {
+		// TODO: Use the XC Misc extension to look for released ids.
+		if last > 0 && last >= max - inc + 1 {
+			conn.xidChan <- xid{
+				id: Id(0),
+				err: errors.New("There are no more available resource" +
+					"identifiers."),
+			}
+		}
+
+		last += inc
+		conn.xidChan <- xid{
+			id: Id(last | conn.Setup.ResourceIdBase),
+			err: nil,
+		}
+	}
 }
 
 // RegisterExtension adds the respective extension's major op code to
@@ -328,165 +403,3 @@ func (c *Conn) PollForEvent() (Event, error) {
 	return nil, nil
 }
 
-// Dial connects to the X server given in the 'display' string.
-// If 'display' is empty it will be taken from os.Getenv("DISPLAY").
-//
-// Examples:
-//	Dial(":1")                 // connect to net.Dial("unix", "", "/tmp/.X11-unix/X1")
-//	Dial("/tmp/launch-123/:0") // connect to net.Dial("unix", "", "/tmp/launch-123/:0")
-//	Dial("hostname:2.1")       // connect to net.Dial("tcp", "", "hostname:6002")
-//	Dial("tcp/hostname:1.0")   // connect to net.Dial("tcp", "", "hostname:6001")
-func Dial(display string) (*Conn, error) {
-	c, err := connect(display)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get authentication data
-	authName, authData, err := readAuthority(c.host, c.display)
-	noauth := false
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not get authority info: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Trying connection without authority info...\n")
-		authName = ""
-		authData = []byte{}
-		noauth = true
-	}
-
-	// Assume that the authentication protocol is "MIT-MAGIC-COOKIE-1".
-	if !noauth && (authName != "MIT-MAGIC-COOKIE-1" || len(authData) != 16) {
-		return nil, errors.New("unsupported auth protocol " + authName)
-	}
-
-	buf := make([]byte, 12+pad(len(authName))+pad(len(authData)))
-	buf[0] = 0x6c
-	buf[1] = 0
-	Put16(buf[2:], 11)
-	Put16(buf[4:], 0)
-	Put16(buf[6:], uint16(len(authName)))
-	Put16(buf[8:], uint16(len(authData)))
-	Put16(buf[10:], 0)
-	copy(buf[12:], []byte(authName))
-	copy(buf[12+pad(len(authName)):], authData)
-	if _, err = c.conn.Write(buf); err != nil {
-		return nil, err
-	}
-
-	head := make([]byte, 8)
-	if _, err = io.ReadFull(c.conn, head[0:8]); err != nil {
-		return nil, err
-	}
-	code := head[0]
-	reasonLen := head[1]
-	major := Get16(head[2:])
-	minor := Get16(head[4:])
-	dataLen := Get16(head[6:])
-
-	if major != 11 || minor != 0 {
-		return nil, errors.New(fmt.Sprintf("x protocol version mismatch: %d.%d", major, minor))
-	}
-
-	buf = make([]byte, int(dataLen)*4+8, int(dataLen)*4+8)
-	copy(buf, head)
-	if _, err = io.ReadFull(c.conn, buf[8:]); err != nil {
-		return nil, err
-	}
-
-	if code == 0 {
-		reason := buf[8 : 8+reasonLen]
-		return nil, errors.New(fmt.Sprintf("x protocol authentication refused: %s", string(reason)))
-	}
-
-	ReadSetupInfo(buf, &c.Setup)
-
-	if c.defaultScreen >= len(c.Setup.Roots) {
-		c.defaultScreen = 0
-	}
-
-	c.nextId = Id(c.Setup.ResourceIdBase)
-	c.nextCookie = 1
-	c.cookies = make(map[uint16]*Cookie)
-	c.events = queue{make([][]byte, 100), 0, 0}
-	c.extensions = make(map[string]byte)
-
-	c.newReadChannels()
-	c.newRequestChannels()
-	return c, nil
-}
-
-// Close closes the connection to the X server.
-func (c *Conn) Close() { c.conn.Close() }
-
-func connect(display string) (*Conn, error) {
-	if len(display) == 0 {
-		display = os.Getenv("DISPLAY")
-	}
-
-	display0 := display
-	if len(display) == 0 {
-		return nil, errors.New("empty display string")
-	}
-
-	colonIdx := strings.LastIndex(display, ":")
-	if colonIdx < 0 {
-		return nil, errors.New("bad display string: " + display0)
-	}
-
-	var protocol, socket string
-	c := new(Conn)
-
-	if display[0] == '/' {
-		socket = display[0:colonIdx]
-	} else {
-		slashIdx := strings.LastIndex(display, "/")
-		if slashIdx >= 0 {
-			protocol = display[0:slashIdx]
-			c.host = display[slashIdx+1 : colonIdx]
-		} else {
-			c.host = display[0:colonIdx]
-		}
-	}
-
-	display = display[colonIdx+1 : len(display)]
-	if len(display) == 0 {
-		return nil, errors.New("bad display string: " + display0)
-	}
-
-	var scr string
-	dotIdx := strings.LastIndex(display, ".")
-	if dotIdx < 0 {
-		c.display = display[0:]
-	} else {
-		c.display = display[0:dotIdx]
-		scr = display[dotIdx+1:]
-	}
-
-	dispnum, err := strconv.Atoi(c.display)
-	if err != nil || dispnum < 0 {
-		return nil, errors.New("bad display string: " + display0)
-	}
-
-	if len(scr) != 0 {
-		c.defaultScreen, err = strconv.Atoi(scr)
-		if err != nil {
-			return nil, errors.New("bad display string: " + display0)
-		}
-	}
-
-	// Connect to server
-	if len(socket) != 0 {
-		c.conn, err = net.Dial("unix", socket+":"+c.display)
-	} else if len(c.host) != 0 {
-		if protocol == "" {
-			protocol = "tcp"
-		}
-		c.conn, err = net.Dial(protocol, c.host+":"+strconv.Itoa(6000+dispnum))
-	} else {
-		c.conn, err = net.Dial("unix", "/tmp/.X11-unix/X"+c.display)
-	}
-
-	if err != nil {
-		return nil, errors.New("cannot connect to " + display0 + ": " + err.Error())
-	}
-	return c, nil
-}

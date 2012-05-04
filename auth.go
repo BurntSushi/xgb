@@ -44,8 +44,10 @@ func getString(r io.Reader, b []byte) (string, error) {
 
 // readAuthority reads the X authority file for the DISPLAY.
 // If hostname == "" or hostname == "localhost",
-// readAuthority uses the system's hostname (as returned by os.Hostname) instead.
-func readAuthority(hostname, display string) (name string, data []byte, err error) {
+// then use the system's hostname (as returned by os.Hostname) instead.
+func readAuthority(hostname, display string) (
+	name string, data []byte, err error) {
+
 	// b is a scratch buffer to use and should be at least 256 bytes long
 	// (i.e. it should be able to hold a hostname).
 	var b [256]byte
