@@ -10,7 +10,8 @@ import (
 	"strings"
 )
 
-// connect connects to the X server given in the 'display' string.
+// connect connects to the X server given in the 'display' string,
+// and does all the necessary setup handshaking.
 // If 'display' is empty it will be taken from os.Getenv("DISPLAY").
 // Note that you should read and understand the "Connection Setup" of the
 // X Protocol Reference Manual before changing this function:
@@ -87,6 +88,7 @@ func (c *Conn) connect(display string) error {
 	return nil
 }
 
+// dial initializes the actual net connection with X.
 func (c *Conn) dial(display string) error {
 	if len(display) == 0 {
 		display = os.Getenv("DISPLAY")

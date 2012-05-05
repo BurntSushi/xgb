@@ -4,16 +4,28 @@ import (
 	"errors"
 )
 
+// cookie is the internal representation of a cookie, where one is generated
+// for *every* request sent by XGB.
+// 'cookie' is most frequently used by embedding it into a more specific
+// kind of cookie, i.e., 'GetInputFocusCookie'.
 type cookie struct {
+	conn *Conn
 	Sequence        uint16
 	replyChan chan []byte
 	errorChan chan error
 	pingChan chan bool
 }
 
-func (c *Conn) newCookie(checked, reply bool) cookie {
-	cookie := cookie{
-		Sequence: c.newSequenceId(),
+// newCookie creates a new cookie with the correct channels initialized
+// depending upon the values of 'checked' and 'reply'. Together, there are
+// four different kinds of cookies. (See more detailed comments in the
+// function for more info on those.)
+// Note that a sequence number is not set until just before the request
+// corresponding to this cookie is sent over the wire.
+func (c *Conn) newCookie(checked, reply bool) *cookie {
+	cookie := &cookie{
+		conn: c,
+		Sequence: 0, // we add the sequence id just before sending a request
 		replyChan: nil,
 		errorChan: nil,
 		pingChan: nil,
@@ -48,6 +60,8 @@ func (c *Conn) newCookie(checked, reply bool) cookie {
 	return cookie
 }
 
+// reply detects whether this is a checked or unchecked cookie, and calls
+// 'replyChecked' or 'replyUnchecked' appropriately.
 func (c cookie) reply() ([]byte, error) {
 	// checked
 	if c.errorChan != nil {
@@ -56,6 +70,10 @@ func (c cookie) reply() ([]byte, error) {
 	return c.replyUnchecked()
 }
 
+// replyChecked waits for a response on either the replyChan or errorChan
+// channels. If the former arrives, the bytes are returned with a nil error.
+// If the latter arrives, no bytes are returned (nil) and the error received
+// is returned.
 func (c cookie) replyChecked() ([]byte, error) {
 	if c.replyChan == nil {
 		return nil, errors.New("Cannot call 'replyChecked' on a cookie that " +
@@ -75,6 +93,12 @@ func (c cookie) replyChecked() ([]byte, error) {
 	panic("unreachable")
 }
 
+// replyChecked waits for a response on either the replyChan or pingChan
+// channels. If the former arrives, the bytes are returned with a nil error.
+// If the latter arrives, no bytes are returned (nil) and a nil error
+// is returned. (In the latter case, the corresponding error can be retrieved
+// from (Wait|Poll)ForEvent asynchronously.)
+// In all honesty, you *probably* don't want to use this method.
 func (c cookie) replyUnchecked() ([]byte, error) {
 	if c.replyChan == nil {
 		return nil, errors.New("Cannot call 'replyUnchecked' on a cookie " +
@@ -90,7 +114,15 @@ func (c cookie) replyUnchecked() ([]byte, error) {
 	panic("unreachable")
 }
 
-func (c cookie) Check() error {
+// check is used for checked requests that have no replies. It is a mechanism
+// by which to report "success" or "error" in a synchronous fashion. (Therefore,
+// unchecked requests without replies cannot use this method.)
+// If the request causes an error, it is sent to this cookie's errorChan.
+// If the request was successful, there is no response from the server.
+// Thus, pingChan is sent a value when the *next* reply is read.
+// If no more replies are being processed, we force a round trip request with
+// GetInputFocus.
+func (c cookie) check() error {
 	if c.replyChan != nil {
 		return errors.New("Cannot call 'Check' on a cookie that is " +
 			"expecting a *reply*. Use 'Reply' instead.")
@@ -100,6 +132,17 @@ func (c cookie) Check() error {
 			"not expecting a possible *error*.")
 	}
 
+	// First do a quick non-blocking check to see if we've been pinged.
+	select {
+	case err := <-c.errorChan:
+		return err
+	case <-c.pingChan:
+		return nil
+	default:
+	}
+
+	// Now force a round trip and try again, but block this time.
+	c.conn.GetInputFocus().Reply()
 	select {
 	case err := <-c.errorChan:
 		return err

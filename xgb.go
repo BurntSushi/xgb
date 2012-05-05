@@ -17,6 +17,11 @@ import (
 )
 
 const (
+	// cookieBuffer represents the queue size of cookies existing at any
+	// point in time. The size of the buffer is really only important when
+	// there are many requests without replies made in sequence. Once the
+	// buffer fills, a round trip request is made to clear the buffer.
+	cookieBuffer = 1000
 	readBuffer  = 100
 	writeBuffer = 100
 )
@@ -32,7 +37,7 @@ type Conn struct {
 	extensions    map[string]byte
 
 	eventChan         chan eventOrError
-	cookieChan chan cookie
+	cookieChan chan *cookie
 	xidChan chan xid
 	seqChan chan uint16
 	reqChan chan *request
@@ -68,7 +73,7 @@ func NewConnDisplay(display string) (*Conn, error) {
 
 	conn.extensions = make(map[string]byte)
 
-	conn.cookieChan = make(chan cookie, 100)
+	conn.cookieChan = make(chan *cookie, cookieBuffer)
 	conn.xidChan = make(chan xid, 5)
 	conn.seqChan = make(chan uint16, 20)
 	conn.reqChan = make(chan *request, 100)
@@ -87,6 +92,12 @@ func (c *Conn) Close() {
 	c.conn.Close()
 }
 
+// DefaultScreen returns the Screen info for the default screen, which is
+// 0 or the one given in the display argument to Dial.
+func (c *Conn) DefaultScreen() *ScreenInfo {
+	return &c.Setup.Roots[c.defaultScreen]
+}
+
 // Id is used for all X identifiers, such as windows, pixmaps, and GCs.
 type Id uint32
 
@@ -95,6 +106,7 @@ type Id uint32
 type Event interface {
 	ImplementsEvent()
 	Bytes() []byte
+	String() string
 }
 
 // newEventFuncs is a map from event numbers to functions that create
@@ -188,7 +200,8 @@ func (c *Conn) newSequenceId() uint16 {
 // to match up replies with requests.
 // Since sequence ids can only be 16 bit integers we start over at zero when it 
 // comes time to wrap.
-// FIXME: 65,536 requests without replies cannot be made in a single sequence.
+// N.B. As long as the cookie buffer is less than 2^16, there are no limitations
+// on the number (or kind) of requests made in sequence.
 func (c *Conn) generateSeqIds() {
 	seqid := uint16(1)
 	for {
@@ -206,13 +219,14 @@ func (c *Conn) generateSeqIds() {
 // The cookie is used to match up the reply/error.
 type request struct {
 	buf []byte
-	cookie cookie
+	cookie *cookie
 }
 
 // newRequest takes the bytes an a cookie, constructs a request type,
-// and sends it over the Conn.reqChan channel. It then returns the cookie
-// (for convenience).
-func (c *Conn) newRequest(buf []byte, cookie cookie) {
+// and sends it over the Conn.reqChan channel.
+// Note that the sequence number is added to the cookie after it is sent
+// over the request channel.
+func (c *Conn) newRequest(buf []byte, cookie *cookie) {
 	c.reqChan <- &request{buf: buf, cookie: cookie}
 }
 
@@ -220,13 +234,36 @@ func (c *Conn) newRequest(buf []byte, cookie cookie) {
 // the bytes to the wire and adds the cookie to the cookie queue.
 func (c *Conn) sendRequests() {
 	for req := range c.reqChan {
+		// ho there! if the cookie channel is nearly full, force a round
+		// trip to clear out the cookie buffer.
+		// Note that we circumvent the request channel, because we're *in*
+		// the request channel.
+		if len(c.cookieChan) == cookieBuffer - 1 {
+			cookie := c.newCookie(true, true)
+			cookie.Sequence = c.newSequenceId()
+			c.cookieChan <- cookie
+			if !c.writeBuffer(c.getInputFocusRequest()) {
+				return
+			}
+			GetInputFocusCookie{cookie}.Reply() // wait for the buffer to clear
+		}
+
+		req.cookie.Sequence = c.newSequenceId()
 		c.cookieChan <- req.cookie
-		if _, err := c.conn.Write(req.buf); err != nil {
-			fmt.Fprintf(os.Stderr, "x protocol write error: %s\n", err)
-			close(c.reqChan)
+		if !c.writeBuffer(req.buf) {
 			return
 		}
 	}
+}
+
+// writeBuffer is a convenience function for writing a byte slice to the wire.
+func (c *Conn) writeBuffer(buf []byte) bool {
+	if _, err := c.conn.Write(buf); err != nil {
+		fmt.Fprintf(os.Stderr, "x protocol write error: %s\n", err)
+		close(c.reqChan)
+		return false
+	}
+	return true
 }
 
 // readResponses is a goroutine that reads events, errors and
@@ -260,7 +297,15 @@ func (c *Conn) readResponses() {
 		case 0: // This is an error
 			// Use the constructor function for this error (that is auto
 			// generated) by looking it up by the error number.
-			err = newErrorFuncs[int(buf[1])](buf)
+			newErrFun, ok := newErrorFuncs[int(buf[1])]
+			if !ok {
+				fmt.Fprintf(os.Stderr,
+					"BUG: " +
+					"Could not find error constructor function for error " +
+					"with number %d.", buf[1])
+				continue
+			}
+			err = newErrFun(buf)
 			seq = err.SequenceId()
 
 			// This error is either sent to the event channel or a specific
@@ -291,22 +336,23 @@ func (c *Conn) readResponses() {
 			// Note that we AND the event number with 127 so that we ignore
 			// the most significant bit (which is set when it was sent from
 			// a SendEvent request).
-			event = newEventFuncs[int(buf[0] & 127)](buf)
-			// seq = event.SequenceId() // 0 for KeymapNotify 
+			evNum := int(buf[0] & 127)
+			newEventFun, ok := newEventFuncs[evNum]
+			if !ok {
+				fmt.Fprintf(os.Stderr,
+					"BUG: " +
+					"Could not find event constructor function for event " +
+					"with number %d.", evNum)
+				continue
+			}
+
+			event = newEventFun(buf)
 
 			// Put the event into the queue.
 			c.eventChan <- event
 
 			// No more processing for events.
 			continue
-
-			// If this was a KeymapNotify event, then we don't do any more
-			// processing since we don't have any sequence id.
-			// if event != nil { 
-				// if _, ok := event.(KeymapNotifyEvent); ok { 
-					// continue 
-				// } 
-			// } 
 		}
 
 		// At this point, we have a sequence number and we're either
@@ -326,12 +372,17 @@ func (c *Conn) readResponses() {
 						cookie.errorChan <- err
 					} else { // asynchronous processing
 						c.eventChan <- err
+						// if this is an unchecked reply, ping the cookie too
+						if cookie.pingChan != nil {
+							cookie.pingChan <- true
+						}
 					}
 				} else { // this is a reply
 					if cookie.replyChan == nil {
 						fmt.Fprintf(os.Stderr,
 							"Reply with sequence id %d does not have a " +
 							"cookie with a valid reply channel.\n", seq)
+						continue
 					} else {
 						cookie.replyChan <- replyBytes
 					}
@@ -344,10 +395,14 @@ func (c *Conn) readResponses() {
 			case cookie.replyChan != nil && cookie.errorChan != nil:
 				fmt.Fprintf(os.Stderr,
 					"Found cookie with sequence id %d that is expecting a " +
-					"reply but will never get it.\n", cookie.Sequence)
+					"reply but will never get it. Currently on sequence " +
+					"number %d\n", cookie.Sequence, seq)
 			// Unchecked requests with replies
 			case cookie.replyChan != nil && cookie.pingChan != nil:
-				cookie.pingChan <- true
+				fmt.Fprintf(os.Stderr,
+					"Found cookie with sequence id %d that is expecting a " +
+					"reply (and not an error) but will never get it. " +
+					"Currently on sequence number %d\n", cookie.Sequence, seq)
 			// Checked requests without replies
 			case cookie.pingChan != nil && cookie.errorChan != nil:
 				cookie.pingChan <- true
@@ -368,6 +423,7 @@ func processEventOrError(everr eventOrError) (Event, Error) {
 		return nil, ee
 	default:
 		fmt.Fprintf(os.Stderr, "Invalid event/error type: %T\n", everr)
+		return nil, nil
 	}
 	panic("unreachable")
 }

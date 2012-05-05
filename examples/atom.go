@@ -18,7 +18,7 @@ func main() {
 	}
 
 	aname := "_NET_ACTIVE_WINDOW"
-	atom, err := X.InternAtom(true, uint16(len(aname)), aname)
+	atom, err := X.InternAtom(true, uint16(len(aname)), aname).Reply()
 	if err != nil {
 		log.Fatal(err)
 	}

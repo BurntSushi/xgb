@@ -27,13 +27,15 @@ func main() {
 	root := X.DefaultScreen().Root
 
 	aname := "_NET_ACTIVE_WINDOW"
-	atom, err := X.InternAtom(true, uint16(len(aname)), aname)
+	atom, err := X.InternAtom(true, uint16(len(aname)), aname).Reply()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	reply, err := X.GetProperty(false, root, atom.Atom, xgb.GetPropertyTypeAny,
-		0, (1<<32)-1)
+	reply, err := X.GetProperty(false, root, atom.Atom,
+		xgb.GetPropertyTypeAny, 0, (1<<32)-1).Reply()
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Printf("%X", get32(reply.Value))
 }
-
