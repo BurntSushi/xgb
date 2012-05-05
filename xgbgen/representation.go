@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"unicode"
 )
 
 type Protocol struct {
@@ -62,11 +63,27 @@ func (r *Request) ReplyName() string {
 		log.Panicf("Cannot call 'ReplyName' on request %s, which has no reply.",
 			r.SrcName())
 	}
+	name := r.SrcName()
+	lower := string(unicode.ToLower(rune(name[0]))) + name[1:]
+	return fmt.Sprintf("%sReply", lower)
+}
+
+func (r *Request) ReplyTypeName() string {
+	if r.Reply == nil {
+		log.Panicf("Cannot call 'ReplyName' on request %s, which has no reply.",
+			r.SrcName())
+	}
 	return fmt.Sprintf("%sReply", r.SrcName())
 }
 
 func (r *Request) ReqName() string {
-	return fmt.Sprintf("%sRequest", r.SrcName())
+	name := r.SrcName()
+	lower := string(unicode.ToLower(rune(name[0]))) + name[1:]
+	return fmt.Sprintf("%sRequest", lower)
+}
+
+func (r *Request) CookieName() string {
+	return fmt.Sprintf("%sCookie", r.SrcName())
 }
 
 // Size for Request needs a context.
@@ -99,7 +116,9 @@ func (r *Request) Size(c *Context) Size {
 			size = size.Add(field.Size())
 		}
 	}
-	return size
+	return newExpressionSize(&Padding{
+		Expr: size.Expression,
+	})
 }
 
 type Reply struct {

@@ -158,6 +158,33 @@ func (e *UnaryOp) Initialize(p *Protocol) {
 	e.Expr.Initialize(p)
 }
 
+type Padding struct {
+	Expr Expression
+}
+
+func (e *Padding) Concrete() bool {
+	return e.Expr.Concrete()
+}
+
+func (e *Padding) Eval() uint {
+	return uint(pad(int(e.Expr.Eval())))
+}
+
+func (e *Padding) Reduce(prefix string) string {
+	if e.Concrete() {
+		return fmt.Sprintf("%d", e.Eval())
+	}
+	return fmt.Sprintf("pad(%s)", e.Expr.Reduce(prefix))
+}
+
+func (e *Padding) String() string {
+	return e.Reduce("")
+}
+
+func (e *Padding) Initialize(p *Protocol) {
+	e.Expr.Initialize(p)
+}
+
 type PopCount struct {
 	Expr Expression
 }

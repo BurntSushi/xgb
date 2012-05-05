@@ -28,6 +28,14 @@ func (e *Event) Define(c *Context) {
 	// Makes sure that this event type is an Event interface.
 	c.Putln("func (v %s) ImplementsEvent() { }", e.EvType())
 	c.Putln("")
+	c.Putln("func (v %s) SequenceId() uint16 {", e.EvType())
+	if e.NoSequence {
+		c.Putln("return uint16(0)")
+	} else {
+		c.Putln("return v.Sequence")
+	}
+	c.Putln("}")
+	c.Putln("")
 
 	// Let's the XGB event loop read this event.
 	c.Putln("func init() {")
@@ -98,6 +106,14 @@ func (e *EventCopy) Define(c *Context) {
 
 	// Makes sure that this event type is an Event interface.
 	c.Putln("func (v %s) ImplementsEvent() { }", e.EvType())
+	c.Putln("")
+	c.Putln("func (v %s) SequenceId() uint16 {", e.EvType())
+	if e.Old.(*Event).NoSequence {
+		c.Putln("return uint16(0)")
+	} else {
+		c.Putln("return v.Sequence")
+	}
+	c.Putln("}")
 	c.Putln("")
 
 	// Let's the XGB event loop read this event.
