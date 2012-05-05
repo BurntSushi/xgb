@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 // Event types
 func (e *Event) Define(c *Context) {
 	c.Putln("// Event definition %s (%d)", e.SrcName(), e.Number)
@@ -34,6 +38,10 @@ func (e *Event) Define(c *Context) {
 	} else {
 		c.Putln("return v.Sequence")
 	}
+	c.Putln("}")
+	c.Putln("")
+	c.Putln("func (v %s) String() string {", e.EvType())
+	EventFieldString(c, e.Fields, e.SrcName())
 	c.Putln("}")
 	c.Putln("")
 
@@ -115,6 +123,10 @@ func (e *EventCopy) Define(c *Context) {
 	}
 	c.Putln("}")
 	c.Putln("")
+	c.Putln("func (v %s) String() string {", e.EvType())
+	EventFieldString(c, e.Old.(*Event).Fields, e.SrcName())
+	c.Putln("}")
+	c.Putln("")
 
 	// Let's the XGB event loop read this event.
 	c.Putln("func init() {")
@@ -136,4 +148,43 @@ func (e *EventCopy) Write(c *Context) {
 	c.Putln("return %s(v).Bytes()", e.Old.(*Event).EvType())
 	c.Putln("}")
 	c.Putln("")
+}
+
+// EventFieldString works for both Event and EventCopy. It assembles all of the
+// fields in an event and formats them into a single string.
+func EventFieldString(c *Context, fields []Field, evName string) {
+	c.Putln("fieldVals := make([]string, 0, %d)", len(fields))
+	if evName != "KeymapNotify" {
+		c.Putln("fieldVals = append(fieldVals, " +
+			"sprintf(\"Sequence: %s\", v.Sequence))", "%d")
+	}
+	for _, field := range fields {
+		switch f := field.(type) {
+		case *PadField:
+			continue
+		case *SingleField:
+			switch f.Type.(type) {
+			case *Base:
+			case *Resource:
+			case *TypeDef:
+			default: continue
+			}
+
+			switch field.SrcType() {
+			case "string":
+				format := fmt.Sprintf("sprintf(\"%s: %s\", v.%s)",
+					field.SrcName(), "%s", field.SrcName())
+				c.Putln("fieldVals = append(fieldVals, %s)", format)
+			case "bool":
+				format := fmt.Sprintf("sprintf(\"%s: %s\", v.%s)",
+					field.SrcName(), "%t", field.SrcName())
+				c.Putln("fieldVals = append(fieldVals, %s)", format)
+			default:
+				format := fmt.Sprintf("sprintf(\"%s: %s\", v.%s)",
+					field.SrcName(), "%d", field.SrcName())
+				c.Putln("fieldVals = append(fieldVals, %s)", format)
+			}
+		}
+	}
+	c.Putln("return \"%s {\" + stringsJoin(fieldVals, \", \") + \"}\"", evName)
 }

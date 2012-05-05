@@ -282,7 +282,7 @@ func (e *FieldRef) String() string {
 }
 
 func (e *FieldRef) Initialize(p *Protocol) {
-	e.Name = SrcName(e.Name)
+	e.Name = SrcName(p, e.Name)
 }
 
 type EnumRef struct {
@@ -309,7 +309,7 @@ func (e *EnumRef) String() string {
 
 func (e *EnumRef) Initialize(p *Protocol) {
 	e.EnumKind = e.EnumKind.(*Translation).RealType(p)
-	e.EnumItem = SrcName(e.EnumItem)
+	e.EnumItem = SrcName(p, e.EnumItem)
 }
 
 type SumOf struct {
@@ -337,5 +337,5 @@ func (e *SumOf) String() string {
 }
 
 func (e *SumOf) Initialize(p *Protocol) {
-	e.Name = SrcName(e.Name)
+	e.Name = SrcName(p, e.Name)
 }

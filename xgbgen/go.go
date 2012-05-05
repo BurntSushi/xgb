@@ -65,7 +65,8 @@ var NameMap = map[string]string{}
 
 // Base types
 func (b *Base) Define(c *Context) {
-	c.Putln("// Skipping definition for base type '%s'", SrcName(b.XmlName()))
+	c.Putln("// Skipping definition for base type '%s'",
+		SrcName(c.protocol, b.XmlName()))
 	c.Putln("")
 }
 
@@ -81,7 +82,8 @@ func (enum *Enum) Define(c *Context) {
 
 // Resource types
 func (res *Resource) Define(c *Context) {
-	c.Putln("// Skipping resource definition of '%s'", SrcName(res.XmlName()))
+	c.Putln("// Skipping resource definition of '%s'",
+		SrcName(c.protocol, res.XmlName()))
 	c.Putln("")
 }
 

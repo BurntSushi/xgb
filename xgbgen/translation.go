@@ -373,7 +373,7 @@ func (x *XMLBitcase) Translate() *Bitcase {
 
 // SrcName is used to translate any identifier into a Go name.
 // Mostly used for fields, but used in a couple other places too (enum items).
-func SrcName(name string) string {
+func SrcName(p *Protocol, name string) string {
 	// If it's in the name map, use that translation.
 	if newn, ok := NameMap[name]; ok {
 		return newn

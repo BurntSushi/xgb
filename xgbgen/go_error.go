@@ -64,11 +64,15 @@ func (e *Error) ImplementsError(c *Context) {
 	c.Putln("}")
 	c.Putln("")
 	c.Putln("func (err %s) BadId() Id {", e.ErrType())
-	c.Putln("return Id(err.BadValue)")
+	if c.protocol.Name == "xproto" {
+		c.Putln("return Id(err.BadValue)")
+	} else {
+		c.Putln("return 0")
+	}
 	c.Putln("}")
 	c.Putln("")
 	c.Putln("func (err %s) Error() string {", e.ErrType())
-	FieldString(c, e.Fields, e.ErrConst())
+	ErrorFieldString(c, e.Fields, e.ErrConst())
 	c.Putln("}")
 	c.Putln("")
 }
@@ -119,14 +123,14 @@ func (e *ErrorCopy) ImplementsError(c *Context) {
 	c.Putln("}")
 	c.Putln("")
 	c.Putln("func (err %s) Error() string {", e.ErrType())
-	FieldString(c, e.Old.(*Error).Fields, e.ErrConst())
+	ErrorFieldString(c, e.Old.(*Error).Fields, e.ErrConst())
 	c.Putln("}")
 	c.Putln("")
 }
 
-// FieldString works for both Error and ErrorCopy. It assembles all of the
+// ErrorFieldString works for both Error and ErrorCopy. It assembles all of the
 // fields in an error and formats them into a single string.
-func FieldString(c *Context, fields []Field, errName string) {
+func ErrorFieldString(c *Context, fields []Field, errName string) {
 	c.Putln("fieldVals := make([]string, 0, %d)", len(fields))
 	c.Putln("fieldVals = append(fieldVals, \"NiceName: \" + err.NiceName)")
 	c.Putln("fieldVals = append(fieldVals, " +

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"unicode"
 )
 
@@ -41,7 +42,11 @@ type Request struct {
 }
 
 func (r *Request) Initialize(p *Protocol) {
-	r.srcName = SrcName(r.xmlName)
+	r.srcName = SrcName(p, r.xmlName)
+	if p.Name != "xproto" {
+		r.srcName = strings.Title(strings.ToLower(p.Name)) + r.srcName
+	}
+
 	if r.Reply != nil {
 		r.Reply.Initialize(p)
 	}

@@ -8,21 +8,24 @@ import (
 func (r *Request) Define(c *Context) {
 	c.Putln("// Request %s", r.SrcName())
 	c.Putln("// size: %s", r.Size(c))
-	c.Putln("type %s cookie", r.CookieName())
+	c.Putln("type %s struct {", r.CookieName())
+	c.Putln("*cookie")
+	c.Putln("}")
+	c.Putln("")
 	if r.Reply != nil {
 		c.Putln("func (c *Conn) %s(%s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
 		c.Putln("cookie := c.newCookie(true, true)")
-		c.Putln("c.newRequest(%s(%s), cookie)", r.ReqName(), r.ParamNames())
-		c.Putln("return %s(cookie)", r.CookieName())
+		c.Putln("c.newRequest(c.%s(%s), cookie)", r.ReqName(), r.ParamNames())
+		c.Putln("return %s{cookie}", r.CookieName())
 		c.Putln("}")
 		c.Putln("")
 
 		c.Putln("func (c *Conn) %sUnchecked(%s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
 		c.Putln("cookie := c.newCookie(false, true)")
-		c.Putln("c.newRequest(%s(%s), cookie)", r.ReqName(), r.ParamNames())
-		c.Putln("return %s(cookie)", r.CookieName())
+		c.Putln("c.newRequest(c.%s(%s), cookie)", r.ReqName(), r.ParamNames())
+		c.Putln("return %s{cookie}", r.CookieName())
 		c.Putln("}")
 		c.Putln("")
 
@@ -32,20 +35,24 @@ func (r *Request) Define(c *Context) {
 		c.Putln("func (c *Conn) %s(%s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
 		c.Putln("cookie := c.newCookie(false, false)")
-		c.Putln("c.newRequest(%s(%s), cookie)", r.ReqName(), r.ParamNames())
-		c.Putln("return %s(cookie)", r.CookieName())
+		c.Putln("c.newRequest(c.%s(%s), cookie)", r.ReqName(), r.ParamNames())
+		c.Putln("return %s{cookie}", r.CookieName())
 		c.Putln("}")
 		c.Putln("")
 
 		c.Putln("func (c *Conn) %sChecked(%s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
 		c.Putln("cookie := c.newCookie(true, false)")
-		c.Putln("c.newRequest(%s(%s), cookie)", r.ReqName(), r.ParamNames())
-		c.Putln("return %s(cookie)", r.CookieName())
+		c.Putln("c.newRequest(c.%s(%s), cookie)", r.ReqName(), r.ParamNames())
+		c.Putln("return %s{cookie}", r.CookieName())
 		c.Putln("}")
 		c.Putln("")
 	}
 
+	c.Putln("func (cook %s) Check() error {", r.CookieName())
+	c.Putln("return cook.check()")
+	c.Putln("}")
+	c.Putln("")
 	r.WriteRequest(c)
 }
 
@@ -64,9 +71,12 @@ func (r *Request) ReadReply(c *Context) {
 	c.Putln("// Waits and reads reply data from request %s", r.SrcName())
 	c.Putln("func (cook %s) Reply() (*%s, error) {",
 		r.CookieName(), r.ReplyTypeName())
-		c.Putln("buf, err := cookie(cook).reply()")
+		c.Putln("buf, err := cook.reply()")
 		c.Putln("if err != nil {")
 		c.Putln("return nil, err")
+		c.Putln("}")
+		c.Putln("if buf == nil {")
+		c.Putln("return nil, nil")
 		c.Putln("}")
 		c.Putln("return %s(buf), nil", r.ReplyName())
 	c.Putln("}")
@@ -79,7 +89,9 @@ func (r *Request) ReadReply(c *Context) {
 	c.Putln("b := 1 // skip reply determinant")
 	c.Putln("")
 	for i, field := range r.Reply.Fields {
-		if i == 1 {
+		field.Read(c, "v.")
+		c.Putln("")
+		if i == 0 {
 			c.Putln("v.Sequence = Get16(buf[b:])")
 			c.Putln("b += 2")
 			c.Putln("")
@@ -87,8 +99,6 @@ func (r *Request) ReadReply(c *Context) {
 			c.Putln("b += 4")
 			c.Putln("")
 		}
-		field.Read(c, "v.")
-		c.Putln("")
 	}
 	c.Putln("return v")
 	c.Putln("}")
@@ -96,14 +106,17 @@ func (r *Request) ReadReply(c *Context) {
 }
 
 func (r *Request) WriteRequest(c *Context) {
+	writeSize := func() {
+		c.Putln("Put16(buf[b:], uint16(size / 4)) "+
+			"// write request size in 4-byte units")
+		c.Putln("b += 2")
+		c.Putln("")
+	}
 	c.Putln("// Write request to wire for %s", r.SrcName())
-	c.Putln("func %s(%s) []byte {", r.ReqName(), r.ParamNameTypes())
+	c.Putln("func (c *Conn) %s(%s) []byte {", r.ReqName(), r.ParamNameTypes())
 	c.Putln("size := %s", r.Size(c))
 	c.Putln("b := 0")
 	c.Putln("buf := make([]byte, size)")
-	c.Putln("")
-	c.Putln("buf[b] = %d // request opcode", r.Opcode)
-	c.Putln("b += 1")
 	c.Putln("")
 	if strings.ToLower(c.protocol.Name) != "xproto" {
 		c.Putln("buf[b] = c.extensions[\"%s\"]",
@@ -111,15 +124,23 @@ func (r *Request) WriteRequest(c *Context) {
 		c.Putln("b += 1")
 		c.Putln("")
 	}
-	for i, field := range r.Fields {
-		if i == 1 {
-			c.Putln("Put16(buf[b:], uint16(size / 4)) "+
-				"// write request size in 4-byte units")
-			c.Putln("b += 2")
-			c.Putln("")
+	c.Putln("buf[b] = %d // request opcode", r.Opcode)
+	c.Putln("b += 1")
+	c.Putln("")
+	if len(r.Fields) == 0 {
+		if strings.ToLower(c.protocol.Name) == "xproto" {
+			c.Putln("b += 1 // padding")
 		}
+		writeSize()
+	} else if strings.ToLower(c.protocol.Name) != "xproto" {
+		writeSize()
+	}
+	for i, field := range r.Fields {
 		field.Write(c, "")
 		c.Putln("")
+		if i == 0 && strings.ToLower(c.protocol.Name) == "xproto" {
+			writeSize()
+		}
 	}
 	c.Putln("return buf")
 	c.Putln("}")

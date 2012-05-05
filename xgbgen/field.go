@@ -47,7 +47,7 @@ type SingleField struct {
 }
 
 func (f *SingleField) Initialize(p *Protocol) {
-	f.srcName = SrcName(f.XmlName())
+	f.srcName = SrcName(p, f.XmlName())
 	f.Type = f.Type.(*Translation).RealType(p)
 }
 
@@ -138,7 +138,7 @@ func (f *ListField) Size() Size {
 }
 
 func (f *ListField) Initialize(p *Protocol) {
-	f.srcName = SrcName(f.XmlName())
+	f.srcName = SrcName(p, f.XmlName())
 	f.Type = f.Type.(*Translation).RealType(p)
 	if f.LengthExpr != nil {
 		f.LengthExpr.Initialize(p)
@@ -173,7 +173,7 @@ func (f *ExprField) Size() Size {
 }
 
 func (f *ExprField) Initialize(p *Protocol) {
-	f.srcName = SrcName(f.XmlName())
+	f.srcName = SrcName(p, f.XmlName())
 	f.Type = f.Type.(*Translation).RealType(p)
 	f.Expr.Initialize(p)
 }
@@ -230,8 +230,8 @@ func (f *ValueField) ListLength() Size {
 
 func (f *ValueField) Initialize(p *Protocol) {
 	f.MaskType = f.MaskType.(*Translation).RealType(p)
-	f.MaskName = SrcName(f.MaskName)
-	f.ListName = SrcName(f.ListName)
+	f.MaskName = SrcName(p, f.MaskName)
+	f.ListName = SrcName(p, f.ListName)
 }
 
 type SwitchField struct {
@@ -260,7 +260,7 @@ func (f *SwitchField) Size() Size {
 }
 
 func (f *SwitchField) Initialize(p *Protocol) {
-	f.Name = SrcName(f.Name)
+	f.Name = SrcName(p, f.Name)
 	f.Expr.Initialize(p)
 	for _, bitcase := range f.Bitcases {
 		bitcase.Expr.Initialize(p)

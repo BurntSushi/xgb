@@ -123,7 +123,7 @@ func (enum *Enum) Size() Size {
 func (enum *Enum) Initialize(p *Protocol) {
 	enum.srcName = TypeSrcName(p, enum)
 	for _, item := range enum.Items {
-		item.srcName = SrcName(item.xmlName)
+		item.srcName = SrcName(p, item.xmlName)
 		if item.Expr != nil {
 			item.Expr.Initialize(p)
 		}
