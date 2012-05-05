@@ -25,27 +25,18 @@ const (
 type Conn struct {
 	host          string
 	conn          net.Conn
-	nextCookie    uint16
-	cookies       map[uint16]*Cookie
-	events        queue
 	err           error
 	display       string
 	defaultScreen int
-	scratch       [32]byte
 	Setup         SetupInfo
 	extensions    map[string]byte
 
-	requestChan       chan *Request
-	requestCookieChan chan *Cookie
-	replyChan         chan bool
-	eventChan         chan bool
-	errorChan         chan bool
-
+	eventChan         chan eventOrError
+	cookieChan chan cookie
 	xidChan chan xid
-	newIdLock   sync.Mutex
-	writeLock   sync.Mutex
-	dequeueLock sync.Mutex
-	cookieLock  sync.Mutex
+	seqChan chan uint16
+	reqChan chan *request
+
 	extLock     sync.Mutex
 }
 
@@ -75,16 +66,18 @@ func NewConnDisplay(display string) (*Conn, error) {
 		return nil, err
 	}
 
-	conn.xidChan = make(chan xid, 5)
-	go conn.generateXids()
-
-	conn.nextCookie = 1
-	conn.cookies = make(map[uint16]*Cookie)
-	conn.events = queue{make([][]byte, 100), 0, 0}
 	conn.extensions = make(map[string]byte)
 
-	conn.newReadChannels()
-	conn.newRequestChannels()
+	conn.cookieChan = make(chan cookie, 100)
+	conn.xidChan = make(chan xid, 5)
+	conn.seqChan = make(chan uint16, 20)
+	conn.reqChan = make(chan *request, 100)
+	conn.eventChan = make(chan eventOrError, 100)
+
+	go conn.generateXIds()
+	go conn.generateSeqIds()
+	go conn.sendRequests()
+	go conn.readResponses()
 
 	return conn, nil
 }
@@ -97,43 +90,11 @@ func (c *Conn) Close() {
 // Id is used for all X identifiers, such as windows, pixmaps, and GCs.
 type Id uint32
 
-// Request is used to abstract the difference between a request
-// that expects a reply and a request that doesn't expect a reply.
-type Request struct {
-	buf        []byte
-	cookieChan chan *Cookie
-}
-
-func newRequest(buf []byte, needsReply bool) *Request {
-	req := &Request{
-		buf:        buf,
-		cookieChan: nil,
-	}
-	if needsReply {
-		req.cookieChan = make(chan *Cookie)
-	}
-	return req
-}
-
-// Cookies are the sequence numbers used to pair replies up with their requests
-type Cookie struct {
-	id        uint16
-	replyChan chan []byte
-	errorChan chan error
-}
-
-func newCookie(id uint16) *Cookie {
-	return &Cookie{
-		id:        id,
-		replyChan: make(chan []byte, 1),
-		errorChan: make(chan error, 1),
-	}
-}
-
 // Event is an interface that can contain any of the events returned by the
 // server. Use a type assertion switch to extract the Event structs.
 type Event interface {
 	ImplementsEvent()
+	Bytes() []byte
 }
 
 // newEventFuncs is a map from event numbers to functions that create
@@ -153,6 +114,10 @@ type Error interface {
 // the corresponding error.
 var newErrorFuncs = map[int]func(buf []byte) Error{}
 
+// eventOrError corresponds to values that can be either an event or an
+// error.
+type eventOrError interface{}
+
 // NewID generates a new unused ID for use with requests like CreateWindow.
 // If no new ids can be generated, the id returned is 0 and error is non-nil.
 func (c *Conn) NewId() (Id, error) {
@@ -164,7 +129,7 @@ func (c *Conn) NewId() (Id, error) {
 }
 
 // xid encapsulates a resource identifier being sent over the Conn.xidChan
-// channel. If no new resource id can be generated, id is set to -1 and a
+// channel. If no new resource id can be generated, id is set to 0 and a
 // non-nil error is set in xid.err.
 type xid struct {
 	id Id
@@ -174,7 +139,24 @@ type xid struct {
 // generateXids sends new Ids down the channel for NewId to use.
 // This needs to be updated to use the XC Misc extension once we run out of
 // new ids.
-func (conn *Conn) generateXids() {
+// Thanks to libxcb/src/xcb_xid.c. This code is greatly inspired by it.
+func (conn *Conn) generateXIds() {
+	// This requires some explanation. From the horse's mouth:
+	// "The resource-id-mask contains a single contiguous set of bits (at least 
+	// 18).  The client allocates resource IDs for types WINDOW, PIXMAP, 
+	// CURSOR, FONT, GCONTEXT, and COLORMAP by choosing a value with only some 
+	// subset of these bits set and ORing it with resource-id-base. Only values 
+	// constructed in this way can be used to name newly created resources over 
+	// this connection."
+	// So for example (using 8 bit integers), the mask might look like:
+	// 00111000
+	// So that valid values would be 00101000, 00110000, 00001000, and so on.
+	// Thus, the idea is to increment it by the place of the last least
+	// significant '1'. In this case, that value would be 00001000. To get
+	// that value, we can AND the original mask with its two's complement:
+	// 00111000 & 11001000 = 00001000.
+	// And we use that value to increment the last resource id to get a new one.
+	// (And then, of course, we OR it with resource-id-base.)
 	inc := conn.Setup.ResourceIdMask & -conn.Setup.ResourceIdMask
 	max := conn.Setup.ResourceIdMask
 	last := uint32(0)
@@ -196,11 +178,224 @@ func (conn *Conn) generateXids() {
 	}
 }
 
+// newSeqId fetches the next sequence id from the Conn.seqChan channel.
+func (c *Conn) newSequenceId() uint16 {
+	return <-c.seqChan
+}
+
+// generateSeqIds returns new sequence ids.
+// A sequence id is generated for *every* request. It's the identifier used
+// to match up replies with requests.
+// Since sequence ids can only be 16 bit integers we start over at zero when it 
+// comes time to wrap.
+// FIXME: 65,536 requests without replies cannot be made in a single sequence.
+func (c *Conn) generateSeqIds() {
+	seqid := uint16(1)
+	for {
+		c.seqChan <- seqid
+		if seqid == uint16((1 << 16) - 1) {
+			seqid = 0
+		} else {
+			seqid++
+		}
+	}
+}
+
+// request encapsulates a buffer of raw bytes (containing the request data)
+// and a cookie, which when combined represents a single request.
+// The cookie is used to match up the reply/error.
+type request struct {
+	buf []byte
+	cookie cookie
+}
+
+// newRequest takes the bytes an a cookie, constructs a request type,
+// and sends it over the Conn.reqChan channel. It then returns the cookie
+// (for convenience).
+func (c *Conn) newRequest(buf []byte, cookie cookie) {
+	c.reqChan <- &request{buf: buf, cookie: cookie}
+}
+
+// sendRequests is run as a single goroutine that takes requests and writes
+// the bytes to the wire and adds the cookie to the cookie queue.
+func (c *Conn) sendRequests() {
+	for req := range c.reqChan {
+		c.cookieChan <- req.cookie
+		if _, err := c.conn.Write(req.buf); err != nil {
+			fmt.Fprintf(os.Stderr, "x protocol write error: %s\n", err)
+			close(c.reqChan)
+			return
+		}
+	}
+}
+
+// readResponses is a goroutine that reads events, errors and
+// replies off the wire.
+// When an event is read, it is always added to the event channel.
+// When an error is read, if it corresponds to an existing checked cookie,
+// it is sent to that cookie's error channel. Otherwise it is added to the
+// event channel.
+// When a reply is read, it is added to the corresponding cookie's reply
+// channel. (It is an error if no such cookie exists in this case.)
+// Finally, cookies that came "before" this reply are always cleaned up.
+func (c *Conn) readResponses() {
+	var (
+		err Error
+		event Event
+		seq uint16
+		replyBytes []byte
+	)
+
+	buf := make([]byte, 32)
+	for {
+		err, event, seq = nil, nil, 0
+
+		if _, err := io.ReadFull(c.conn, buf); err != nil {
+			fmt.Fprintf(os.Stderr, "x protocol read error: %s\n", err)
+			close(c.eventChan)
+			break
+		}
+
+		switch buf[0] {
+		case 0: // This is an error
+			// Use the constructor function for this error (that is auto
+			// generated) by looking it up by the error number.
+			err = newErrorFuncs[int(buf[1])](buf)
+			seq = err.SequenceId()
+
+			// This error is either sent to the event channel or a specific
+			// cookie's error channel below.
+		case 1: // This is a reply
+			seq = Get16(buf[2:])
+
+			// check to see if this reply has more bytes to be read
+			size := Get32(buf[4:])
+			if size > 0 {
+				byteCount := 32 + size * 4
+				biggerBuf := make([]byte, byteCount)
+				copy(biggerBuf[:32], buf)
+				if _, err := io.ReadFull(c.conn, biggerBuf[32:]); err != nil {
+					fmt.Fprintf(os.Stderr, "x protocol read error: %s\n", err)
+					close(c.eventChan)
+					break
+				}
+				replyBytes = biggerBuf
+			} else {
+				replyBytes = buf
+			}
+
+			// This reply is sent to its corresponding cookie below.
+		default: // This is an event
+			// Use the constructor function for this event (like for errors,
+			// and is also auto generated) by looking it up by the event number.
+			// Note that we AND the event number with 127 so that we ignore
+			// the most significant bit (which is set when it was sent from
+			// a SendEvent request).
+			event = newEventFuncs[int(buf[0] & 127)](buf)
+			// seq = event.SequenceId() // 0 for KeymapNotify 
+
+			// Put the event into the queue.
+			c.eventChan <- event
+
+			// No more processing for events.
+			continue
+
+			// If this was a KeymapNotify event, then we don't do any more
+			// processing since we don't have any sequence id.
+			// if event != nil { 
+				// if _, ok := event.(KeymapNotifyEvent); ok { 
+					// continue 
+				// } 
+			// } 
+		}
+
+		// At this point, we have a sequence number and we're either
+		// processing an error or a reply, which are both responses to
+		// requests. So all we have to do is find the cookie corresponding
+		// to this error/reply, and send the appropriate data to it.
+		// In doing so, we make sure that any cookies that came before it
+		// are marked as successful if they are void and checked.
+		// If there's a cookie that requires a reply that is before this
+		// reply, then something is wrong.
+		for cookie := range c.cookieChan {
+			// This is the cookie we're looking for. Process and break.
+			if cookie.Sequence == seq {
+				if err != nil { // this is an error to a request
+					// synchronous processing
+					if cookie.errorChan != nil {
+						cookie.errorChan <- err
+					} else { // asynchronous processing
+						c.eventChan <- err
+					}
+				} else { // this is a reply
+					if cookie.replyChan == nil {
+						fmt.Fprintf(os.Stderr,
+							"Reply with sequence id %d does not have a " +
+							"cookie with a valid reply channel.\n", seq)
+					} else {
+						cookie.replyChan <- replyBytes
+					}
+				}
+				break
+			}
+
+			switch {
+			// Checked requests with replies
+			case cookie.replyChan != nil && cookie.errorChan != nil:
+				fmt.Fprintf(os.Stderr,
+					"Found cookie with sequence id %d that is expecting a " +
+					"reply but will never get it.\n", cookie.Sequence)
+			// Unchecked requests with replies
+			case cookie.replyChan != nil && cookie.pingChan != nil:
+				cookie.pingChan <- true
+			// Checked requests without replies
+			case cookie.pingChan != nil && cookie.errorChan != nil:
+				cookie.pingChan <- true
+			// Unchecked requests without replies don't have any channels,
+			// so we can't do anything with them except let them pass by.
+			}
+		}
+	}
+}
+
+// processEventOrError takes an eventOrError, type switches on it,
+// and returns it in Go idiomatic style.
+func processEventOrError(everr eventOrError) (Event, Error) {
+	switch ee := everr.(type) {
+	case Event:
+		return ee, nil
+	case Error:
+		return nil, ee
+	default:
+		fmt.Fprintf(os.Stderr, "Invalid event/error type: %T\n", everr)
+	}
+	panic("unreachable")
+}
+
+// WaitForEvent returns the next event from the server.
+// It will block until an event is available.
+func (c *Conn) WaitForEvent() (Event, Error) {
+	return processEventOrError(<-c.eventChan)
+}
+
+// PollForEvent returns the next event from the server if one is available in 
+// the internal queue.
+// It will not block.
+func (c *Conn) PollForEvent() (Event, Error) {
+	select {
+	case everr := <-c.eventChan:
+		return processEventOrError(everr)
+	default:
+		return nil, nil
+	}
+	panic("unreachable")
+}
+
 // RegisterExtension adds the respective extension's major op code to
 // the extensions map.
 func (c *Conn) RegisterExtension(name string) error {
 	nameUpper := strings.ToUpper(name)
-	reply, err := c.QueryExtension(uint16(len(nameUpper)), nameUpper)
+	reply, err := c.QueryExtension(uint16(len(nameUpper)), nameUpper).Reply()
 
 	switch {
 	case err != nil:
@@ -216,190 +411,3 @@ func (c *Conn) RegisterExtension(name string) error {
 
 	return nil
 }
-
-// A simple queue used to stow away events.
-type queue struct {
-	data [][]byte
-	a, b int
-}
-
-func (q *queue) queue(item []byte) {
-	if q.b == len(q.data) {
-		if q.a > 0 {
-			copy(q.data, q.data[q.a:q.b])
-			q.a, q.b = 0, q.b-q.a
-		} else {
-			newData := make([][]byte, (len(q.data)*3)/2)
-			copy(newData, q.data)
-			q.data = newData
-		}
-	}
-	q.data[q.b] = item
-	q.b++
-}
-
-func (q *queue) dequeue(c *Conn) []byte {
-	c.dequeueLock.Lock()
-	defer c.dequeueLock.Unlock()
-
-	if q.a < q.b {
-		item := q.data[q.a]
-		q.a++
-		return item
-	}
-	return nil
-}
-
-// newWriteChan creates the channel required for writing to the net.Conn.
-func (c *Conn) newRequestChannels() {
-	c.requestChan = make(chan *Request, writeBuffer)
-	c.requestCookieChan = make(chan *Cookie, 1)
-
-	go func() {
-		for request := range c.requestChan {
-			cookieNum := c.nextCookie
-			c.nextCookie++
-
-			if request.cookieChan != nil {
-				cookie := newCookie(cookieNum)
-				c.cookies[cookieNum] = cookie
-				request.cookieChan <- cookie
-			}
-			if _, err := c.conn.Write(request.buf); err != nil {
-				fmt.Fprintf(os.Stderr, "x protocol write error: %s\n", err)
-				close(c.requestChan)
-				return
-			}
-		}
-	}()
-}
-
-// request is a buffered write to net.Conn.
-func (c *Conn) request(buf []byte, needsReply bool) *Cookie {
-	req := newRequest(buf, needsReply)
-	c.requestChan <- req
-
-	if req.cookieChan != nil {
-		cookie := <-req.cookieChan
-		close(req.cookieChan)
-		return cookie
-	}
-	return nil
-}
-
-func (c *Conn) sendRequest(needsReply bool, bufs ...[]byte) *Cookie {
-	if len(bufs) == 1 {
-		return c.request(bufs[0], needsReply)
-	}
-
-	total := make([]byte, 0)
-	for _, buf := range bufs {
-		total = append(total, buf...)
-	}
-	return c.request(total, needsReply)
-}
-
-func (c *Conn) newReadChannels() {
-	c.eventChan = make(chan bool, readBuffer)
-
-	onError := func() {
-		panic("read error")
-	}
-
-	go func() {
-		for {
-			buf := make([]byte, 32)
-			if _, err := io.ReadFull(c.conn, buf); err != nil {
-				fmt.Fprintf(os.Stderr, "x protocol read error: %s\n", err)
-				onError()
-				return
-			}
-
-			switch buf[0] {
-			case 0:
-				// err := &Error{ 
-					// Detail: buf[1], 
-					// Cookie: uint16(get16(buf[2:])), 
-					// Id:     Id(get32(buf[4:])), 
-					// Minor:  get16(buf[8:]), 
-					// Major:  buf[10], 
-				// } 
-				err := newErrorFuncs[int(buf[1])](buf)
-				if cookie, ok := c.cookies[err.SequenceId()]; ok {
-					cookie.errorChan <- err
-				} else {
-					fmt.Fprintf(os.Stderr, "x protocol error: %s\n", err)
-				}
-			case 1:
-				seq := uint16(Get16(buf[2:]))
-				if _, ok := c.cookies[seq]; !ok {
-					continue
-				}
-
-				size := Get32(buf[4:])
-				if size > 0 {
-					bigbuf := make([]byte, 32+size*4, 32+size*4)
-					copy(bigbuf[0:32], buf)
-					if _, err := io.ReadFull(c.conn, bigbuf[32:]); err != nil {
-						fmt.Fprintf(os.Stderr,
-							"x protocol read error: %s\n", err)
-						onError()
-						return
-					}
-					c.cookies[seq].replyChan <- bigbuf
-				} else {
-					c.cookies[seq].replyChan <- buf
-				}
-			default:
-				c.events.queue(buf)
-				select {
-				case c.eventChan <- true:
-				default:
-				}
-			}
-		}
-	}()
-}
-
-func (c *Conn) waitForReply(cookie *Cookie) ([]byte, error) {
-	if cookie == nil {
-		panic("nil cookie")
-	}
-	if _, ok := c.cookies[cookie.id]; !ok {
-		panic("waiting for a cookie that will never come")
-	}
-	select {
-	case reply := <-cookie.replyChan:
-		return reply, nil
-	case err := <-cookie.errorChan:
-		return nil, err
-	}
-	panic("unreachable")
-}
-
-// WaitForEvent returns the next event from the server.
-// It will block until an event is available.
-func (c *Conn) WaitForEvent() (Event, error) {
-	for {
-		if reply := c.events.dequeue(c); reply != nil {
-			evCode := reply[0] & 0x7f
-			return newEventFuncs[int(evCode)](reply), nil
-		}
-		if !<-c.eventChan {
-			return nil, errors.New("Event channel has been closed.")
-		}
-	}
-	panic("unreachable")
-}
-
-// PollForEvent returns the next event from the server if one is available in the internal queue.
-// It will not read from the connection, so you must call WaitForEvent to receive new events.
-// Only use this function to empty the queue without blocking.
-func (c *Conn) PollForEvent() (Event, error) {
-	if reply := c.events.dequeue(c); reply != nil {
-		evCode := reply[0] & 0x7f
-		return newEventFuncs[int(evCode)](reply), nil
-	}
-	return nil, nil
-}
-
