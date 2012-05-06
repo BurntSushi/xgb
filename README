@@ -8,7 +8,7 @@ of an xgbgen package.
 
 The biggest parts that *haven't* been rewritten by me are the connection and
 authentication handshakes. They're inherently messy, and there's really no
-reason to re-work them.
+reason to re-work them. The rest of XGB has been completely rewritten.
 
 I like to release my code under the WTFPL, but since I'm starting with someone
 else's work, I'm leaving the original license/contributor/author information
