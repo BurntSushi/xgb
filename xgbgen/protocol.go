@@ -36,6 +36,6 @@ func (p *Protocol) Initialize() {
 // isExt returns true if this protocol is an extension.
 // i.e., it's name isn't "xproto".
 func (p *Protocol) isExt() bool {
-	return strings.ToLower(p.Name) == "xproto"
+	return strings.ToLower(p.Name) != "xproto"
 }
 

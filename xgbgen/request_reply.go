@@ -22,7 +22,7 @@ type Request struct {
 // It also initializes the reply if one exists, and all fields in this request.
 func (r *Request) Initialize(p *Protocol) {
 	r.srcName = SrcName(p, r.xmlName)
-	if p.Name != "xproto" {
+	if p.isExt() {
 		r.srcName = strings.Title(strings.ToLower(p.Name)) + r.srcName
 	}
 
@@ -93,7 +93,7 @@ func (r *Request) Size(c *Context) Size {
 	// request. In an extension request, this byte is always occupied
 	// by the opcode of the request (while the first byte is always occupied
 	// by the opcode of the extension).
-	if c.protocol.Name == "xproto" {
+	if !c.protocol.isExt() {
 		size = size.Add(newFixedSize(3))
 	} else {
 		size = size.Add(newFixedSize(4))

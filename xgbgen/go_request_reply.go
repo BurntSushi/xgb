@@ -118,7 +118,7 @@ func (r *Request) WriteRequest(c *Context) {
 	c.Putln("b := 0")
 	c.Putln("buf := make([]byte, size)")
 	c.Putln("")
-	if strings.ToLower(c.protocol.Name) != "xproto" {
+	if c.protocol.isExt() {
 		c.Putln("buf[b] = c.extensions[\"%s\"]",
 			strings.ToUpper(c.protocol.ExtXName))
 		c.Putln("b += 1")
@@ -128,17 +128,17 @@ func (r *Request) WriteRequest(c *Context) {
 	c.Putln("b += 1")
 	c.Putln("")
 	if len(r.Fields) == 0 {
-		if strings.ToLower(c.protocol.Name) == "xproto" {
+		if !c.protocol.isExt() {
 			c.Putln("b += 1 // padding")
 		}
 		writeSize()
-	} else if strings.ToLower(c.protocol.Name) != "xproto" {
+	} else if c.protocol.isExt() {
 		writeSize()
 	}
 	for i, field := range r.Fields {
 		field.Write(c, "")
 		c.Putln("")
-		if i == 0 && strings.ToLower(c.protocol.Name) == "xproto" {
+		if i == 0 && !c.protocol.isExt() {
 			writeSize()
 		}
 	}

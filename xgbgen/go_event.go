@@ -47,7 +47,12 @@ func (e *Event) Define(c *Context) {
 
 	// Let's the XGB event loop read this event.
 	c.Putln("func init() {")
-	c.Putln("newEventFuncs[%d] = New%s", e.Number, e.EvType())
+	if c.protocol.isExt() {
+		c.Putln("newExtEventFuncs[\"%s\"][%d] = New%s",
+			c.protocol.ExtXName, e.Number, e.EvType())
+	} else {
+		c.Putln("newEventFuncs[%d] = New%s", e.Number, e.EvType())
+	}
 	c.Putln("}")
 	c.Putln("")
 }
@@ -130,7 +135,12 @@ func (e *EventCopy) Define(c *Context) {
 
 	// Let's the XGB event loop read this event.
 	c.Putln("func init() {")
-	c.Putln("newEventFuncs[%d] = New%s", e.Number, e.EvType())
+	if c.protocol.isExt() {
+		c.Putln("newExtEventFuncs[\"%s\"][%d] = New%s",
+			c.protocol.ExtXName, e.Number, e.EvType())
+	} else {
+		c.Putln("newEventFuncs[%d] = New%s", e.Number, e.EvType())
+	}
 	c.Putln("}")
 	c.Putln("")
 }

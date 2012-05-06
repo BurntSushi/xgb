@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -67,6 +68,43 @@ func (c *Context) Morph(xmlBytes []byte) {
 		for _, imp := range c.protocol.Imports {
 			c.Putln("// import \"%s\"", imp.Name)
 		}
+		c.Putln("")
+	}
+
+	// If this is an extension, create a function to initialize the extension
+	// before it can be used.
+	if c.protocol.isExt() {
+		name := strings.Title(c.protocol.Name) + "Init"
+		xname := c.protocol.ExtXName
+
+		c.Putln("// %s must be called before using the %s extension.",
+			name, xname)
+		c.Putln("func (c *Conn) %s() error {", name)
+		c.Putln("reply, err := c.QueryExtension(%d, \"%s\").Reply()",
+			len(xname), xname)
+		c.Putln("switch {")
+		c.Putln("case err != nil:")
+		c.Putln("return err")
+		c.Putln("case !reply.Present:")
+		c.Putln("return newError(\"No extension named %s could be found on " +
+			"on the server.\")", xname)
+		c.Putln("}")
+		c.Putln("")
+		c.Putln("c.extLock.Lock()")
+		c.Putln("c.extensions[\"%s\"] = reply.MajorOpcode", xname)
+		c.Putln("for evNum, fun := range newExtEventFuncs[\"%s\"] {", xname)
+		c.Putln("newEventFuncs[int(reply.FirstEvent) + evNum] = fun")
+		c.Putln("}")
+		c.Putln("c.extLock.Unlock()")
+		c.Putln("")
+		c.Putln("return nil")
+		c.Putln("}")
+		c.Putln("")
+
+		// Make sure newExtEventFuncs["EXT_NAME"] map is initialized.
+		c.Putln("func init() {")
+		c.Putln("newExtEventFuncs[\"%s\"] = make(map[int]newEventFun)", xname)
+		c.Putln("}")
 		c.Putln("")
 	}
 

@@ -64,7 +64,7 @@ func (e *Error) ImplementsError(c *Context) {
 	c.Putln("}")
 	c.Putln("")
 	c.Putln("func (err %s) BadId() Id {", e.ErrType())
-	if c.protocol.Name == "xproto" {
+	if !c.protocol.isExt() {
 		c.Putln("return Id(err.BadValue)")
 	} else {
 		c.Putln("return 0")

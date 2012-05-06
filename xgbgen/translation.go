@@ -410,7 +410,7 @@ func TypeSrcName(p *Protocol, typ Type) string {
 	// Since there is no namespace, we need to look for a namespace
 	// in the current context.
 	niceType := splitAndTitle(t)
-	if p.Name != "xproto" {
+	if p.isExt() {
 		for _, typ2 := range p.Types {
 			if t == typ2.XmlName() {
 				return strings.Title(p.Name) + niceType
