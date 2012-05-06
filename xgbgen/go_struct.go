@@ -104,7 +104,11 @@ func (s *Struct) WriteListSize(c *Context) {
 	c.Putln("// Struct list size %s", s.SrcName())
 	c.Putln("func %sListSize(list []%s) int {", s.SrcName(), s.SrcName())
 	c.Putln("size := 0")
-	c.Putln("for _, item := range list {")
+	if s.Size().Expression.Concrete() {
+		c.Putln("for _ = range list {")
+	} else {
+		c.Putln("for _, item := range list {")
+	}
 	c.Putln("size += %s", s.Size().Reduce("item."))
 	c.Putln("}")
 	c.Putln("return size")

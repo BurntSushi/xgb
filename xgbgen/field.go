@@ -142,8 +142,7 @@ func (f *ListField) Length() Size {
 // special function written in go_struct.go to compute the size (since the
 // size in this case can only be computed recursively).
 func (f *ListField) Size() Size {
-	simpleLen := &Function{
-		Name: "pad",
+	simpleLen := &Padding{
 		Expr: newBinaryOp("*", f.Length().Expression, f.Type.Size().Expression),
 	}
 

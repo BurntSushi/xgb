@@ -150,15 +150,21 @@ func (f *ExprField) Write(c *Context, prefix string) {
 
 // Value field
 func (f *ValueField) Define(c *Context) {
-	c.Putln("// valueparam field: type: %s, mask name: %s, list name: %s",
-		f.MaskType.SrcName(), f.MaskName, f.ListName)
-	panic("todo")
+	c.Putln("%s %s", f.MaskName, f.SrcType())
+	c.Putln("%s []uint32", f.ListName)
 }
 
 func (f *ValueField) Read(c *Context, prefix string) {
-	c.Putln("// reading valueparam: type: %s, mask name: %s, list name: %s",
-		f.MaskType.SrcName(), f.MaskName, f.ListName)
-	panic("todo")
+	ReadSimpleSingleField(c,
+		fmt.Sprintf("%s%s", prefix, f.MaskName), f.MaskType)
+	c.Putln("")
+	c.Putln("%s%s = make([]uint32, %s)",
+		prefix, f.ListName, f.ListLength().Reduce(prefix))
+	c.Putln("for i := 0; i < %s; i++ {", f.ListLength().Reduce(prefix))
+	c.Putln("%s%s[i] = Get32(buf[b:])", prefix, f.ListName)
+	c.Putln("b += 4")
+	c.Putln("}")
+	c.Putln("b = pad(b)")
 }
 
 func (f *ValueField) Write(c *Context, prefix string) {

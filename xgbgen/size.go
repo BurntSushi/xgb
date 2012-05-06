@@ -11,7 +11,7 @@ type Size struct {
 
 // newFixedSize creates a new Size with some fixed and known value.
 func newFixedSize(fixed uint) Size {
-	return Size{&Value{v: fixed}}
+	return Size{&Value{v: int(fixed)}}
 }
 
 // newExpressionSize creates a new Size with some expression.

@@ -89,7 +89,7 @@ func (xml *XML) Translate() *Protocol {
 		if !ok {
 			continue
 		}
-		nextValue := uint(0)
+		nextValue := 0
 		for _, item := range enum.Items {
 			if item.Expr == nil {
 				item.Expr = &Value{v: nextValue}
@@ -267,16 +267,16 @@ func (x *XMLExpression) Translate() Expression {
 			Expr: x.Exprs[0].Translate(),
 		}
 	case "value":
-		val, err := strconv.Atoi(x.Data)
+		val, err := strconv.Atoi(strings.TrimSpace(x.Data))
 		if err != nil {
 			log.Panicf("Could not convert '%s' in 'value' expression to int.",
 				x.Data)
 		}
 		return &Value{
-			v: uint(val),
+			v: val,
 		}
 	case "bit":
-		bit, err := strconv.Atoi(x.Data)
+		bit, err := strconv.Atoi(strings.TrimSpace(x.Data))
 		if err != nil {
 			log.Panicf("Could not convert '%s' in 'bit' expression to int.",
 				x.Data)
@@ -286,7 +286,7 @@ func (x *XMLExpression) Translate() Expression {
 				" is %d", bit)
 		}
 		return &Bit{
-			b: uint(bit),
+			b: bit,
 		}
 	case "fieldref":
 		return &FieldRef{

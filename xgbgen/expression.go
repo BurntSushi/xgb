@@ -18,7 +18,7 @@ type Expression interface {
 	// Eval evaluates a concrete expression. It is an error to call Eval
 	// on any expression that is not concrete (or contains any sub-expression
 	// that is not concrete).
-	Eval() uint
+	Eval() int
 
 	// Reduce attempts to evaluate any concrete sub-expressions.
 	// i.e., (1 + 2 * (5 + 1 + someSizeOfStruct) reduces to
@@ -45,7 +45,7 @@ func (e *Function) Concrete() bool {
 	return false
 }
 
-func (e *Function) Eval() uint {
+func (e *Function) Eval() int {
 	log.Fatalf("Cannot evaluate a 'Function'. It is not concrete.")
 	panic("unreachable")
 }
@@ -95,7 +95,7 @@ func (e *BinaryOp) Concrete() bool {
 	return e.Expr1.Concrete() && e.Expr2.Concrete()
 }
 
-func (e *BinaryOp) Eval() uint {
+func (e *BinaryOp) Eval() int {
 	switch e.Op {
 	case "+":
 		return e.Expr1.Eval() + e.Expr2.Eval()
@@ -108,7 +108,7 @@ func (e *BinaryOp) Eval() uint {
 	case "&amp;":
 		return e.Expr1.Eval() & e.Expr2.Eval()
 	case "&lt;&lt;":
-		return e.Expr1.Eval() << e.Expr2.Eval()
+		return int(uint(e.Expr1.Eval()) << uint(e.Expr2.Eval()))
 	}
 
 	log.Fatalf("Invalid binary operator '%s' for expression.", e.Op)
@@ -161,7 +161,7 @@ func (e *UnaryOp) Concrete() bool {
 	return e.Expr.Concrete()
 }
 
-func (e *UnaryOp) Eval() uint {
+func (e *UnaryOp) Eval() int {
 	switch e.Op {
 	case "~":
 		return ^e.Expr.Eval()
@@ -196,8 +196,8 @@ func (e *Padding) Concrete() bool {
 	return e.Expr.Concrete()
 }
 
-func (e *Padding) Eval() uint {
-	return uint(pad(int(e.Expr.Eval())))
+func (e *Padding) Eval() int {
+	return pad(e.Expr.Eval())
 }
 
 func (e *Padding) Reduce(prefix string) string {
@@ -225,8 +225,8 @@ func (e *PopCount) Concrete() bool {
 	return e.Expr.Concrete()
 }
 
-func (e *PopCount) Eval() uint {
-	return popCount(e.Expr.Eval())
+func (e *PopCount) Eval() int {
+	return int(popCount(uint(e.Expr.Eval())))
 }
 
 func (e *PopCount) Reduce(prefix string) string {
@@ -246,14 +246,14 @@ func (e *PopCount) Initialize(p *Protocol) {
 
 // Value represents some constant integer.
 type Value struct {
-	v uint
+	v int
 }
 
 func (e *Value) Concrete() bool {
 	return true
 }
 
-func (e *Value) Eval() uint {
+func (e *Value) Eval() int {
 	return e.v
 }
 
@@ -269,15 +269,15 @@ func (e *Value) Initialize(p *Protocol) {}
 
 // Bit represents some bit whose value is computed by '1 << bit'.
 type Bit struct {
-	b uint
+	b int
 }
 
 func (e *Bit) Concrete() bool {
 	return true
 }
 
-func (e *Bit) Eval() uint {
-	return 1 << e.b
+func (e *Bit) Eval() int {
+	return int(1 << uint(e.b))
 }
 
 func (e *Bit) Reduce(prefix string) string {
@@ -300,7 +300,7 @@ func (e *FieldRef) Concrete() bool {
 	return false
 }
 
-func (e *FieldRef) Eval() uint {
+func (e *FieldRef) Eval() int {
 	log.Fatalf("Cannot evaluate a 'FieldRef'. It is not concrete.")
 	panic("unreachable")
 }
@@ -333,7 +333,7 @@ func (e *EnumRef) Concrete() bool {
 	return false
 }
 
-func (e *EnumRef) Eval() uint {
+func (e *EnumRef) Eval() int {
 	log.Fatalf("Cannot evaluate an 'EnumRef'. It is not concrete.")
 	panic("unreachable")
 }
@@ -361,7 +361,7 @@ func (e *SumOf) Concrete() bool {
 	return false
 }
 
-func (e *SumOf) Eval() uint {
+func (e *SumOf) Eval() int {
 	log.Fatalf("Cannot evaluate a 'SumOf'. It is not concrete.")
 	panic("unreachable")
 }
