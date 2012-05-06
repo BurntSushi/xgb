@@ -1,19 +1,16 @@
+# This Makefile is used by the developer. It is not needed in any way to build
+# a checkout of the XGB repository.
+
 XPROTO=/usr/share/xcb
-all: xproto xinerama
 
-xproto:
-	python2 go_client.py $(XPROTO)/xproto.xml
-	gofmt -w xproto.go
+# All of the XML files in my /usr/share/xcb directory EXCEPT XKB. -_-
+all: bigreq.xml composite.xml damage.xml dpms.xml dri2.xml \
+		 ge.xml glx.xml randr.xml record.xml render.xml res.xml \
+		 screensaver.xml shape.xml shm.xml sync.xml xc_misc.xml \
+		 xevie.xml xf86dri.xml xf86vidmode.xml xfixes.xml xinerama.xml \
+		 xinput.xml xprint.xml xproto.xml xselinux.xml xtest.xml \
+		 xvmc.xml xv.xml
 
-xinerama:
-	python2 go_client.py $(XPROTO)/xinerama.xml
-	gofmt -w xinerama.go
-
-randr:
-	python2 go_client.py $(XPROTO)/randr.xml
-	gofmt -w randr.go
-
-render:
-	python2 go_client.py $(XPROTO)/render.xml
-	gofmt -w render.go
+%.xml:
+	xgbgen/xgbgen --proto-path $(XPROTO) $(XPROTO)/$*.xml > auto_$*.go
 
