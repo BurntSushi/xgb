@@ -7,7 +7,7 @@ import (
 
 // AllCaps is a regex to test if a string identifier is made of
 // all upper case letters.
-var AllCaps = regexp.MustCompile("^[A-Z0-9]+$")
+var allCaps = regexp.MustCompile("^[A-Z0-9]+$")
 
 // popCount counts number of bits 'set' in mask.
 func popCount(mask uint) uint {
@@ -30,7 +30,7 @@ func pad(n int) int {
 // first letter of each chunk, and smushes'em back together.
 func splitAndTitle(s string) string {
 	// If the string is all caps, lower it and capitalize first letter.
-	if AllCaps.MatchString(s) {
+	if allCaps.MatchString(s) {
 		return strings.Title(strings.ToLower(s))
 	}
 

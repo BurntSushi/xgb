@@ -6,20 +6,48 @@ import (
 	"strings"
 )
 
+// Field corresponds to any field described in an XML protocol description
+// file. This includes struct fields, union fields, request fields,
+// reply fields and so on.
+// To make code generation easier, fields that have types are also stored.
+// Note that not all fields support all methods defined in this interface.
+// For instance, a padding field does not have a source name.
 type Field interface {
+	// Initialize sets up the source name of this field.
 	Initialize(p *Protocol)
+
+	// SrcName is the Go source name of this field.
 	SrcName() string
+
+	// XmlName is the name of this field from the XML file.
 	XmlName() string
+
+	// SrcType is the Go source type name of this field.
 	SrcType() string
+
+	// Size returns an expression that computes the size (in bytes)
+	// of this field.
 	Size() Size
 
+	// Define writes the Go code to declare this field (in a struct definition).
 	Define(c *Context)
+
+	// Read writes the Go code to convert a byte slice to a Go value
+	// of this field.
+	// 'prefix' is the prefix of the name of the Go value.
 	Read(c *Context, prefix string)
+
+	// Write writes the Go code to convert a Go value to a byte slice of
+	// this field.
+	// 'prefix' is the prefix of the name of the Go value.
 	Write(c *Context, prefix string)
 }
 
 func (pad *PadField) Initialize(p *Protocol) {}
 
+// PadField represents any type of padding. It is omitted from
+// definitions, but is used in Read/Write to increment the buffer index.
+// It is also used in size calculation.
 type PadField struct {
 	Bytes uint
 }
@@ -40,6 +68,8 @@ func (p *PadField) Size() Size {
 	return newFixedSize(p.Bytes)
 }
 
+// SingleField represents most of the fields in an XML protocol description.
+// It corresponds to any single value.
 type SingleField struct {
 	srcName string
 	xmlName string
@@ -67,6 +97,7 @@ func (f *SingleField) Size() Size {
 	return f.Type.Size()
 }
 
+// ListField represents a list of values.
 type ListField struct {
 	srcName    string
 	xmlName    string
@@ -89,6 +120,9 @@ func (f *ListField) SrcType() string {
 	return fmt.Sprintf("[]%s", f.Type.SrcName())
 }
 
+// Length computes the *number* of values in a list.
+// If this ListField does not have any length expression, we throw our hands
+// up and simply compute the 'len' of the field name of this list.
 func (f *ListField) Length() Size {
 	if f.LengthExpr == nil {
 		return newExpressionSize(&Function{
@@ -101,6 +135,12 @@ func (f *ListField) Length() Size {
 	return newExpressionSize(f.LengthExpr)
 }
 
+// Size computes the *size* of a list (in bytes).
+// It it typically a simple matter of multiplying the length of the list by
+// the size of the type of the list.
+// But if it's a list of struct where the struct has a list field, we use a 
+// special function written in go_struct.go to compute the size (since the
+// size in this case can only be computed recursively).
 func (f *ListField) Size() Size {
 	simpleLen := &Function{
 		Name: "pad",
@@ -120,11 +160,6 @@ func (f *ListField) Size() Size {
 		}
 	case *Union:
 		return newExpressionSize(simpleLen)
-		// sizeFun := &Function{ 
-			// Name: fmt.Sprintf("%sListSize", f.Type.SrcName()), 
-			// Expr: &FieldRef{Name: f.SrcName()}, 
-		// } 
-		// return newExpressionSize(sizeFun) 
 	case *Base:
 		return newExpressionSize(simpleLen)
 	case *Resource:
@@ -145,10 +180,14 @@ func (f *ListField) Initialize(p *Protocol) {
 	}
 }
 
+// LocalField is exactly the same as a regular SingleField, except it isn't
+// sent over the wire. (i.e., it's probably used to compute an ExprField).
 type LocalField struct {
 	*SingleField
 }
 
+// ExprField is a field that is not parameterized, but is computed from values
+// of other fields.
 type ExprField struct {
 	srcName string
 	xmlName string
@@ -178,6 +217,9 @@ func (f *ExprField) Initialize(p *Protocol) {
 	f.Expr.Initialize(p)
 }
 
+// ValueField represents two fields in one: a mask and a list of 4-byte
+// integers. The mask specifies which kinds of values are in the list.
+// (i.e., See ConfigureWindow, CreateWindow, ChangeWindowAttributes, etc.)
 type ValueField struct {
 	Parent interface{}
 	MaskType Type
@@ -197,6 +239,10 @@ func (f *ValueField) SrcType() string {
 	return f.MaskType.SrcName()
 }
 
+// Size computes the size in bytes of the combination of the mask and list
+// in this value field.
+// The expression to compute this looks complicated, but it's really just
+// the number of bits set in the mask multiplied 4 (and padded of course).
 func (f *ValueField) Size() Size {
 	maskSize := f.MaskType.Size()
 	listSize := newExpressionSize(&Function{
@@ -234,6 +280,8 @@ func (f *ValueField) Initialize(p *Protocol) {
 	f.ListName = SrcName(p, f.ListName)
 }
 
+// SwitchField represents a 'switch' element in the XML protocol description
+// file. It is not currently used. (i.e., it is XKB voodoo.)
 type SwitchField struct {
 	Name     string
 	Expr     Expression
@@ -270,6 +318,8 @@ func (f *SwitchField) Initialize(p *Protocol) {
 	}
 }
 
+// Bitcase represents a single bitcase inside a switch expression.
+// It is not currently used. (i.e., it's XKB voodoo.)
 type Bitcase struct {
 	Fields []Field
 	Expr   Expression

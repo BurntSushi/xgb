@@ -18,19 +18,19 @@ type XML struct {
 	// Types for all top-level elements.
 	// First are the simple ones.
 	Imports     XMLImports     `xml:"import"`
-	Enums       XMLEnums       `xml:"enum"`
-	Xids        XMLXids        `xml:"xidtype"`
-	XidUnions   XMLXids        `xml:"xidunion"`
-	TypeDefs    XMLTypeDefs    `xml:"typedef"`
-	EventCopies XMLEventCopies `xml:"eventcopy"`
-	ErrorCopies XMLErrorCopies `xml:"errorcopy"`
+	Enums       []*XMLEnum       `xml:"enum"`
+	Xids        []*XMLXid        `xml:"xidtype"`
+	XidUnions   []*XMLXid        `xml:"xidunion"`
+	TypeDefs    []*XMLTypeDef    `xml:"typedef"`
+	EventCopies []*XMLEventCopy `xml:"eventcopy"`
+	ErrorCopies []*XMLErrorCopy `xml:"errorcopy"`
 
 	// Here are the complex ones, i.e., anything with "structure contents"
-	Structs  XMLStructs  `xml:"struct"`
-	Unions   XMLUnions   `xml:"union"`
-	Requests XMLRequests `xml:"request"`
-	Events   XMLEvents   `xml:"event"`
-	Errors   XMLErrors   `xml:"error"`
+	Structs  []*XMLStruct  `xml:"struct"`
+	Unions   []*XMLUnion   `xml:"union"`
+	Requests []*XMLRequest `xml:"request"`
+	Events   []*XMLEvent   `xml:"event"`
+	Errors   []*XMLError   `xml:"error"`
 }
 
 type XMLImports []*XMLImport
@@ -60,8 +60,6 @@ type XMLImport struct {
 	xml  *XML   `xml:"-"`
 }
 
-type XMLEnums []XMLEnum
-
 type XMLEnum struct {
 	Name  string         `xml:"name,attr"`
 	Items []*XMLEnumItem `xml:"item"`
@@ -72,21 +70,15 @@ type XMLEnumItem struct {
 	Expr *XMLExpression `xml:",any"`
 }
 
-type XMLXids []*XMLXid
-
 type XMLXid struct {
 	XMLName xml.Name
 	Name    string `xml:"name,attr"`
 }
 
-type XMLTypeDefs []*XMLTypeDef
-
 type XMLTypeDef struct {
 	Old string `xml:"oldname,attr"`
 	New string `xml:"newname,attr"`
 }
-
-type XMLEventCopies []*XMLEventCopy
 
 type XMLEventCopy struct {
 	Name   string `xml:"name,attr"`
@@ -94,55 +86,53 @@ type XMLEventCopy struct {
 	Ref    string `xml:"ref,attr"`
 }
 
-type XMLErrorCopies []*XMLErrorCopy
-
 type XMLErrorCopy struct {
 	Name   string `xml:"name,attr"`
 	Number int    `xml:"number,attr"`
 	Ref    string `xml:"ref,attr"`
 }
 
-type XMLStructs []*XMLStruct
-
 type XMLStruct struct {
 	Name   string    `xml:"name,attr"`
-	Fields XMLFields `xml:",any"`
+	Fields []*XMLField `xml:",any"`
 }
-
-type XMLUnions []*XMLUnion
 
 type XMLUnion struct {
 	Name   string    `xml:"name,attr"`
-	Fields XMLFields `xml:",any"`
+	Fields []*XMLField `xml:",any"`
 }
-
-type XMLRequests []*XMLRequest
 
 type XMLRequest struct {
 	Name    string    `xml:"name,attr"`
 	Opcode  int       `xml:"opcode,attr"`
 	Combine bool      `xml:"combine-adjacent,attr"`
-	Fields  XMLFields `xml:",any"`
+	Fields  []*XMLField `xml:",any"`
 	Reply   *XMLReply `xml:"reply"`
 }
 
 type XMLReply struct {
-	Fields XMLFields `xml:",any"`
+	Fields []*XMLField `xml:",any"`
 }
-
-type XMLEvents []*XMLEvent
 
 type XMLEvent struct {
 	Name       string    `xml:"name,attr"`
 	Number     int       `xml:"number,attr"`
 	NoSequence bool      `xml:"no-sequence-number,attr"`
-	Fields     XMLFields `xml:",any"`
+	Fields     []*XMLField `xml:",any"`
 }
-
-type XMLErrors []*XMLError
 
 type XMLError struct {
 	Name   string    `xml:"name,attr"`
 	Number int       `xml:"number,attr"`
-	Fields XMLFields `xml:",any"`
+	Fields []*XMLField `xml:",any"`
+}
+
+type XMLExpression struct {
+	XMLName xml.Name
+
+	Exprs []*XMLExpression `xml:",any"`
+
+	Data string `xml:",chardata"`
+	Op   string `xml:"op,attr"`
+	Ref  string `xml:"ref,attr"`
 }

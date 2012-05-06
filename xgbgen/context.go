@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+// Context represents the protocol we're converting to Go, and a writer
+// buffer to write the Go source to.
 type Context struct {
 	protocol *Protocol
 	out      *bytes.Buffer

@@ -5,11 +5,32 @@ import (
 	"log"
 )
 
+// Expression represents all the different forms of expressions possible in
+// side an XML protocol description file. It's also received a few custom
+// addendums to make applying special functions (like padding) easier.
 type Expression interface {
+	// Concrete determines whether this particular expression can be computed
+	// to some constant value inside xgbgen. (The alternative is that the
+	// expression can only be computed with values at run time of the
+	// generated code.)
 	Concrete() bool
+
+	// Eval evaluates a concrete expression. It is an error to call Eval
+	// on any expression that is not concrete (or contains any sub-expression
+	// that is not concrete).
 	Eval() uint
+
+	// Reduce attempts to evaluate any concrete sub-expressions.
+	// i.e., (1 + 2 * (5 + 1 + someSizeOfStruct) reduces to
+	// (3 * (6 + someSizeOfStruct)).
+	// 'prefix' is used preprended to any field reference name.
 	Reduce(prefix string) string
+
+	// String is an alias for Reduce("")
 	String() string
+
+	// Initialize makes sure all names in this expression and any subexpressions
+	// have been translated to Go source names.
 	Initialize(p *Protocol)
 }
 
@@ -41,12 +62,17 @@ func (e *Function) Initialize(p *Protocol) {
 	e.Expr.Initialize(p)
 }
 
+// BinaryOp is an expression that performs some operation (defined in the XML
+// file) with Expr1 and Expr2 as operands.
 type BinaryOp struct {
 	Op    string
 	Expr1 Expression
 	Expr2 Expression
 }
 
+// newBinaryOp constructs a new binary expression when both expr1 and expr2
+// are not nil. If one or both are nil, then the non-nil expression is
+// returned unchanged or nil is returned.
 func newBinaryOp(op string, expr1, expr2 Expression) Expression {
 	switch {
 	case expr1 != nil && expr2 != nil:
@@ -124,6 +150,8 @@ func (e *BinaryOp) Initialize(p *Protocol) {
 	e.Expr2.Initialize(p)
 }
 
+// UnaryOp is the same as BinaryOp, except it's a unary operator with only
+// one sub-expression.
 type UnaryOp struct {
 	Op   string
 	Expr Expression
@@ -158,6 +186,8 @@ func (e *UnaryOp) Initialize(p *Protocol) {
 	e.Expr.Initialize(p)
 }
 
+// Padding represents the application of the 'pad' function to some
+// sub-expression.
 type Padding struct {
 	Expr Expression
 }
@@ -185,6 +215,8 @@ func (e *Padding) Initialize(p *Protocol) {
 	e.Expr.Initialize(p)
 }
 
+// PopCount represents the application of the 'PopCount' function to
+// some sub-expression.
 type PopCount struct {
 	Expr Expression
 }
@@ -212,6 +244,7 @@ func (e *PopCount) Initialize(p *Protocol) {
 	e.Expr.Initialize(p)
 }
 
+// Value represents some constant integer.
 type Value struct {
 	v uint
 }
@@ -234,6 +267,7 @@ func (e *Value) String() string {
 
 func (e *Value) Initialize(p *Protocol) {}
 
+// Bit represents some bit whose value is computed by '1 << bit'.
 type Bit struct {
 	b uint
 }
@@ -256,6 +290,8 @@ func (e *Bit) String() string {
 
 func (e *Bit) Initialize(p *Protocol) {}
 
+// FieldRef represents a reference to some variable in the generated code
+// with name Name.
 type FieldRef struct {
 	Name string
 }
@@ -285,6 +321,9 @@ func (e *FieldRef) Initialize(p *Protocol) {
 	e.Name = SrcName(p, e.Name)
 }
 
+// EnumRef represents a reference to some enumeration field.
+// EnumKind is the "group" an EnumItem is the name of the specific enumeration 
+// value inside that group.
 type EnumRef struct {
 	EnumKind Type
 	EnumItem string
@@ -312,6 +351,8 @@ func (e *EnumRef) Initialize(p *Protocol) {
 	e.EnumItem = SrcName(p, e.EnumItem)
 }
 
+// SumOf represents a summation of the variable in the generated code named by
+// Name. It is not currently used. (It's XKB voodoo.)
 type SumOf struct {
 	Name string
 }

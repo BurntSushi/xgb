@@ -7,40 +7,19 @@ import (
 	"unicode"
 )
 
-type Protocol struct {
-	Name         string
-	ExtXName     string
-	ExtName      string
-	MajorVersion string
-	MinorVersion string
-
-	Imports  []*Protocol
-	Types    []Type
-	Requests []*Request
-}
-
-// Initialize traverses all structures, looks for 'Translation' type,
-// and looks up the real type in the namespace. It also sets the source
-// name for all relevant fields/structures.
-// This is necessary because we don't traverse the XML in order initially.
-func (p *Protocol) Initialize() {
-	for _, typ := range p.Types {
-		typ.Initialize(p)
-	}
-	for _, req := range p.Requests {
-		req.Initialize(p)
-	}
-}
-
+// Request represents all XML 'request' nodes.
+// If the request doesn't have a reply, Reply is nil.
 type Request struct {
-	srcName string
-	xmlName string
+	srcName string // The Go name of this request.
+	xmlName string // The XML name of this request.
 	Opcode  int
-	Combine bool
-	Fields  []Field
-	Reply   *Reply
+	Combine bool // Not currently used.
+	Fields  []Field // All fields in the request.
+	Reply   *Reply // A reply, if one exists for this request.
 }
 
+// Initialize creates the proper Go source name for this request.
+// It also initializes the reply if one exists, and all fields in this request.
 func (r *Request) Initialize(p *Protocol) {
 	r.srcName = SrcName(p, r.xmlName)
 	if p.Name != "xproto" {
@@ -63,6 +42,9 @@ func (r *Request) XmlName() string {
 	return r.xmlName
 }
 
+// ReplyName gets the Go source name of the function that generates a
+// reply type from a slice of bytes.
+// The generated function is not currently exported.
 func (r *Request) ReplyName() string {
 	if r.Reply == nil {
 		log.Panicf("Cannot call 'ReplyName' on request %s, which has no reply.",
@@ -73,6 +55,8 @@ func (r *Request) ReplyName() string {
 	return fmt.Sprintf("%sReply", lower)
 }
 
+// ReplyTypeName gets the Go source name of the type holding all reply data
+// for this request.
 func (r *Request) ReplyTypeName() string {
 	if r.Reply == nil {
 		log.Panicf("Cannot call 'ReplyName' on request %s, which has no reply.",
@@ -81,12 +65,17 @@ func (r *Request) ReplyTypeName() string {
 	return fmt.Sprintf("%sReply", r.SrcName())
 }
 
+// ReqName gets the Go source name of the function that generates a byte
+// slice from a list of parameters.
+// The generated function is not currently exported.
 func (r *Request) ReqName() string {
 	name := r.SrcName()
 	lower := string(unicode.ToLower(rune(name[0]))) + name[1:]
 	return fmt.Sprintf("%sRequest", lower)
 }
 
+// CookieName gets the Go source name of the type that holds cookies for
+// this request.
 func (r *Request) CookieName() string {
 	return fmt.Sprintf("%sCookie", r.SrcName())
 }
@@ -99,6 +88,11 @@ func (r *Request) CookieName() string {
 func (r *Request) Size(c *Context) Size {
 	size := newFixedSize(0)
 
+	// If this is a core protocol request, we squeeze in an extra byte of
+	// data (from the fields below) between the opcode and the size of the 
+	// request. In an extension request, this byte is always occupied
+	// by the opcode of the request (while the first byte is always occupied
+	// by the opcode of the extension).
 	if c.protocol.Name == "xproto" {
 		size = size.Add(newFixedSize(3))
 	} else {
@@ -107,7 +101,7 @@ func (r *Request) Size(c *Context) Size {
 
 	for _, field := range r.Fields {
 		switch field.(type) {
-		case *LocalField:
+		case *LocalField: // local fields don't go over the wire
 			continue
 		case *SingleField:
 			// mofos!!!
@@ -126,10 +120,16 @@ func (r *Request) Size(c *Context) Size {
 	})
 }
 
+// Reply encapsulates the fields associated with a 'reply' element.
 type Reply struct {
 	Fields []Field
 }
 
+// Size gets the number of bytes in this request's reply.
+// A reply always has at least 7 bytes:
+// 1 byte: A reply discriminant (first byte set to 1)
+// 2 bytes: A sequence number
+// 4 bytes: Number of additional bytes in 4-byte units past initial 32 bytes.
 func (r *Reply) Size() Size {
 	size := newFixedSize(0)
 
