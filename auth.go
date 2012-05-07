@@ -11,37 +11,6 @@ import (
 	"os"
 )
 
-func getU16BE(r io.Reader, b []byte) (uint16, error) {
-	_, err := io.ReadFull(r, b[0:2])
-	if err != nil {
-		return 0, err
-	}
-	return uint16(b[0])<<8 + uint16(b[1]), nil
-}
-
-func getBytes(r io.Reader, b []byte) ([]byte, error) {
-	n, err := getU16BE(r, b)
-	if err != nil {
-		return nil, err
-	}
-	if int(n) > len(b) {
-		return nil, errors.New("bytes too long for buffer")
-	}
-	_, err = io.ReadFull(r, b[0:n])
-	if err != nil {
-		return nil, err
-	}
-	return b[0:n], nil
-}
-
-func getString(r io.Reader, b []byte) (string, error) {
-	b, err := getBytes(r, b)
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
-}
-
 // readAuthority reads the X authority file for the DISPLAY.
 // If hostname == "" or hostname == "localhost",
 // then use the system's hostname (as returned by os.Hostname) instead.
@@ -110,4 +79,35 @@ func readAuthority(hostname, display string) (
 		}
 	}
 	panic("unreachable")
+}
+
+func getU16BE(r io.Reader, b []byte) (uint16, error) {
+	_, err := io.ReadFull(r, b[0:2])
+	if err != nil {
+		return 0, err
+	}
+	return uint16(b[0])<<8 + uint16(b[1]), nil
+}
+
+func getBytes(r io.Reader, b []byte) ([]byte, error) {
+	n, err := getU16BE(r, b)
+	if err != nil {
+		return nil, err
+	}
+	if int(n) > len(b) {
+		return nil, errors.New("bytes too long for buffer")
+	}
+	_, err = io.ReadFull(r, b[0:n])
+	if err != nil {
+		return nil, err
+	}
+	return b[0:n], nil
+}
+
+func getString(r io.Reader, b []byte) (string, error) {
+	b, err := getBytes(r, b)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
