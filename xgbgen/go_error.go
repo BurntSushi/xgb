@@ -133,7 +133,7 @@ func (e *ErrorCopy) ImplementsError(c *Context) {
 func ErrorFieldString(c *Context, fields []Field, errName string) {
 	c.Putln("fieldVals := make([]string, 0, %d)", len(fields))
 	c.Putln("fieldVals = append(fieldVals, \"NiceName: \" + err.NiceName)")
-	c.Putln("fieldVals = append(fieldVals, " +
+	c.Putln("fieldVals = append(fieldVals, "+
 		"sprintf(\"Sequence: %s\", err.Sequence))", "%d")
 	for _, field := range fields {
 		switch field.(type) {

@@ -86,7 +86,7 @@ func (c *Context) Morph(xmlBytes []byte) {
 		c.Putln("case err != nil:")
 		c.Putln("return err")
 		c.Putln("case !reply.Present:")
-		c.Putln("return newError(\"No extension named %s could be found on " +
+		c.Putln("return newError(\"No extension named %s could be found on "+
 			"on the server.\")", xname)
 		c.Putln("}")
 		c.Putln("")

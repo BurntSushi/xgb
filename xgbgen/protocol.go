@@ -38,4 +38,3 @@ func (p *Protocol) Initialize() {
 func (p *Protocol) isExt() bool {
 	return strings.ToLower(p.Name) != "xproto"
 }
-

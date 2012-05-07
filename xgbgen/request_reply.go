@@ -13,9 +13,9 @@ type Request struct {
 	srcName string // The Go name of this request.
 	xmlName string // The XML name of this request.
 	Opcode  int
-	Combine bool // Not currently used.
+	Combine bool    // Not currently used.
 	Fields  []Field // All fields in the request.
-	Reply   *Reply // A reply, if one exists for this request.
+	Reply   *Reply  // A reply, if one exists for this request.
 }
 
 // Initialize creates the proper Go source name for this request.

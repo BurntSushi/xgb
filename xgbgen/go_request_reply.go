@@ -71,14 +71,14 @@ func (r *Request) ReadReply(c *Context) {
 	c.Putln("// Waits and reads reply data from request %s", r.SrcName())
 	c.Putln("func (cook %s) Reply() (*%s, error) {",
 		r.CookieName(), r.ReplyTypeName())
-		c.Putln("buf, err := cook.reply()")
-		c.Putln("if err != nil {")
-		c.Putln("return nil, err")
-		c.Putln("}")
-		c.Putln("if buf == nil {")
-		c.Putln("return nil, nil")
-		c.Putln("}")
-		c.Putln("return %s(buf), nil", r.ReplyName())
+	c.Putln("buf, err := cook.reply()")
+	c.Putln("if err != nil {")
+	c.Putln("return nil, err")
+	c.Putln("}")
+	c.Putln("if buf == nil {")
+	c.Putln("return nil, nil")
+	c.Putln("}")
+	c.Putln("return %s(buf), nil", r.ReplyName())
 	c.Putln("}")
 	c.Putln("")
 
@@ -107,7 +107,7 @@ func (r *Request) ReadReply(c *Context) {
 
 func (r *Request) WriteRequest(c *Context) {
 	writeSize := func() {
-		c.Putln("Put16(buf[b:], uint16(size / 4)) "+
+		c.Putln("Put16(buf[b:], uint16(size / 4)) " +
 			"// write request size in 4-byte units")
 		c.Putln("b += 2")
 		c.Putln("")

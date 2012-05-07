@@ -1,5 +1,6 @@
 # This Makefile is used by the developer. It is not needed in any way to build
 # a checkout of the XGB repository.
+# It will be useful, however, if you are hacking at the code generator.
 
 XPROTO=/usr/share/xcb
 
@@ -19,4 +20,9 @@ test:
 
 bench:
 	go test -run 'nomatch' -bench '.*' -cpu 1,2,6
+
+gofmt:
+	gofmt -w *.go xgbgen/*.go examples/*.go examples/*/*.go
+	colcheck xgbgen/*.go examples/*.go examples/*/*.go \
+					 auth.go conn.go cookie.go doc.go xgb.go xgb_help.go xgb_test.go
 

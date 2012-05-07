@@ -17,11 +17,11 @@ type XML struct {
 
 	// Types for all top-level elements.
 	// First are the simple ones.
-	Imports     XMLImports     `xml:"import"`
-	Enums       []*XMLEnum       `xml:"enum"`
-	Xids        []*XMLXid        `xml:"xidtype"`
-	XidUnions   []*XMLXid        `xml:"xidunion"`
-	TypeDefs    []*XMLTypeDef    `xml:"typedef"`
+	Imports     XMLImports      `xml:"import"`
+	Enums       []*XMLEnum      `xml:"enum"`
+	Xids        []*XMLXid       `xml:"xidtype"`
+	XidUnions   []*XMLXid       `xml:"xidunion"`
+	TypeDefs    []*XMLTypeDef   `xml:"typedef"`
 	EventCopies []*XMLEventCopy `xml:"eventcopy"`
 	ErrorCopies []*XMLErrorCopy `xml:"errorcopy"`
 
@@ -93,21 +93,21 @@ type XMLErrorCopy struct {
 }
 
 type XMLStruct struct {
-	Name   string    `xml:"name,attr"`
+	Name   string      `xml:"name,attr"`
 	Fields []*XMLField `xml:",any"`
 }
 
 type XMLUnion struct {
-	Name   string    `xml:"name,attr"`
+	Name   string      `xml:"name,attr"`
 	Fields []*XMLField `xml:",any"`
 }
 
 type XMLRequest struct {
-	Name    string    `xml:"name,attr"`
-	Opcode  int       `xml:"opcode,attr"`
-	Combine bool      `xml:"combine-adjacent,attr"`
+	Name    string      `xml:"name,attr"`
+	Opcode  int         `xml:"opcode,attr"`
+	Combine bool        `xml:"combine-adjacent,attr"`
 	Fields  []*XMLField `xml:",any"`
-	Reply   *XMLReply `xml:"reply"`
+	Reply   *XMLReply   `xml:"reply"`
 }
 
 type XMLReply struct {
@@ -115,15 +115,15 @@ type XMLReply struct {
 }
 
 type XMLEvent struct {
-	Name       string    `xml:"name,attr"`
-	Number     int       `xml:"number,attr"`
-	NoSequence bool      `xml:"no-sequence-number,attr"`
+	Name       string      `xml:"name,attr"`
+	Number     int         `xml:"number,attr"`
+	NoSequence bool        `xml:"no-sequence-number,attr"`
 	Fields     []*XMLField `xml:",any"`
 }
 
 type XMLError struct {
-	Name   string    `xml:"name,attr"`
-	Number int       `xml:"number,attr"`
+	Name   string      `xml:"name,attr"`
+	Number int         `xml:"number,attr"`
 	Fields []*XMLField `xml:",any"`
 }
 

@@ -139,4 +139,3 @@ func (u *Union) WriteListSize(c *Context) {
 	c.Putln("}")
 	c.Putln("")
 }
-

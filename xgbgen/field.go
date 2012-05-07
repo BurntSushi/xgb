@@ -220,7 +220,7 @@ func (f *ExprField) Initialize(p *Protocol) {
 // integers. The mask specifies which kinds of values are in the list.
 // (i.e., See ConfigureWindow, CreateWindow, ChangeWindowAttributes, etc.)
 type ValueField struct {
-	Parent interface{}
+	Parent   interface{}
 	MaskType Type
 	MaskName string
 	ListName string
@@ -247,7 +247,7 @@ func (f *ValueField) Size() Size {
 	listSize := newExpressionSize(&Function{
 		Name: "pad",
 		Expr: &BinaryOp{
-			Op: "*",
+			Op:    "*",
 			Expr1: &Value{v: 4},
 			Expr2: &PopCount{
 				Expr: &Function{

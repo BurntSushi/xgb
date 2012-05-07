@@ -165,7 +165,7 @@ func (e *EventCopy) Write(c *Context) {
 func EventFieldString(c *Context, fields []Field, evName string) {
 	c.Putln("fieldVals := make([]string, 0, %d)", len(fields))
 	if evName != "KeymapNotify" {
-		c.Putln("fieldVals = append(fieldVals, " +
+		c.Putln("fieldVals = append(fieldVals, "+
 			"sprintf(\"Sequence: %s\", v.Sequence))", "%d")
 	}
 	for _, field := range fields {
@@ -177,7 +177,8 @@ func EventFieldString(c *Context, fields []Field, evName string) {
 			case *Base:
 			case *Resource:
 			case *TypeDef:
-			default: continue
+			default:
+				continue
 			}
 
 			switch field.SrcType() {

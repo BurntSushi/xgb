@@ -339,7 +339,7 @@ func (x *XMLField) Translate(parent interface{}) Field {
 		}
 	case "valueparam":
 		return &ValueField{
-			Parent: parent,
+			Parent:   parent,
 			MaskType: newTranslation(x.ValueMaskType),
 			MaskName: x.ValueMaskName,
 			ListName: x.ValueListName,

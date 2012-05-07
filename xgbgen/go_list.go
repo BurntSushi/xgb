@@ -107,4 +107,3 @@ func (f *ListField) Write(c *Context, prefix string) {
 			f.XmlName(), f.Type)
 	}
 }
-

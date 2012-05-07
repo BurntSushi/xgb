@@ -45,8 +45,8 @@ func init() {
 // Tests
 /******************************************************************************/
 
-// TestSynchronousError purposefully causes a BadLength error in an
-// InternAtom request, and checks it synchronously.
+// TestSynchronousError purposefully causes a BadWindow error in a
+// MapWindow request, and checks it synchronously.
 func TestSynchronousError(t *testing.T) {
 	err := X.MapWindowChecked(0).Check() // resource id 0 is always invalid
 	if err == nil {
@@ -205,7 +205,7 @@ func TestWindowEvents(t *testing.T) {
 // BenchmarkInternAtomsGood shows how many requests with replies
 // *should* be sent and gathered from the server. Namely, send as many
 // requests as you can at once, then go back and gather up all the replies.
-// More importantly, this approach can exploit parallelism better when
+// More importantly, this approach can exploit parallelism when
 // GOMAXPROCS > 1.
 // Run with `go test -run 'nomatch' -bench '.*' -cpu 1,2,6` if you have
 // multiple cores to see the improvement that parallelism brings.
