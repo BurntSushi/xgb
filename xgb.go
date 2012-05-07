@@ -53,10 +53,10 @@ func NewConn() (*Conn, error) {
 // If 'display' is empty it will be taken from os.Getenv("DISPLAY").
 //
 // Examples:
-//	NewConn(":1") -> net.Dial("unix", "", "/tmp/.X11-unix/X1")
-//	NewConn("/tmp/launch-123/:0") -> net.Dial("unix", "", "/tmp/launch-123/:0")
-//	NewConn("hostname:2.1") -> net.Dial("tcp", "", "hostname:6002")
-//	NewConn("tcp/hostname:1.0") -> net.Dial("tcp", "", "hostname:6001")
+// NewConn(":1") -> net.Dial("unix", "", "/tmp/.X11-unix/X1")
+// NewConn("/tmp/launch-123/:0") -> net.Dial("unix", "", "/tmp/launch-123/:0")
+// NewConn("hostname:2.1") -> net.Dial("tcp", "", "hostname:6002")
+// NewConn("tcp/hostname:1.0") -> net.Dial("tcp", "", "hostname:6001")
 func NewConnDisplay(display string) (*Conn, error) {
 	conn := &Conn{}
 
@@ -405,7 +405,8 @@ func (c *Conn) readResponses() {
 				fmt.Fprintf(os.Stderr,
 					"Found cookie with sequence id %d that is expecting a "+
 						"reply (and not an error) but will never get it. "+
-						"Currently on sequence number %d\n", cookie.Sequence, seq)
+						"Currently on sequence number %d\n",
+					cookie.Sequence, seq)
 			// Checked requests without replies
 			case cookie.pingChan != nil && cookie.errorChan != nil:
 				cookie.pingChan <- true
