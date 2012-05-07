@@ -9,11 +9,11 @@ import (
 // 'cookie' is most frequently used by embedding it into a more specific
 // kind of cookie, i.e., 'GetInputFocusCookie'.
 type cookie struct {
-	conn *Conn
-	Sequence        uint16
+	conn      *Conn
+	Sequence  uint16
 	replyChan chan []byte
 	errorChan chan error
-	pingChan chan bool
+	pingChan  chan bool
 }
 
 // newCookie creates a new cookie with the correct channels initialized
@@ -24,11 +24,11 @@ type cookie struct {
 // corresponding to this cookie is sent over the wire.
 func (c *Conn) newCookie(checked, reply bool) *cookie {
 	cookie := &cookie{
-		conn: c,
-		Sequence: 0, // we add the sequence id just before sending a request
+		conn:      c,
+		Sequence:  0, // we add the sequence id just before sending a request
 		replyChan: nil,
 		errorChan: nil,
-		pingChan: nil,
+		pingChan:  nil,
 	}
 
 	// There are four different kinds of cookies:
@@ -151,4 +151,3 @@ func (c cookie) check() error {
 	}
 	panic("unreachable")
 }
-

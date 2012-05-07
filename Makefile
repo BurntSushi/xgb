@@ -14,3 +14,9 @@ all: bigreq.xml composite.xml damage.xml dpms.xml dri2.xml \
 %.xml:
 	xgbgen/xgbgen --proto-path $(XPROTO) $(XPROTO)/$*.xml > auto_$*.go
 
+test:
+	go test
+
+bench:
+	go test -run 'nomatch' -bench '.*' -cpu 1,2,6
+

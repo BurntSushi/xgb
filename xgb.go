@@ -12,7 +12,6 @@ import (
 	"io"
 	"net"
 	"os"
-	"strings"
 	"sync"
 )
 
@@ -22,27 +21,24 @@ const (
 	// there are many requests without replies made in sequence. Once the
 	// buffer fills, a round trip request is made to clear the buffer.
 	cookieBuffer = 1000
-	readBuffer  = 100
-	writeBuffer = 100
 )
 
 // A Conn represents a connection to an X server.
 type Conn struct {
 	host          string
 	conn          net.Conn
-	err           error
 	display       string
 	defaultScreen int
 	Setup         SetupInfo
-	extensions    map[string]byte
 
-	eventChan         chan eventOrError
+	eventChan  chan eventOrError
 	cookieChan chan *cookie
-	xidChan chan xid
-	seqChan chan uint16
-	reqChan chan *request
+	xidChan    chan xid
+	seqChan    chan uint16
+	reqChan    chan *request
 
-	extLock     sync.Mutex
+	extLock    sync.Mutex
+	extensions map[string]byte
 }
 
 // NewConn creates a new connection instance. It initializes locks, data
@@ -109,9 +105,16 @@ type Event interface {
 	String() string
 }
 
+type newEventFun func(buf []byte) Event
+
 // newEventFuncs is a map from event numbers to functions that create
 // the corresponding event.
-var newEventFuncs = map[int]func(buf []byte) Event{}
+var newEventFuncs = make(map[int]newEventFun)
+
+// newExtEventFuncs is a temporary map that stores event constructor functions
+// for each extension. When an extension is initialize, each event for that
+// extension is added to the 'newEventFuncs' map.
+var newExtEventFuncs = make(map[string]map[int]newEventFun)
 
 // Error is an interface that can contain any of the errors returned by
 // the server. Use a type assertion switch to extract the Error structs.
@@ -144,7 +147,7 @@ func (c *Conn) NewId() (Id, error) {
 // channel. If no new resource id can be generated, id is set to 0 and a
 // non-nil error is set in xid.err.
 type xid struct {
-	id Id
+	id  Id
 	err error
 }
 
@@ -174,7 +177,7 @@ func (conn *Conn) generateXIds() {
 	last := uint32(0)
 	for {
 		// TODO: Use the XC Misc extension to look for released ids.
-		if last > 0 && last >= max - inc + 1 {
+		if last > 0 && last >= max-inc+1 {
 			conn.xidChan <- xid{
 				id: Id(0),
 				err: errors.New("There are no more available resource" +
@@ -184,7 +187,7 @@ func (conn *Conn) generateXIds() {
 
 		last += inc
 		conn.xidChan <- xid{
-			id: Id(last | conn.Setup.ResourceIdBase),
+			id:  Id(last | conn.Setup.ResourceIdBase),
 			err: nil,
 		}
 	}
@@ -206,7 +209,7 @@ func (c *Conn) generateSeqIds() {
 	seqid := uint16(1)
 	for {
 		c.seqChan <- seqid
-		if seqid == uint16((1 << 16) - 1) {
+		if seqid == uint16((1<<16)-1) {
 			seqid = 0
 		} else {
 			seqid++
@@ -218,7 +221,7 @@ func (c *Conn) generateSeqIds() {
 // and a cookie, which when combined represents a single request.
 // The cookie is used to match up the reply/error.
 type request struct {
-	buf []byte
+	buf    []byte
 	cookie *cookie
 }
 
@@ -238,7 +241,7 @@ func (c *Conn) sendRequests() {
 		// trip to clear out the cookie buffer.
 		// Note that we circumvent the request channel, because we're *in*
 		// the request channel.
-		if len(c.cookieChan) == cookieBuffer - 1 {
+		if len(c.cookieChan) == cookieBuffer-1 {
 			cookie := c.newCookie(true, true)
 			cookie.Sequence = c.newSequenceId()
 			c.cookieChan <- cookie
@@ -277,9 +280,9 @@ func (c *Conn) writeBuffer(buf []byte) bool {
 // Finally, cookies that came "before" this reply are always cleaned up.
 func (c *Conn) readResponses() {
 	var (
-		err Error
-		event Event
-		seq uint16
+		err        Error
+		event      Event
+		seq        uint16
 		replyBytes []byte
 	)
 
@@ -300,9 +303,9 @@ func (c *Conn) readResponses() {
 			newErrFun, ok := newErrorFuncs[int(buf[1])]
 			if !ok {
 				fmt.Fprintf(os.Stderr,
-					"BUG: " +
-					"Could not find error constructor function for error " +
-					"with number %d.", buf[1])
+					"BUG: "+
+						"Could not find error constructor function for error "+
+						"with number %d.\n", buf[1])
 				continue
 			}
 			err = newErrFun(buf)
@@ -316,7 +319,7 @@ func (c *Conn) readResponses() {
 			// check to see if this reply has more bytes to be read
 			size := Get32(buf[4:])
 			if size > 0 {
-				byteCount := 32 + size * 4
+				byteCount := 32 + size*4
 				biggerBuf := make([]byte, byteCount)
 				copy(biggerBuf[:32], buf)
 				if _, err := io.ReadFull(c.conn, biggerBuf[32:]); err != nil {
@@ -340,9 +343,9 @@ func (c *Conn) readResponses() {
 			newEventFun, ok := newEventFuncs[evNum]
 			if !ok {
 				fmt.Fprintf(os.Stderr,
-					"BUG: " +
-					"Could not find event constructor function for event " +
-					"with number %d.", evNum)
+					"BUG: "+
+						"Could not find event constructor function for event "+
+						"with number %d.", evNum)
 				continue
 			}
 
@@ -380,8 +383,8 @@ func (c *Conn) readResponses() {
 				} else { // this is a reply
 					if cookie.replyChan == nil {
 						fmt.Fprintf(os.Stderr,
-							"Reply with sequence id %d does not have a " +
-							"cookie with a valid reply channel.\n", seq)
+							"Reply with sequence id %d does not have a "+
+								"cookie with a valid reply channel.\n", seq)
 						continue
 					} else {
 						cookie.replyChan <- replyBytes
@@ -394,20 +397,20 @@ func (c *Conn) readResponses() {
 			// Checked requests with replies
 			case cookie.replyChan != nil && cookie.errorChan != nil:
 				fmt.Fprintf(os.Stderr,
-					"Found cookie with sequence id %d that is expecting a " +
-					"reply but will never get it. Currently on sequence " +
-					"number %d\n", cookie.Sequence, seq)
+					"Found cookie with sequence id %d that is expecting a "+
+						"reply but will never get it. Currently on sequence "+
+						"number %d\n", cookie.Sequence, seq)
 			// Unchecked requests with replies
 			case cookie.replyChan != nil && cookie.pingChan != nil:
 				fmt.Fprintf(os.Stderr,
-					"Found cookie with sequence id %d that is expecting a " +
-					"reply (and not an error) but will never get it. " +
-					"Currently on sequence number %d\n", cookie.Sequence, seq)
+					"Found cookie with sequence id %d that is expecting a "+
+						"reply (and not an error) but will never get it. "+
+						"Currently on sequence number %d\n", cookie.Sequence, seq)
 			// Checked requests without replies
 			case cookie.pingChan != nil && cookie.errorChan != nil:
 				cookie.pingChan <- true
-			// Unchecked requests without replies don't have any channels,
-			// so we can't do anything with them except let them pass by.
+				// Unchecked requests without replies don't have any channels,
+				// so we can't do anything with them except let them pass by.
 			}
 		}
 	}
@@ -445,25 +448,4 @@ func (c *Conn) PollForEvent() (Event, Error) {
 		return nil, nil
 	}
 	panic("unreachable")
-}
-
-// RegisterExtension adds the respective extension's major op code to
-// the extensions map.
-func (c *Conn) RegisterExtension(name string) error {
-	nameUpper := strings.ToUpper(name)
-	reply, err := c.QueryExtension(uint16(len(nameUpper)), nameUpper).Reply()
-
-	switch {
-	case err != nil:
-		return err
-	case !reply.Present:
-		return errors.New(fmt.Sprintf("No extension named '%s' is present.",
-			nameUpper))
-	}
-
-	c.extLock.Lock()
-	c.extensions[nameUpper] = reply.MajorOpcode
-	c.extLock.Unlock()
-
-	return nil
 }

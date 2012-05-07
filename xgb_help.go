@@ -1,6 +1,7 @@
 package xgb
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -14,6 +15,12 @@ func stringsJoin(ss []string, sep string) string {
 // sprintf is so we don't need to import 'fmt' in the generated Go files.
 func sprintf(format string, v ...interface{}) string {
 	return fmt.Sprintf(format, v...)
+}
+
+// newError is just a wrapper for errors.New. Exists for the same reason
+// that 'stringsJoin' and 'sprintf' exists.
+func newError(format string, v ...interface{}) error {
+	return errors.New(fmt.Sprintf(format, v...))
 }
 
 // Pad a length to align on 4 bytes.
