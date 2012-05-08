@@ -1,7 +1,6 @@
 package xgb
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -17,10 +16,10 @@ func sprintf(format string, v ...interface{}) string {
 	return fmt.Sprintf(format, v...)
 }
 
-// newError is just a wrapper for errors.New. Exists for the same reason
+// errorf is just a wrapper for fmt.Errorf. Exists for the same reason
 // that 'stringsJoin' and 'sprintf' exists.
-func newError(format string, v ...interface{}) error {
-	return errors.New(fmt.Sprintf(format, v...))
+func errorf(format string, v ...interface{}) error {
+	return fmt.Errorf(format, v...)
 }
 
 // Pad a length to align on 4 bytes.

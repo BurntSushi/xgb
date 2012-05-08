@@ -7,6 +7,9 @@ GOMAXPROCS > 1. (See the benchmarks in xgb_test.go for evidence.)
 
 Please see doc.go for more info.
 
+Note that unless you know you need XGB, you can probably make your life
+easier by using a slightly higher level library: xgbutil.
+
 BurntSushi's Fork
 =================
 I've forked the XGB repository from Google Code due to inactivty upstream.

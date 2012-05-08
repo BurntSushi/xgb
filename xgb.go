@@ -2,12 +2,16 @@ package xgb
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"io"
 	"net"
-	"os"
 	"sync"
 )
+
+func init() {
+	log.SetFlags(0)
+	log.SetPrefix("XGB:")
+}
 
 const (
 	// cookieBuffer represents the queue size of cookies existing at any
@@ -15,6 +19,26 @@ const (
 	// there are many requests without replies made in sequence. Once the
 	// buffer fills, a round trip request is made to clear the buffer.
 	cookieBuffer = 1000
+
+	// xidBuffer represents the queue size of the xid channel.
+	// I don't think this value matters much, since xid generation is not
+	// that expensive.
+	xidBuffer = 5
+
+	// seqBuffer represents the queue size of the sequence number channel.
+	// I don't think this value matters much, since sequence number generation 
+	// is not that expensive.
+	seqBuffer = 5
+
+	// reqBuffer represents the queue size of the number of requests that
+	// can be made until new ones block. This value seems OK.
+	reqBuffer = 100
+
+	// eventBuffer represents the queue size of the number of events or errors
+	// that can be loaded off the wire and not grabbed with WaitForEvent
+	// until reading an event blocks. This value should be big enough to handle
+	// bursts of events.
+	eventBuffer = 500
 )
 
 // A Conn represents a connection to an X server.
@@ -64,10 +88,10 @@ func NewConnDisplay(display string) (*Conn, error) {
 	conn.extensions = make(map[string]byte)
 
 	conn.cookieChan = make(chan *cookie, cookieBuffer)
-	conn.xidChan = make(chan xid, 5)
-	conn.seqChan = make(chan uint16, 20)
-	conn.reqChan = make(chan *request, 100)
-	conn.eventChan = make(chan eventOrError, 100)
+	conn.xidChan = make(chan xid, xidBuffer)
+	conn.seqChan = make(chan uint16, seqBuffer)
+	conn.reqChan = make(chan *request, reqBuffer)
+	conn.eventChan = make(chan eventOrError, eventBuffer)
 
 	go conn.generateXIds()
 	go conn.generateSeqIds()
@@ -106,7 +130,7 @@ type newEventFun func(buf []byte) Event
 var newEventFuncs = make(map[int]newEventFun)
 
 // newExtEventFuncs is a temporary map that stores event constructor functions
-// for each extension. When an extension is initialize, each event for that
+// for each extension. When an extension is initialized, each event for that
 // extension is added to the 'newEventFuncs' map.
 var newExtEventFuncs = make(map[string]map[int]newEventFun)
 
@@ -119,9 +143,16 @@ type Error interface {
 	Error() string
 }
 
+type newErrorFun func(buf []byte) Error
+
 // newErrorFuncs is a map from error numbers to functions that create
 // the corresponding error.
-var newErrorFuncs = map[int]func(buf []byte) Error{}
+var newErrorFuncs = make(map[int]newErrorFun)
+
+// newExtErrorFuncs is a temporary map that stores error constructor functions
+// for each extension. When an extension is initialized, each error for that
+// extension is added to the 'newErrorFuncs' map.
+var newExtErrorFuncs = make(map[string]map[int]newErrorFun)
 
 // eventOrError corresponds to values that can be either an event or an
 // error.
@@ -239,28 +270,22 @@ func (c *Conn) sendRequests() {
 			cookie := c.newCookie(true, true)
 			cookie.Sequence = c.newSequenceId()
 			c.cookieChan <- cookie
-			if !c.writeBuffer(c.getInputFocusRequest()) {
-				return
-			}
+			c.writeBuffer(c.getInputFocusRequest())
 			GetInputFocusCookie{cookie}.Reply() // wait for the buffer to clear
 		}
 
 		req.cookie.Sequence = c.newSequenceId()
 		c.cookieChan <- req.cookie
-		if !c.writeBuffer(req.buf) {
-			return
-		}
+		c.writeBuffer(req.buf)
 	}
 }
 
 // writeBuffer is a convenience function for writing a byte slice to the wire.
-func (c *Conn) writeBuffer(buf []byte) bool {
+func (c *Conn) writeBuffer(buf []byte) {
 	if _, err := c.conn.Write(buf); err != nil {
-		fmt.Fprintf(os.Stderr, "x protocol write error: %s\n", err)
-		close(c.reqChan)
-		return false
+		log.Printf("Write error: %s", err)
+		log.Fatal("A write error is unrecoverable. Exiting...")
 	}
-	return true
 }
 
 // readResponses is a goroutine that reads events, errors and
@@ -285,9 +310,8 @@ func (c *Conn) readResponses() {
 		err, event, seq = nil, nil, 0
 
 		if _, err := io.ReadFull(c.conn, buf); err != nil {
-			fmt.Fprintf(os.Stderr, "x protocol read error: %s\n", err)
-			close(c.eventChan)
-			break
+			log.Printf("Read error: %s", err)
+			log.Fatal("A read error is unrecoverable. Exiting...")
 		}
 
 		switch buf[0] {
@@ -296,10 +320,8 @@ func (c *Conn) readResponses() {
 			// generated) by looking it up by the error number.
 			newErrFun, ok := newErrorFuncs[int(buf[1])]
 			if !ok {
-				fmt.Fprintf(os.Stderr,
-					"BUG: "+
-						"Could not find error constructor function for error "+
-						"with number %d.\n", buf[1])
+				log.Printf("BUG: Could not find error constructor function " +
+					"for error with number %d.", buf[1])
 				continue
 			}
 			err = newErrFun(buf)
@@ -317,9 +339,8 @@ func (c *Conn) readResponses() {
 				biggerBuf := make([]byte, byteCount)
 				copy(biggerBuf[:32], buf)
 				if _, err := io.ReadFull(c.conn, biggerBuf[32:]); err != nil {
-					fmt.Fprintf(os.Stderr, "x protocol read error: %s\n", err)
-					close(c.eventChan)
-					break
+					log.Printf("Read error: %s", err)
+					log.Fatal("A read error is unrecoverable. Exiting...")
 				}
 				replyBytes = biggerBuf
 			} else {
@@ -336,17 +357,24 @@ func (c *Conn) readResponses() {
 			evNum := int(buf[0] & 127)
 			newEventFun, ok := newEventFuncs[evNum]
 			if !ok {
-				fmt.Fprintf(os.Stderr,
-					"BUG: "+
-						"Could not find event constructor function for event "+
-						"with number %d.", evNum)
+				log.Printf("BUG: Could not find event construct function " +
+					"for event with number %d.", evNum)
 				continue
 			}
 
 			event = newEventFun(buf)
 
 			// Put the event into the queue.
-			c.eventChan <- event
+			// FIXME: I'm not sure if using a goroutine here to guarantee
+			// a non-blocking send is the right way to go. I should implement
+			// a proper dynamic queue.
+			if cap(c.eventChan) == len(c.eventChan) {
+				go func() {
+					c.eventChan <- event
+				}()
+			} else {
+				c.eventChan <- event
+			}
 
 			// No more processing for events.
 			continue
@@ -376,9 +404,8 @@ func (c *Conn) readResponses() {
 					}
 				} else { // this is a reply
 					if cookie.replyChan == nil {
-						fmt.Fprintf(os.Stderr,
-							"Reply with sequence id %d does not have a "+
-								"cookie with a valid reply channel.\n", seq)
+						log.Printf("Reply with sequence id %d does not have a "+
+							"cookie with a valid reply channel.", seq)
 						continue
 					} else {
 						cookie.replyChan <- replyBytes
@@ -390,16 +417,14 @@ func (c *Conn) readResponses() {
 			switch {
 			// Checked requests with replies
 			case cookie.replyChan != nil && cookie.errorChan != nil:
-				fmt.Fprintf(os.Stderr,
-					"Found cookie with sequence id %d that is expecting a "+
-						"reply but will never get it. Currently on sequence "+
-						"number %d\n", cookie.Sequence, seq)
+				log.Printf("Found cookie with sequence id %d that is " +
+					"expecting a reply but will never get it. Currently " +
+					"on sequence number %d", cookie.Sequence, seq)
 			// Unchecked requests with replies
 			case cookie.replyChan != nil && cookie.pingChan != nil:
-				fmt.Fprintf(os.Stderr,
-					"Found cookie with sequence id %d that is expecting a "+
-						"reply (and not an error) but will never get it. "+
-						"Currently on sequence number %d\n",
+				log.Printf("Found cookie with sequence id %d that is " +
+					"expecting a reply (and not an error) but will never " +
+					"get it. Currently on sequence number %d",
 					cookie.Sequence, seq)
 			// Checked requests without replies
 			case cookie.pingChan != nil && cookie.errorChan != nil:
@@ -420,7 +445,7 @@ func processEventOrError(everr eventOrError) (Event, Error) {
 	case Error:
 		return nil, ee
 	default:
-		fmt.Fprintf(os.Stderr, "Invalid event/error type: %T\n", everr)
+		log.Printf("Invalid event/error type: %T", everr)
 		return nil, nil
 	}
 	panic("unreachable")

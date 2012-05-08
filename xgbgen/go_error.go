@@ -29,7 +29,12 @@ func (e *Error) Define(c *Context) {
 
 	// Let's the XGB event loop read this error.
 	c.Putln("func init() {")
-	c.Putln("newErrorFuncs[%d] = New%s", e.Number, e.ErrType())
+	if c.protocol.isExt() {
+		c.Putln("newExtErrorFuncs[\"%s\"][%d] = New%s",
+			c.protocol.ExtXName, e.Number, e.ErrType())
+	} else {
+		c.Putln("newErrorFuncs[%d] = New%s", e.Number, e.ErrType())
+	}
 	c.Putln("}")
 	c.Putln("")
 }
@@ -95,7 +100,12 @@ func (e *ErrorCopy) Define(c *Context) {
 
 	// Let's the XGB know how to read this error.
 	c.Putln("func init() {")
-	c.Putln("newErrorFuncs[%d] = New%s", e.Number, e.ErrType())
+	if c.protocol.isExt() {
+		c.Putln("newExtErrorFuncs[\"%s\"][%d] = New%s",
+			c.protocol.ExtXName, e.Number, e.ErrType())
+	} else {
+		c.Putln("newErrorFuncs[%d] = New%s", e.Number, e.ErrType())
+	}
 	c.Putln("}")
 	c.Putln("")
 }

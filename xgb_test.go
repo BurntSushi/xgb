@@ -162,6 +162,24 @@ func TestWindowEvents(t *testing.T) {
 		t.Fatalf("ConfigureWindow: %s", err)
 	}
 
+	err = X.ConfigureWindowChecked(wid,
+		ConfigWindowX|ConfigWindowY|
+			ConfigWindowWidth|ConfigWindowHeight,
+		[]uint32{uint32(gx + 2), uint32(gy), uint32(gw), uint32(gh)}).Check()
+	if err != nil {
+		t.Fatalf("ConfigureWindow: %s", err)
+	}
+
+	err = X.ConfigureWindowChecked(wid,
+		ConfigWindowX|ConfigWindowY|
+			ConfigWindowWidth|ConfigWindowHeight,
+		[]uint32{uint32(gx + 1), uint32(gy), uint32(gw), uint32(gh)}).Check()
+	if err != nil {
+		t.Fatalf("ConfigureWindow: %s", err)
+	}
+
+	TestProperty(t)
+
 	evOrErr := waitForEvent(t, 5)
 	switch event := evOrErr.ev.(type) {
 	case ConfigureNotifyEvent:

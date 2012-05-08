@@ -86,7 +86,7 @@ func (c *Context) Morph(xmlBytes []byte) {
 		c.Putln("case err != nil:")
 		c.Putln("return err")
 		c.Putln("case !reply.Present:")
-		c.Putln("return newError(\"No extension named %s could be found on "+
+		c.Putln("return errorf(\"No extension named %s could be found on "+
 			"on the server.\")", xname)
 		c.Putln("}")
 		c.Putln("")
@@ -95,6 +95,9 @@ func (c *Context) Morph(xmlBytes []byte) {
 		c.Putln("for evNum, fun := range newExtEventFuncs[\"%s\"] {", xname)
 		c.Putln("newEventFuncs[int(reply.FirstEvent) + evNum] = fun")
 		c.Putln("}")
+		c.Putln("for errNum, fun := range newExtErrorFuncs[\"%s\"] {", xname)
+		c.Putln("newErrorFuncs[int(reply.FirstError) + errNum] = fun")
+		c.Putln("}")
 		c.Putln("c.extLock.Unlock()")
 		c.Putln("")
 		c.Putln("return nil")
@@ -102,8 +105,10 @@ func (c *Context) Morph(xmlBytes []byte) {
 		c.Putln("")
 
 		// Make sure newExtEventFuncs["EXT_NAME"] map is initialized.
+		// Same deal for newExtErrorFuncs["EXT_NAME"]
 		c.Putln("func init() {")
 		c.Putln("newExtEventFuncs[\"%s\"] = make(map[int]newEventFun)", xname)
+		c.Putln("newExtErrorFuncs[\"%s\"] = make(map[int]newErrorFun)", xname)
 		c.Putln("}")
 		c.Putln("")
 	}
