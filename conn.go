@@ -26,8 +26,8 @@ func (c *Conn) connect(display string) error {
 	authName, authData, err := readAuthority(c.host, c.display)
 	noauth := false
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Could not get authority info: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Trying connection without authority info...\n")
+		logger.Printf("Could not get authority info: %v", err)
+		logger.Println("Trying connection without authority info...")
 		authName = ""
 		authData = []byte{}
 		noauth = true
@@ -63,8 +63,7 @@ func (c *Conn) connect(display string) error {
 	dataLen := Get16(head[6:])
 
 	if major != 11 || minor != 0 {
-		return errors.New(fmt.Sprintf("x protocol version mismatch: %d.%d",
-			major, minor))
+		return fmt.Errorf("x protocol version mismatch: %d.%d", major, minor)
 	}
 
 	buf = make([]byte, int(dataLen)*4+8, int(dataLen)*4+8)
@@ -75,8 +74,8 @@ func (c *Conn) connect(display string) error {
 
 	if code == 0 {
 		reason := buf[8 : 8+reasonLen]
-		return errors.New(fmt.Sprintf("x protocol authentication refused: %s",
-			string(reason)))
+		return fmt.Errorf("x protocol authentication refused: %s",
+			string(reason))
 	}
 
 	ReadSetupInfo(buf, &c.Setup)
