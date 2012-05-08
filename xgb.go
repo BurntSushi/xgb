@@ -2,8 +2,8 @@ package xgb
 
 import (
 	"errors"
-	"log"
 	"io"
+	"log"
 	"net"
 	"sync"
 )
@@ -320,7 +320,7 @@ func (c *Conn) readResponses() {
 			// generated) by looking it up by the error number.
 			newErrFun, ok := newErrorFuncs[int(buf[1])]
 			if !ok {
-				log.Printf("BUG: Could not find error constructor function " +
+				log.Printf("BUG: Could not find error constructor function "+
 					"for error with number %d.", buf[1])
 				continue
 			}
@@ -357,7 +357,7 @@ func (c *Conn) readResponses() {
 			evNum := int(buf[0] & 127)
 			newEventFun, ok := newEventFuncs[evNum]
 			if !ok {
-				log.Printf("BUG: Could not find event construct function " +
+				log.Printf("BUG: Could not find event construct function "+
 					"for event with number %d.", evNum)
 				continue
 			}
@@ -417,13 +417,13 @@ func (c *Conn) readResponses() {
 			switch {
 			// Checked requests with replies
 			case cookie.replyChan != nil && cookie.errorChan != nil:
-				log.Printf("Found cookie with sequence id %d that is " +
-					"expecting a reply but will never get it. Currently " +
+				log.Printf("Found cookie with sequence id %d that is "+
+					"expecting a reply but will never get it. Currently "+
 					"on sequence number %d", cookie.Sequence, seq)
 			// Unchecked requests with replies
 			case cookie.replyChan != nil && cookie.pingChan != nil:
-				log.Printf("Found cookie with sequence id %d that is " +
-					"expecting a reply (and not an error) but will never " +
+				log.Printf("Found cookie with sequence id %d that is "+
+					"expecting a reply (and not an error) but will never "+
 					"get it. Currently on sequence number %d",
 					cookie.Sequence, seq)
 			// Checked requests without replies
