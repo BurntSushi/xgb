@@ -303,8 +303,8 @@ func (c *Conn) readResponses() {
 		replyBytes []byte
 	)
 
-	buf := make([]byte, 32)
 	for {
+		buf := make([]byte, 32)
 		err, event, seq = nil, nil, 0
 
 		if _, err := io.ReadFull(c.conn, buf); err != nil {
