@@ -395,11 +395,6 @@ func TypeSrcName(p *Protocol, typ Type) string {
 		return newt
 	}
 
-	// If it's a resource type, just use 'Id'.
-	if _, ok := typ.(*Resource); ok {
-		return xgbGenResourceIdName
-	}
-
 	// If there's a namespace to this type, just use it and be done.
 	if colon := strings.Index(t, ":"); colon > -1 {
 		namespace := t[:colon]

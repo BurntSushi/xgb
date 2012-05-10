@@ -68,9 +68,9 @@ func (e *Error) ImplementsError(c *Context) {
 	c.Putln("return err.Sequence")
 	c.Putln("}")
 	c.Putln("")
-	c.Putln("func (err %s) BadId() Id {", e.ErrType())
+	c.Putln("func (err %s) BadId() uint32 {", e.ErrType())
 	if !c.protocol.isExt() {
-		c.Putln("return Id(err.BadValue)")
+		c.Putln("return err.BadValue")
 	} else {
 		c.Putln("return 0")
 	}
@@ -128,8 +128,12 @@ func (e *ErrorCopy) ImplementsError(c *Context) {
 	c.Putln("return err.Sequence")
 	c.Putln("}")
 	c.Putln("")
-	c.Putln("func (err %s) BadId() Id {", e.ErrType())
-	c.Putln("return Id(err.BadValue)")
+	c.Putln("func (err %s) BadId() uint32 {", e.ErrType())
+	if !c.protocol.isExt() {
+		c.Putln("return err.BadValue")
+	} else {
+		c.Putln("return 0")
+	}
 	c.Putln("}")
 	c.Putln("")
 	c.Putln("func (err %s) Error() string {", e.ErrType())

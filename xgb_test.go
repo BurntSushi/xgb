@@ -127,7 +127,7 @@ func TestWindowEvents(t *testing.T) {
 	// The geometry to set the window.
 	gx, gy, gw, gh := 200, 400, 1000, 300
 
-	wid, err := X.NewId()
+	wid, err := X.NewWindowId()
 	if err != nil {
 		t.Fatalf("NewId: %s", err)
 	}

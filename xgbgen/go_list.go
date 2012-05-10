@@ -16,7 +16,8 @@ func (f *ListField) Read(c *Context, prefix string) {
 	switch t := f.Type.(type) {
 	case *Resource:
 		length := f.LengthExpr.Reduce(prefix)
-		c.Putln("%s%s = make([]Id, %s)", prefix, f.SrcName(), length)
+		c.Putln("%s%s = make([]%s, %s)",
+			prefix, f.SrcName(), t.SrcName(), length)
 		c.Putln("for i := 0; i < int(%s); i++ {", length)
 		ReadSimpleSingleField(c, fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
 		c.Putln("}")

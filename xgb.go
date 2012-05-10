@@ -110,9 +110,6 @@ func (c *Conn) DefaultScreen() *ScreenInfo {
 	return &c.Setup.Roots[c.defaultScreen]
 }
 
-// Id is used for all X identifiers, such as windows, pixmaps, and GCs.
-type Id uint32
-
 // Event is an interface that can contain any of the events returned by the
 // server. Use a type assertion switch to extract the Event structs.
 type Event interface {
@@ -137,7 +134,7 @@ var newExtEventFuncs = make(map[string]map[int]newEventFun)
 type Error interface {
 	ImplementsError()
 	SequenceId() uint16
-	BadId() Id
+	BadId() uint32
 	Error() string
 }
 
@@ -158,7 +155,9 @@ type eventOrError interface{}
 
 // NewID generates a new unused ID for use with requests like CreateWindow.
 // If no new ids can be generated, the id returned is 0 and error is non-nil.
-func (c *Conn) NewId() (Id, error) {
+// Note that the value returned will need to be converted to the proper
+// type. i.e., xproto.Window(id).
+func (c *Conn) NewId() (uint32, error) {
 	xid := <-c.xidChan
 	if xid.err != nil {
 		return 0, xid.err
@@ -170,7 +169,7 @@ func (c *Conn) NewId() (Id, error) {
 // channel. If no new resource id can be generated, id is set to 0 and a
 // non-nil error is set in xid.err.
 type xid struct {
-	id  Id
+	id  uint32
 	err error
 }
 
@@ -202,7 +201,7 @@ func (conn *Conn) generateXIds() {
 		// TODO: Use the XC Misc extension to look for released ids.
 		if last > 0 && last >= max-inc+1 {
 			conn.xidChan <- xid{
-				id: Id(0),
+				id: 0,
 				err: errors.New("There are no more available resource" +
 					"identifiers."),
 			}
@@ -210,7 +209,7 @@ func (conn *Conn) generateXIds() {
 
 		last += inc
 		conn.xidChan <- xid{
-			id:  Id(last | conn.Setup.ResourceIdBase),
+			id:  last | conn.Setup.ResourceIdBase,
 			err: nil,
 		}
 	}

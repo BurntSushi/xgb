@@ -12,7 +12,7 @@ func (f *SingleField) Define(c *Context) {
 func ReadSimpleSingleField(c *Context, name string, typ Type) {
 	switch t := typ.(type) {
 	case *Resource:
-		c.Putln("%s = Id(Get32(buf[b:]))", name)
+		c.Putln("%s = %s(Get32(buf[b:]))", name, t.SrcName())
 	case *TypeDef:
 		switch t.Size().Eval() {
 		case 1:

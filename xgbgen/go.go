@@ -4,10 +4,6 @@ import (
 	"fmt"
 )
 
-// xgbResourceIdName is the name of the type used for all resource identifiers.
-// As of right now, it needs to be declared somewhere manually.
-var xgbGenResourceIdName = "Id"
-
 // BaseTypeMap is a map from X base types to Go types.
 // X base types should correspond to the smallest set of X types
 // that can be used to rewrite ALL X types in terms of Go types.
@@ -27,7 +23,6 @@ var BaseTypeMap = map[string]string{
 	"double": "float64",
 	"char":   "byte",
 	"void":   "byte",
-	"Id":     "Id",
 }
 
 // BaseTypeSizes should have precisely the same keys as in BaseTypeMap,
@@ -45,7 +40,10 @@ var BaseTypeSizes = map[string]uint{
 	"double": 8,
 	"char":   1,
 	"void":   1,
-	"Id":     4,
+
+	// Id is a special type used to determine the size of all Xid types.
+	// "Id" is not actually written in the source.
+	"Id": 4,
 }
 
 // TypeMap is a map from types in the XML to type names that is used
@@ -82,8 +80,16 @@ func (enum *Enum) Define(c *Context) {
 
 // Resource types
 func (res *Resource) Define(c *Context) {
-	c.Putln("// Skipping resource definition of '%s'",
-		SrcName(c.protocol, res.XmlName()))
+	c.Putln("type %s uint32", res.SrcName())
+	c.Putln("")
+	c.Putln("func (c *Conn) New%sId() (%s, error) {",
+		res.SrcName(), res.SrcName())
+	c.Putln("id, err := c.NewId()")
+	c.Putln("if err != nil {")
+	c.Putln("return 0, err")
+	c.Putln("}")
+	c.Putln("return %s(id), nil", res.SrcName())
+	c.Putln("}")
 	c.Putln("")
 }
 
