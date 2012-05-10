@@ -245,7 +245,7 @@ func (f *ValueField) SrcType() string {
 func (f *ValueField) Size() Size {
 	maskSize := f.MaskType.Size()
 	listSize := newExpressionSize(&Function{
-		Name: "pad",
+		Name: "xgb.Pad",
 		Expr: &BinaryOp{
 			Op:    "*",
 			Expr1: &Value{v: 4},

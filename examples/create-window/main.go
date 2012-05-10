@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/BurntSushi/xgb"
+	"github.com/BurntSushi/xgb/xproto"
 )
 
 func main() {
@@ -17,15 +18,23 @@ func main() {
 		return
 	}
 
+	// xproto.Setup retrieves the Setup information from the setup bytes
+	// gathered during connection.
+	setup := xproto.Setup(X)
+
+	// This is the default screen with all its associated info.
+	screen := setup.DefaultScreen(X)
+
 	// Any time a new resource (i.e., a window, pixmap, graphics context, etc.)
-	// is created, we need to generate a resource identifier with NewId.
-	wid, _ := X.NewId()
+	// is created, we need to generate a resource identifier.
+	// If the resource is a window, then use xproto.NewWindowId. If it's for
+	// a pixmap, then use xproto.NewPixmapId. And so on...
+	wid, _ := xproto.NewWindowId(X)
 
 	// CreateWindow takes a boatload of parameters.
-	X.CreateWindow(X.DefaultScreen().RootDepth, wid, X.DefaultScreen().Root,
+	xproto.CreateWindow(X, screen.RootDepth, wid, screen.Root,
 		0, 0, 500, 500, 0,
-		xgb.WindowClassInputOutput, X.DefaultScreen().RootVisual,
-		0, []uint32{})
+		xproto.WindowClassInputOutput, screen.RootVisual, 0, []uint32{})
 
 	// This call to ChangeWindowAttributes could be factored out and
 	// included with the above CreateWindow call, but it is left here for
@@ -34,13 +43,13 @@ func main() {
 	// etc.) and when a key press or a key release has been made when the
 	// window has focus.
 	// We also set the 'BackPixel' to white so that the window isn't butt ugly.
-	X.ChangeWindowAttributes(wid,
-		xgb.CwBackPixel|xgb.CwEventMask,
+	xproto.ChangeWindowAttributes(X, wid,
+		xproto.CwBackPixel|xproto.CwEventMask,
 		[]uint32{ // values must be in the order defined by the protocol
 			0xffffffff,
-			xgb.EventMaskStructureNotify |
-				xgb.EventMaskKeyPress |
-				xgb.EventMaskKeyRelease})
+			xproto.EventMaskStructureNotify |
+				xproto.EventMaskKeyPress |
+				xproto.EventMaskKeyRelease})
 
 	// MapWindow makes the window we've created appear on the screen.
 	// We demonstrated the use of a 'checked' request here.
@@ -58,7 +67,7 @@ func main() {
 	//
 	// Note that requests without replies are by default unchecked while
 	// requests *with* replies are checked by default.
-	err = X.MapWindowChecked(wid).Check()
+	err = xproto.MapWindowChecked(X, wid).Check()
 	if err != nil {
 		fmt.Printf("Checked Error for mapping window %d: %s\n", wid, err)
 	} else {
@@ -67,7 +76,7 @@ func main() {
 
 	// This is an example of an invalid MapWindow request and what an error
 	// looks like.
-	err = X.MapWindowChecked(0).Check()
+	err = xproto.MapWindowChecked(X, 0).Check()
 	if err != nil {
 		fmt.Printf("Checked Error for mapping window 0x1: %s\n", err)
 	} else { // neva

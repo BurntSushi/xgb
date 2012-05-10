@@ -15,27 +15,32 @@ import (
 	"log"
 
 	"github.com/BurntSushi/xgb"
+	"github.com/BurntSushi/xgb/randr"
+	"github.com/BurntSushi/xgb/xproto"
 )
 
 func main() {
 	X, _ := xgb.NewConn()
 
 	// Every extension must be initialized before it can be used.
-	err := X.RandrInit()
+	err := randr.Init(X)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Get the root window on the default screen.
+	root := xproto.Setup(X).DefaultScreen(X).Root
+
 	// Gets the current screen resources. Screen resources contains a list
 	// of names, crtcs, outputs and modes, among other things.
-	resources, err := X.RandrGetScreenResources(X.DefaultScreen().Root).Reply()
+	resources, err := randr.GetScreenResources(X, root).Reply()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Iterate through all of the outputs and show some of their info.
 	for _, output := range resources.Outputs {
-		info, err := X.RandrGetOutputInfo(output, 0).Reply()
+		info, err := randr.GetOutputInfo(X, output, 0).Reply()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -52,7 +57,7 @@ func main() {
 
 	// Iterate through all of the crtcs and show some of their info.
 	for _, crtc := range resources.Crtcs {
-		info, err := X.RandrGetCrtcInfo(crtc, 0).Reply()
+		info, err := randr.GetCrtcInfo(X, crtc, 0).Reply()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -61,11 +66,11 @@ func main() {
 	}
 
 	// Tell RandR to send us events. (I think these are all of them, as of 1.3.)
-	err = X.RandrSelectInputChecked(X.DefaultScreen().Root,
-		xgb.RandrNotifyMaskScreenChange|
-			xgb.RandrNotifyMaskCrtcChange|
-			xgb.RandrNotifyMaskOutputChange|
-			xgb.RandrNotifyMaskOutputProperty).Check()
+	err = randr.SelectInputChecked(X, root,
+		randr.NotifyMaskScreenChange|
+			randr.NotifyMaskCrtcChange|
+			randr.NotifyMaskOutputChange|
+			randr.NotifyMaskOutputProperty).Check()
 	if err != nil {
 		log.Fatal(err)
 	}

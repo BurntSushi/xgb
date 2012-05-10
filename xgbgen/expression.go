@@ -204,7 +204,7 @@ func (e *Padding) Reduce(prefix string) string {
 	if e.Concrete() {
 		return fmt.Sprintf("%d", e.Eval())
 	}
-	return fmt.Sprintf("pad(%s)", e.Expr.Reduce(prefix))
+	return fmt.Sprintf("xgb.Pad(%s)", e.Expr.Reduce(prefix))
 }
 
 func (e *Padding) String() string {
@@ -233,7 +233,7 @@ func (e *PopCount) Reduce(prefix string) string {
 	if e.Concrete() {
 		return fmt.Sprintf("%d", e.Eval())
 	}
-	return fmt.Sprintf("popCount(%s)", e.Expr.Reduce(prefix))
+	return fmt.Sprintf("xgb.PopCount(%s)", e.Expr.Reduce(prefix))
 }
 
 func (e *PopCount) String() string {

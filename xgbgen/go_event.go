@@ -48,10 +48,10 @@ func (e *Event) Define(c *Context) {
 	// Let's the XGB event loop read this event.
 	c.Putln("func init() {")
 	if c.protocol.isExt() {
-		c.Putln("newExtEventFuncs[\"%s\"][%d] = New%s",
+		c.Putln("xgb.NewExtEventFuncs[\"%s\"][%d] = %sNew",
 			c.protocol.ExtXName, e.Number, e.EvType())
 	} else {
-		c.Putln("newEventFuncs[%d] = New%s", e.Number, e.EvType())
+		c.Putln("xgb.NewEventFuncs[%d] = %sNew", e.Number, e.EvType())
 	}
 	c.Putln("}")
 	c.Putln("")
@@ -59,13 +59,13 @@ func (e *Event) Define(c *Context) {
 
 func (e *Event) Read(c *Context) {
 	c.Putln("// Event read %s", e.SrcName())
-	c.Putln("func New%s(buf []byte) Event {", e.EvType())
+	c.Putln("func %sNew(buf []byte) xgb.Event {", e.EvType())
 	c.Putln("v := %s{}", e.EvType())
 	c.Putln("b := 1 // don't read event number")
 	c.Putln("")
 	for i, field := range e.Fields {
 		if i == 1 && !e.NoSequence {
-			c.Putln("v.Sequence = Get16(buf[b:])")
+			c.Putln("v.Sequence = xgb.Get16(buf[b:])")
 			c.Putln("b += 2")
 			c.Putln("")
 		}
@@ -136,18 +136,18 @@ func (e *EventCopy) Define(c *Context) {
 	// Let's the XGB event loop read this event.
 	c.Putln("func init() {")
 	if c.protocol.isExt() {
-		c.Putln("newExtEventFuncs[\"%s\"][%d] = New%s",
+		c.Putln("xgb.NewExtEventFuncs[\"%s\"][%d] = %sNew",
 			c.protocol.ExtXName, e.Number, e.EvType())
 	} else {
-		c.Putln("newEventFuncs[%d] = New%s", e.Number, e.EvType())
+		c.Putln("xgb.NewEventFuncs[%d] = %sNew", e.Number, e.EvType())
 	}
 	c.Putln("}")
 	c.Putln("")
 }
 
 func (e *EventCopy) Read(c *Context) {
-	c.Putln("func New%s(buf []byte) Event {", e.EvType())
-	c.Putln("return %s(New%s(buf).(%s))",
+	c.Putln("func %sNew(buf []byte) xgb.Event {", e.EvType())
+	c.Putln("return %s(%sNew(buf).(%s))",
 		e.EvType(), e.Old.(*Event).EvType(), e.Old.(*Event).EvType())
 	c.Putln("}")
 	c.Putln("")
@@ -166,7 +166,7 @@ func EventFieldString(c *Context, fields []Field, evName string) {
 	c.Putln("fieldVals := make([]string, 0, %d)", len(fields))
 	if evName != "KeymapNotify" {
 		c.Putln("fieldVals = append(fieldVals, "+
-			"sprintf(\"Sequence: %s\", v.Sequence))", "%d")
+			"xgb.Sprintf(\"Sequence: %s\", v.Sequence))", "%d")
 	}
 	for _, field := range fields {
 		switch f := field.(type) {
@@ -183,19 +183,20 @@ func EventFieldString(c *Context, fields []Field, evName string) {
 
 			switch field.SrcType() {
 			case "string":
-				format := fmt.Sprintf("sprintf(\"%s: %s\", v.%s)",
+				format := fmt.Sprintf("xgb.Sprintf(\"%s: %s\", v.%s)",
 					field.SrcName(), "%s", field.SrcName())
 				c.Putln("fieldVals = append(fieldVals, %s)", format)
 			case "bool":
-				format := fmt.Sprintf("sprintf(\"%s: %s\", v.%s)",
+				format := fmt.Sprintf("xgb.Sprintf(\"%s: %s\", v.%s)",
 					field.SrcName(), "%t", field.SrcName())
 				c.Putln("fieldVals = append(fieldVals, %s)", format)
 			default:
-				format := fmt.Sprintf("sprintf(\"%s: %s\", v.%s)",
+				format := fmt.Sprintf("xgb.Sprintf(\"%s: %s\", v.%s)",
 					field.SrcName(), "%d", field.SrcName())
 				c.Putln("fieldVals = append(fieldVals, %s)", format)
 			}
 		}
 	}
-	c.Putln("return \"%s {\" + stringsJoin(fieldVals, \", \") + \"}\"", evName)
+	c.Putln("return \"%s {\" + xgb.StringsJoin(fieldVals, \", \") + \"}\"",
+		evName)
 }

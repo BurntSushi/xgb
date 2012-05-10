@@ -5,30 +5,30 @@ import (
 	"strings"
 )
 
-// stringsJoin is an alias to strings.Join. It allows us to avoid having to
+// StringsJoin is an alias to strings.Join. It allows us to avoid having to
 // import 'strings' in each of the generated Go files.
-func stringsJoin(ss []string, sep string) string {
+func StringsJoin(ss []string, sep string) string {
 	return strings.Join(ss, sep)
 }
 
-// sprintf is so we don't need to import 'fmt' in the generated Go files.
-func sprintf(format string, v ...interface{}) string {
+// Sprintf is so we don't need to import 'fmt' in the generated Go files.
+func Sprintf(format string, v ...interface{}) string {
 	return fmt.Sprintf(format, v...)
 }
 
-// errorf is just a wrapper for fmt.Errorf. Exists for the same reason
+// Errorf is just a wrapper for fmt.Errorf. Exists for the same reason
 // that 'stringsJoin' and 'sprintf' exists.
-func errorf(format string, v ...interface{}) error {
+func Errorf(format string, v ...interface{}) error {
 	return fmt.Errorf(format, v...)
 }
 
 // Pad a length to align on 4 bytes.
-func pad(n int) int {
+func Pad(n int) int {
 	return (n + 3) & ^3
 }
 
 // popCount counts the number of bits set in a value list mask.
-func popCount(mask0 int) int {
+func PopCount(mask0 int) int {
 	mask := uint32(mask0)
 	n := 0
 	for i := uint32(0); i < 32; i++ {

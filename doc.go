@@ -24,6 +24,7 @@ accompanying documentation can be found in examples/create-window.
 	import (
 		"fmt"
 		"github.com/BurntSushi/xgb"
+		"github.com/BurntSushi/xgb/xproto"
 	)
 
 	func main() {
@@ -33,18 +34,19 @@ accompanying documentation can be found in examples/create-window.
 			return
 		}
 
-		wid, _ := X.NewId()
-		X.CreateWindow(X.DefaultScreen().RootDepth, wid, X.DefaultScreen().Root,
+		wid, _ := xproto.NewWindowId(X)
+		screen := xproto.Setup(X).DefaultScreen(X)
+		xproto.CreateWindow(X, screen.RootDepth, wid, screen.Root,
 			0, 0, 500, 500, 0,
-			xgb.WindowClassInputOutput, X.DefaultScreen().RootVisual,
-			xgb.CwBackPixel | xgb.CwEventMask,
+			xproto.WindowClassInputOutput, screen.RootVisual,
+			xproto.CwBackPixel | xproto.CwEventMask,
 			[]uint32{ // values must be in the order defined by the protocol
 				0xffffffff,
-				xgb.EventMaskStructureNotify |
-				xgb.EventMaskKeyPress |
-				xgb.EventMaskKeyRelease})
+				xproto.EventMaskStructureNotify |
+				xproto.EventMaskKeyPress |
+				xproto.EventMaskKeyRelease})
 
-		X.MapWindow(wid)
+		xproto.MapWindow(X, wid)
 		for {
 			ev, xerr := X.WaitForEvent()
 			if ev == nil && xerr == nil {
@@ -73,6 +75,7 @@ can be found in examples/xinerama.
 		"fmt"
 		"log"
 		"github.com/BurntSushi/xgb"
+		"github.com/BurntSushi/xgb/xinerama"
 	)
 
 	func main() {
@@ -84,12 +87,12 @@ can be found in examples/xinerama.
 		// Initialize the Xinerama extension.
 		// The appropriate 'Init' function must be run for *every*
 		// extension before any of its requests can be used.
-		err = X.XineramaInit()
+		err = xinerama.Init(X)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		reply, err := X.XineramaQueryScreens().Reply()
+		reply, err := xinerama.QueryScreens(X).Reply()
 		if err != nil {
 			log.Fatal(err)
 		}

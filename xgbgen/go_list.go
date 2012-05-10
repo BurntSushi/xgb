@@ -21,7 +21,7 @@ func (f *ListField) Read(c *Context, prefix string) {
 		c.Putln("for i := 0; i < int(%s); i++ {", length)
 		ReadSimpleSingleField(c, fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
 		c.Putln("}")
-		c.Putln("b = pad(b)")
+		c.Putln("b = xgb.Pad(b)")
 	case *Base:
 		length := f.LengthExpr.Reduce(prefix)
 		if strings.ToLower(t.XmlName()) == "char" {
@@ -29,13 +29,13 @@ func (f *ListField) Read(c *Context, prefix string) {
 			c.Putln("byteString := make([]%s, %s)", t.SrcName(), length)
 			c.Putln("copy(byteString[:%s], buf[b:])", length)
 			c.Putln("%s%s = string(byteString)", prefix, f.SrcName())
-			c.Putln("b += pad(int(%s))", length)
+			c.Putln("b += xgb.Pad(int(%s))", length)
 			c.Putln("}")
 		} else if t.SrcName() == "byte" {
 			c.Putln("%s%s = make([]%s, %s)",
 				prefix, f.SrcName(), t.SrcName(), length)
 			c.Putln("copy(%s%s[:%s], buf[b:])", prefix, f.SrcName(), length)
-			c.Putln("b += pad(int(%s))", length)
+			c.Putln("b += xgb.Pad(int(%s))", length)
 		} else {
 			c.Putln("%s%s = make([]%s, %s)",
 				prefix, f.SrcName(), t.SrcName(), length)
@@ -43,7 +43,7 @@ func (f *ListField) Read(c *Context, prefix string) {
 			ReadSimpleSingleField(c,
 				fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
 			c.Putln("}")
-			c.Putln("b = pad(b)")
+			c.Putln("b = xgb.Pad(b)")
 		}
 	case *TypeDef:
 		length := f.LengthExpr.Reduce(prefix)
@@ -52,16 +52,16 @@ func (f *ListField) Read(c *Context, prefix string) {
 		c.Putln("for i := 0; i < int(%s); i++ {", length)
 		ReadSimpleSingleField(c, fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
 		c.Putln("}")
-		c.Putln("b = pad(b)")
+		c.Putln("b = xgb.Pad(b)")
 	case *Union:
 		c.Putln("%s%s = make([]%s, %s)",
 			prefix, f.SrcName(), t.SrcName(), f.LengthExpr.Reduce(prefix))
-		c.Putln("b += Read%sList(buf[b:], %s%s)",
+		c.Putln("b += %sReadList(buf[b:], %s%s)",
 			t.SrcName(), prefix, f.SrcName())
 	case *Struct:
 		c.Putln("%s%s = make([]%s, %s)",
 			prefix, f.SrcName(), t.SrcName(), f.LengthExpr.Reduce(prefix))
-		c.Putln("b += Read%sList(buf[b:], %s%s)",
+		c.Putln("b += %sReadList(buf[b:], %s%s)",
 			t.SrcName(), prefix, f.SrcName())
 	default:
 		log.Panicf("Cannot read list field '%s' with %T type.",
@@ -77,18 +77,18 @@ func (f *ListField) Write(c *Context, prefix string) {
 		WriteSimpleSingleField(c,
 			fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
 		c.Putln("}")
-		c.Putln("b = pad(b)")
+		c.Putln("b = xgb.Pad(b)")
 	case *Base:
 		length := f.Length().Reduce(prefix)
 		if t.SrcName() == "byte" {
 			c.Putln("copy(buf[b:], %s%s[:%s])", prefix, f.SrcName(), length)
-			c.Putln("b += pad(int(%s))", length)
+			c.Putln("b += xgb.Pad(int(%s))", length)
 		} else {
 			c.Putln("for i := 0; i < int(%s); i++ {", length)
 			WriteSimpleSingleField(c,
 				fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
 			c.Putln("}")
-			c.Putln("b = pad(b)")
+			c.Putln("b = xgb.Pad(b)")
 		}
 	case *TypeDef:
 		length := f.Length().Reduce(prefix)
@@ -96,7 +96,7 @@ func (f *ListField) Write(c *Context, prefix string) {
 		WriteSimpleSingleField(c,
 			fmt.Sprintf("%s%s[i]", prefix, f.SrcName()), t)
 		c.Putln("}")
-		c.Putln("b = pad(b)")
+		c.Putln("b = xgb.Pad(b)")
 	case *Union:
 		c.Putln("b += %sListBytes(buf[b:], %s%s)",
 			t.SrcName(), prefix, f.SrcName())

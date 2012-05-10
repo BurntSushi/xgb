@@ -9,7 +9,14 @@ import (
 	"sync"
 )
 
-var logger = log.New(os.Stderr, "XGB: ", 0)
+var (
+	logger = log.New(os.Stderr, "XGB: ", 0)
+
+	// ExtLock is a lock used whenever new extensions are initialized.
+	// It should not be used. It is exported for use in the extension
+	// sub-packages.
+	ExtLock sync.Mutex
+)
 
 const (
 	// cookieBuffer represents the queue size of cookies existing at any
@@ -44,17 +51,21 @@ type Conn struct {
 	host          string
 	conn          net.Conn
 	display       string
-	defaultScreen int
-	Setup         SetupInfo
+	DefaultScreen int
+	SetupBytes    []byte
+
+	setupResourceIdBase uint32
+	setupResourceIdMask uint32
 
 	eventChan  chan eventOrError
-	cookieChan chan *cookie
+	cookieChan chan *Cookie
 	xidChan    chan xid
 	seqChan    chan uint16
 	reqChan    chan *request
 
-	extLock    sync.Mutex
-	extensions map[string]byte
+	// Extensions is a map from extension name to major opcode. It should
+	// not be used. It is exported for use in the extension sub-packages.
+	Extensions map[string]byte
 }
 
 // NewConn creates a new connection instance. It initializes locks, data
@@ -83,9 +94,9 @@ func NewConnDisplay(display string) (*Conn, error) {
 		return nil, err
 	}
 
-	conn.extensions = make(map[string]byte)
+	conn.Extensions = make(map[string]byte)
 
-	conn.cookieChan = make(chan *cookie, cookieBuffer)
+	conn.cookieChan = make(chan *Cookie, cookieBuffer)
 	conn.xidChan = make(chan xid, xidBuffer)
 	conn.seqChan = make(chan uint16, seqBuffer)
 	conn.reqChan = make(chan *request, reqBuffer)
@@ -104,12 +115,6 @@ func (c *Conn) Close() {
 	c.conn.Close()
 }
 
-// DefaultScreen returns the Screen info for the default screen, which is
-// 0 or the one given in the display argument to Dial.
-func (c *Conn) DefaultScreen() *ScreenInfo {
-	return &c.Setup.Roots[c.defaultScreen]
-}
-
 // Event is an interface that can contain any of the events returned by the
 // server. Use a type assertion switch to extract the Event structs.
 type Event interface {
@@ -118,16 +123,20 @@ type Event interface {
 	String() string
 }
 
-type newEventFun func(buf []byte) Event
+// NewEventFun is the type of function use to construct events from raw bytes.
+// It should not be used. It is exported for use in the extension sub-packages.
+type NewEventFun func(buf []byte) Event
 
-// newEventFuncs is a map from event numbers to functions that create
-// the corresponding event.
-var newEventFuncs = make(map[int]newEventFun)
+// NewEventFuncs is a map from event numbers to functions that create
+// the corresponding event. It should not be used. It is exported for use
+// in the extension sub-packages.
+var NewEventFuncs = make(map[int]NewEventFun)
 
-// newExtEventFuncs is a temporary map that stores event constructor functions
+// NewExtEventFuncs is a temporary map that stores event constructor functions
 // for each extension. When an extension is initialized, each event for that
-// extension is added to the 'newEventFuncs' map.
-var newExtEventFuncs = make(map[string]map[int]newEventFun)
+// extension is added to the 'NewEventFuncs' map. It should not be used. It is 
+// exported for use in the extension sub-packages.
+var NewExtEventFuncs = make(map[string]map[int]NewEventFun)
 
 // Error is an interface that can contain any of the errors returned by
 // the server. Use a type assertion switch to extract the Error structs.
@@ -138,16 +147,20 @@ type Error interface {
 	Error() string
 }
 
-type newErrorFun func(buf []byte) Error
+// NewErrorFun is the type of function use to construct errors from raw bytes.
+// It should not be used. It is exported for use in the extension sub-packages.
+type NewErrorFun func(buf []byte) Error
 
-// newErrorFuncs is a map from error numbers to functions that create
-// the corresponding error.
-var newErrorFuncs = make(map[int]newErrorFun)
+// NewErrorFuncs is a map from error numbers to functions that create
+// the corresponding error. It should not be used. It is exported for use in
+// the extension sub-packages.
+var NewErrorFuncs = make(map[int]NewErrorFun)
 
-// newExtErrorFuncs is a temporary map that stores error constructor functions
+// NewExtErrorFuncs is a temporary map that stores error constructor functions
 // for each extension. When an extension is initialized, each error for that
-// extension is added to the 'newErrorFuncs' map.
-var newExtErrorFuncs = make(map[string]map[int]newErrorFun)
+// extension is added to the 'NewErrorFuncs' map. It should not be used. It is
+// exported for use in the extension sub-packages.
+var NewExtErrorFuncs = make(map[string]map[int]NewErrorFun)
 
 // eventOrError corresponds to values that can be either an event or an
 // error.
@@ -194,8 +207,8 @@ func (conn *Conn) generateXIds() {
 	// 00111000 & 11001000 = 00001000.
 	// And we use that value to increment the last resource id to get a new one.
 	// (And then, of course, we OR it with resource-id-base.)
-	inc := conn.Setup.ResourceIdMask & -conn.Setup.ResourceIdMask
-	max := conn.Setup.ResourceIdMask
+	inc := conn.setupResourceIdMask & -conn.setupResourceIdMask
+	max := conn.setupResourceIdMask
 	last := uint32(0)
 	for {
 		// TODO: Use the XC Misc extension to look for released ids.
@@ -209,7 +222,7 @@ func (conn *Conn) generateXIds() {
 
 		last += inc
 		conn.xidChan <- xid{
-			id:  last | conn.Setup.ResourceIdBase,
+			id:  last | conn.setupResourceIdBase,
 			err: nil,
 		}
 	}
@@ -244,14 +257,14 @@ func (c *Conn) generateSeqIds() {
 // The cookie is used to match up the reply/error.
 type request struct {
 	buf    []byte
-	cookie *cookie
+	cookie *Cookie
 }
 
-// newRequest takes the bytes an a cookie, constructs a request type,
+// NewRequest takes the bytes an a cookie, constructs a request type,
 // and sends it over the Conn.reqChan channel.
 // Note that the sequence number is added to the cookie after it is sent
 // over the request channel.
-func (c *Conn) newRequest(buf []byte, cookie *cookie) {
+func (c *Conn) NewRequest(buf []byte, cookie *Cookie) {
 	c.reqChan <- &request{buf: buf, cookie: cookie}
 }
 
@@ -264,11 +277,11 @@ func (c *Conn) sendRequests() {
 		// Note that we circumvent the request channel, because we're *in*
 		// the request channel.
 		if len(c.cookieChan) == cookieBuffer-1 {
-			cookie := c.newCookie(true, true)
+			cookie := c.NewCookie(true, true)
 			cookie.Sequence = c.newSequenceId()
 			c.cookieChan <- cookie
 			c.writeBuffer(c.getInputFocusRequest())
-			GetInputFocusCookie{cookie}.Reply() // wait for the buffer to clear
+			cookie.Reply() // wait for the buffer to clear
 		}
 
 		req.cookie.Sequence = c.newSequenceId()
@@ -315,7 +328,7 @@ func (c *Conn) readResponses() {
 		case 0: // This is an error
 			// Use the constructor function for this error (that is auto
 			// generated) by looking it up by the error number.
-			newErrFun, ok := newErrorFuncs[int(buf[1])]
+			newErrFun, ok := NewErrorFuncs[int(buf[1])]
 			if !ok {
 				logger.Printf("BUG: Could not find error constructor function "+
 					"for error with number %d.", buf[1])
@@ -352,7 +365,7 @@ func (c *Conn) readResponses() {
 			// the most significant bit (which is set when it was sent from
 			// a SendEvent request).
 			evNum := int(buf[0] & 127)
-			newEventFun, ok := newEventFuncs[evNum]
+			newEventFun, ok := NewEventFuncs[evNum]
 			if !ok {
 				logger.Printf("BUG: Could not find event construct function "+
 					"for event with number %d.", evNum)

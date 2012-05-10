@@ -82,7 +82,7 @@ func (enum *Enum) Define(c *Context) {
 func (res *Resource) Define(c *Context) {
 	c.Putln("type %s uint32", res.SrcName())
 	c.Putln("")
-	c.Putln("func (c *Conn) New%sId() (%s, error) {",
+	c.Putln("func New%sId(c *xgb.Conn) (%s, error) {",
 		res.SrcName(), res.SrcName())
 	c.Putln("id, err := c.NewId()")
 	c.Putln("if err != nil {")
@@ -167,10 +167,10 @@ func (f *ValueField) Read(c *Context, prefix string) {
 	c.Putln("%s%s = make([]uint32, %s)",
 		prefix, f.ListName, f.ListLength().Reduce(prefix))
 	c.Putln("for i := 0; i < %s; i++ {", f.ListLength().Reduce(prefix))
-	c.Putln("%s%s[i] = Get32(buf[b:])", prefix, f.ListName)
+	c.Putln("%s%s[i] = xgb.Get32(buf[b:])", prefix, f.ListName)
 	c.Putln("b += 4")
 	c.Putln("}")
-	c.Putln("b = pad(b)")
+	c.Putln("b = xgb.Pad(b)")
 }
 
 func (f *ValueField) Write(c *Context, prefix string) {
@@ -180,10 +180,10 @@ func (f *ValueField) Write(c *Context, prefix string) {
 			fmt.Sprintf("%s%s", prefix, f.MaskName), f.MaskType)
 	}
 	c.Putln("for i := 0; i < %s; i++ {", f.ListLength().Reduce(prefix))
-	c.Putln("Put32(buf[b:], %s%s[i])", prefix, f.ListName)
+	c.Putln("xgb.Put32(buf[b:], %s%s[i])", prefix, f.ListName)
 	c.Putln("b += 4")
 	c.Putln("}")
-	c.Putln("b = pad(b)")
+	c.Putln("b = xgb.Pad(b)")
 }
 
 // Switch field

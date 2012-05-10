@@ -16,17 +16,30 @@ all: build-xgbgen \
 build-xgbgen:
 	(cd xgbgen && go build)
 
-%.xml:
-	xgbgen/xgbgen --proto-path $(XPROTO) $(XPROTO)/$*.xml > auto_$*.go
+build-all: bigreq.b composite.b damage.b dpms.b dri2.b ge.b glx.b randr.b \
+					 record.b render.b res.b screensaver.b shape.b shm.b sync.b xcmisc.b \
+					 xevie.b xf86dri.b xf86vidmode.b xfixes.b xinerama.b xinput.b \
+					 xprint.b xproto.b xselinux.b xtest.b xv.b xvmc.b
+
+%.b:
+	(cd $* ; go build)
+
+xc_misc.xml: build-xgbgen
+	mkdir -p xcmisc
+	xgbgen/xgbgen --proto-path $(XPROTO) $(XPROTO)/xc_misc.xml > xcmisc/xcmisc.go
+
+%.xml: build-xgbgen
+	mkdir -p $*
+	xgbgen/xgbgen --proto-path $(XPROTO) $(XPROTO)/$*.xml > $*/$*.go
 
 test:
-	go test
+	(cd xproto ; go test)
 
 bench:
-	go test -run 'nomatch' -bench '.*' -cpu 1,2,6
+	(cd xproto ; go test -run 'nomatch' -bench '.*' -cpu 1,2,6)
 
 gofmt:
 	gofmt -w *.go xgbgen/*.go examples/*.go examples/*/*.go
-	colcheck xgbgen/*.go examples/*.go examples/*/*.go \
-					 auth.go conn.go cookie.go doc.go xgb.go xgb_help.go xgb_test.go
+	colcheck xgbgen/*.go examples/*.go examples/*/*.go xproto/xproto_test.go \
+					 auth.go conn.go cookie.go doc.go xgb.go xgb_help.go
 

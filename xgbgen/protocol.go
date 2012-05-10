@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"strings"
 )
 
@@ -9,6 +10,7 @@ import (
 // if this protocol imports other other extensions. The import relationship
 // is recursive.
 type Protocol struct {
+	Parent       *Protocol
 	Name         string
 	ExtXName     string
 	ExtName      string
@@ -31,6 +33,28 @@ func (p *Protocol) Initialize() {
 	for _, req := range p.Requests {
 		req.Initialize(p)
 	}
+}
+
+// PkgName returns the name of this package.
+// i.e., 'xproto' for the core X protocol, 'randr' for the RandR extension, etc.
+func (p *Protocol) PkgName() string {
+	return strings.Replace(p.Name, "_", "", -1)
+}
+
+// ProtocolGet searches the current context for the protocol with the given
+// name. (i.e., the current protocol and its imports.)
+// It is an error if one is not found.
+func (p *Protocol) ProtocolFind(name string) *Protocol {
+	if p.Name == name {
+		return p // that was easy
+	}
+	for _, imp := range p.Imports {
+		if imp.Name == name {
+			return imp
+		}
+	}
+	log.Panicf("Could not find protocol with name '%s'.", name)
+	panic("unreachable")
 }
 
 // isExt returns true if this protocol is an extension.

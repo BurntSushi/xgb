@@ -30,10 +30,10 @@ func (e *Error) Define(c *Context) {
 	// Let's the XGB event loop read this error.
 	c.Putln("func init() {")
 	if c.protocol.isExt() {
-		c.Putln("newExtErrorFuncs[\"%s\"][%d] = New%s",
+		c.Putln("xgb.NewExtErrorFuncs[\"%s\"][%d] = %sNew",
 			c.protocol.ExtXName, e.Number, e.ErrType())
 	} else {
-		c.Putln("newErrorFuncs[%d] = New%s", e.Number, e.ErrType())
+		c.Putln("xgb.NewErrorFuncs[%d] = %sNew", e.Number, e.ErrType())
 	}
 	c.Putln("}")
 	c.Putln("")
@@ -41,14 +41,14 @@ func (e *Error) Define(c *Context) {
 
 func (e *Error) Read(c *Context) {
 	c.Putln("// Error read %s", e.SrcName())
-	c.Putln("func New%s(buf []byte) Error {", e.ErrType())
+	c.Putln("func %sNew(buf []byte) xgb.Error {", e.ErrType())
 	c.Putln("v := %s{}", e.ErrType())
 	c.Putln("v.NiceName = \"%s\"", e.SrcName())
 	c.Putln("")
 	c.Putln("b := 1 // skip error determinant")
 	c.Putln("b += 1 // don't read error number")
 	c.Putln("")
-	c.Putln("v.Sequence = Get16(buf[b:])")
+	c.Putln("v.Sequence = xgb.Get16(buf[b:])")
 	c.Putln("b += 2")
 	c.Putln("")
 	for _, field := range e.Fields {
@@ -101,18 +101,18 @@ func (e *ErrorCopy) Define(c *Context) {
 	// Let's the XGB know how to read this error.
 	c.Putln("func init() {")
 	if c.protocol.isExt() {
-		c.Putln("newExtErrorFuncs[\"%s\"][%d] = New%s",
+		c.Putln("xgb.NewExtErrorFuncs[\"%s\"][%d] = %sNew",
 			c.protocol.ExtXName, e.Number, e.ErrType())
 	} else {
-		c.Putln("newErrorFuncs[%d] = New%s", e.Number, e.ErrType())
+		c.Putln("xgb.NewErrorFuncs[%d] = %sNew", e.Number, e.ErrType())
 	}
 	c.Putln("}")
 	c.Putln("")
 }
 
 func (e *ErrorCopy) Read(c *Context) {
-	c.Putln("func New%s(buf []byte) Error {", e.ErrType())
-	c.Putln("v := %s(New%s(buf).(%s))",
+	c.Putln("func %sNew(buf []byte) xgb.Error {", e.ErrType())
+	c.Putln("v := %s(%sNew(buf).(%s))",
 		e.ErrType(), e.Old.(*Error).ErrType(), e.Old.(*Error).ErrType())
 	c.Putln("v.NiceName = \"%s\"", e.SrcName())
 	c.Putln("return v")
@@ -148,7 +148,7 @@ func ErrorFieldString(c *Context, fields []Field, errName string) {
 	c.Putln("fieldVals := make([]string, 0, %d)", len(fields))
 	c.Putln("fieldVals = append(fieldVals, \"NiceName: \" + err.NiceName)")
 	c.Putln("fieldVals = append(fieldVals, "+
-		"sprintf(\"Sequence: %s\", err.Sequence))", "%d")
+		"xgb.Sprintf(\"Sequence: %s\", err.Sequence))", "%d")
 	for _, field := range fields {
 		switch field.(type) {
 		case *PadField:
@@ -158,11 +158,12 @@ func ErrorFieldString(c *Context, fields []Field, errName string) {
 				c.Putln("fieldVals = append(fieldVals, \"%s: \" + err.%s)",
 					field.SrcName(), field.SrcName())
 			} else {
-				format := fmt.Sprintf("sprintf(\"%s: %s\", err.%s)",
+				format := fmt.Sprintf("xgb.Sprintf(\"%s: %s\", err.%s)",
 					field.SrcName(), "%d", field.SrcName())
 				c.Putln("fieldVals = append(fieldVals, %s)", format)
 			}
 		}
 	}
-	c.Putln("return \"%s {\" + stringsJoin(fieldVals, \", \") + \"}\"", errName)
+	c.Putln("return \"%s {\" + xgb.StringsJoin(fieldVals, \", \") + \"}\"",
+		errName)
 }

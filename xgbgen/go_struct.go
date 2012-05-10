@@ -35,7 +35,7 @@ func (s *Struct) Define(c *Context) {
 // 'ReadStructName' should only be used to read raw reply data from the wire.
 func (s *Struct) Read(c *Context) {
 	c.Putln("// Struct read %s", s.SrcName())
-	c.Putln("func Read%s(buf []byte, v *%s) int {", s.SrcName(), s.SrcName())
+	c.Putln("func %sRead(buf []byte, v *%s) int {", s.SrcName(), s.SrcName())
 
 	c.Putln("b := 0")
 	c.Putln("")
@@ -54,16 +54,16 @@ func (s *Struct) Read(c *Context) {
 // the number of bytes read from the byte slice.
 func (s *Struct) ReadList(c *Context) {
 	c.Putln("// Struct list read %s", s.SrcName())
-	c.Putln("func Read%sList(buf []byte, dest []%s) int {",
+	c.Putln("func %sReadList(buf []byte, dest []%s) int {",
 		s.SrcName(), s.SrcName())
 
 	c.Putln("b := 0")
 	c.Putln("for i := 0; i < len(dest); i++ {")
 	c.Putln("dest[i] = %s{}", s.SrcName())
-	c.Putln("b += Read%s(buf[b:], &dest[i])", s.SrcName())
+	c.Putln("b += %sRead(buf[b:], &dest[i])", s.SrcName())
 	c.Putln("}")
 
-	c.Putln("return pad(b)")
+	c.Putln("return xgb.Pad(b)")
 
 	c.Putln("}")
 	c.Putln("")
@@ -93,7 +93,7 @@ func (s *Struct) WriteList(c *Context) {
 	c.Putln("for _, item := range list {")
 	c.Putln("structBytes = item.Bytes()")
 	c.Putln("copy(buf[b:], structBytes)")
-	c.Putln("b += pad(len(structBytes))")
+	c.Putln("b += xgb.Pad(len(structBytes))")
 	c.Putln("}")
 	c.Putln("return b")
 	c.Putln("}")

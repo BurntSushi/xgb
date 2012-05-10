@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/BurntSushi/xgb"
+	"github.com/BurntSushi/xgb/xinerama"
 )
 
 func main() {
@@ -17,13 +18,13 @@ func main() {
 	// Initialize the Xinerama extension.
 	// The appropriate 'Init' function must be run for *every*
 	// extension before any of its requests can be used.
-	err = X.XineramaInit()
+	err = xinerama.Init(X)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Issue a request to get the screen information.
-	reply, err := X.XineramaQueryScreens().Reply()
+	reply, err := xinerama.QueryScreens(X).Reply()
 	if err != nil {
 		log.Fatal(err)
 	}

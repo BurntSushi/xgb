@@ -8,7 +8,7 @@ func (u *Union) Define(c *Context) {
 	c.Putln("// Instead use one of the following constructors for '%s':",
 		u.SrcName())
 	for _, field := range u.Fields {
-		c.Putln("//     New%s%s(%s %s) %s", u.SrcName(), field.SrcName(),
+		c.Putln("//     %s%sNew(%s %s) %s", u.SrcName(), field.SrcName(),
 			field.SrcName(), field.SrcType(), u.SrcName())
 	}
 
@@ -40,7 +40,7 @@ func (u *Union) New(c *Context) {
 	for _, field := range u.Fields {
 		c.Putln("// Union constructor for %s for field %s.",
 			u.SrcName(), field.SrcName())
-		c.Putln("func New%s%s(%s %s) %s {",
+		c.Putln("func %s%sNew(%s %s) %s {",
 			u.SrcName(), field.SrcName(), field.SrcName(),
 			field.SrcType(), u.SrcName())
 		c.Putln("var b int")
@@ -66,7 +66,7 @@ func (u *Union) New(c *Context) {
 
 func (u *Union) Read(c *Context) {
 	c.Putln("// Union read %s", u.SrcName())
-	c.Putln("func Read%s(buf []byte, v *%s) int {", u.SrcName(), u.SrcName())
+	c.Putln("func %sRead(buf []byte, v *%s) int {", u.SrcName(), u.SrcName())
 	c.Putln("var b int")
 	c.Putln("")
 	for _, field := range u.Fields {
@@ -81,14 +81,14 @@ func (u *Union) Read(c *Context) {
 
 func (u *Union) ReadList(c *Context) {
 	c.Putln("// Union list read %s", u.SrcName())
-	c.Putln("func Read%sList(buf []byte, dest []%s) int {",
+	c.Putln("func %sReadList(buf []byte, dest []%s) int {",
 		u.SrcName(), u.SrcName())
 	c.Putln("b := 0")
 	c.Putln("for i := 0; i < len(dest); i++ {")
 	c.Putln("dest[i] = %s{}", u.SrcName())
-	c.Putln("b += Read%s(buf[b:], &dest[i])", u.SrcName())
+	c.Putln("b += %sRead(buf[b:], &dest[i])", u.SrcName())
 	c.Putln("}")
-	c.Putln("return pad(b)")
+	c.Putln("return xgb.Pad(b)")
 	c.Putln("}")
 	c.Putln("")
 }
@@ -121,7 +121,7 @@ func (u *Union) WriteList(c *Context) {
 	c.Putln("for _, item := range list {")
 	c.Putln("unionBytes = item.Bytes()")
 	c.Putln("copy(buf[b:], unionBytes)")
-	c.Putln("b += pad(len(unionBytes))")
+	c.Putln("b += xgb.Pad(len(unionBytes))")
 	c.Putln("}")
 	c.Putln("return b")
 	c.Putln("}")

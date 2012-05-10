@@ -18,8 +18,9 @@ import (
 	"strings"
 )
 
-func (xml *XML) Translate() *Protocol {
+func (xml *XML) Translate(parent *Protocol) *Protocol {
 	protocol := &Protocol{
+		Parent:       parent,
 		Name:         xml.Header,
 		ExtXName:     xml.ExtensionXName,
 		ExtName:      xml.ExtensionName,
@@ -33,7 +34,8 @@ func (xml *XML) Translate() *Protocol {
 
 	for _, imp := range xml.Imports {
 		if imp.xml != nil {
-			protocol.Imports = append(protocol.Imports, imp.xml.Translate())
+			protocol.Imports = append(protocol.Imports,
+				imp.xml.Translate(protocol))
 		}
 	}
 
@@ -209,7 +211,7 @@ func (x *XMLRequest) Translate() *Request {
 	// The XML protocol description references 'string_len' in the
 	// computation of the 'odd_length' field. However, 'string_len' is not
 	// defined. Therefore, let's forcefully add it as a 'local field'.
-	// (i.e., a parameter in the caller but does not get send over the wire.)
+	// (i.e., a parameter in the caller but does not get sent over the wire.)
 	if x.Name == "QueryTextExtents" {
 		stringLenLocal := &LocalField{&SingleField{
 			xmlName: "string_len",
@@ -399,27 +401,15 @@ func TypeSrcName(p *Protocol, typ Type) string {
 	if colon := strings.Index(t, ":"); colon > -1 {
 		namespace := t[:colon]
 		rest := t[colon+1:]
-		return splitAndTitle(namespace) + splitAndTitle(rest)
+		return p.ProtocolFind(namespace).PkgName() + "." + splitAndTitle(rest)
 	}
 
-	// Since there is no namespace, we need to look for a namespace
-	// in the current context.
-	niceType := splitAndTitle(t)
-	if p.isExt() {
-		for _, typ2 := range p.Types {
-			if t == typ2.XmlName() {
-				return strings.Title(p.Name) + niceType
-			}
-		}
-		for _, imp := range p.Imports {
-			for _, typ2 := range imp.Types {
-				if t == typ2.XmlName() {
-					return strings.Title(imp.Name) + niceType
-				}
-			}
-		}
+	// Since there's no namespace, we're left with the raw type name.
+	// If the type is part of the source we're generating (i.e., there is
+	// no parent protocol), then just return that type name.
+	// Otherwise, we must qualify it with a package name.
+	if p.Parent == nil {
+		return splitAndTitle(t)
 	}
-
-	// We couldn't find one, so return it without a prefix.
-	return niceType
+	return p.PkgName() + "." + splitAndTitle(t)
 }

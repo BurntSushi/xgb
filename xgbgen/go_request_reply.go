@@ -9,22 +9,22 @@ func (r *Request) Define(c *Context) {
 	c.Putln("// Request %s", r.SrcName())
 	c.Putln("// size: %s", r.Size(c))
 	c.Putln("type %s struct {", r.CookieName())
-	c.Putln("*cookie")
+	c.Putln("*xgb.Cookie")
 	c.Putln("}")
 	c.Putln("")
 	if r.Reply != nil {
-		c.Putln("func (c *Conn) %s(%s) %s {",
+		c.Putln("func %s(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
-		c.Putln("cookie := c.newCookie(true, true)")
-		c.Putln("c.newRequest(c.%s(%s), cookie)", r.ReqName(), r.ParamNames())
+		c.Putln("cookie := c.NewCookie(true, true)")
+		c.Putln("c.NewRequest(%s(c, %s), cookie)", r.ReqName(), r.ParamNames())
 		c.Putln("return %s{cookie}", r.CookieName())
 		c.Putln("}")
 		c.Putln("")
 
-		c.Putln("func (c *Conn) %sUnchecked(%s) %s {",
+		c.Putln("func %sUnchecked(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
-		c.Putln("cookie := c.newCookie(false, true)")
-		c.Putln("c.newRequest(c.%s(%s), cookie)", r.ReqName(), r.ParamNames())
+		c.Putln("cookie := c.NewCookie(false, true)")
+		c.Putln("c.NewRequest(%s(c, %s), cookie)", r.ReqName(), r.ParamNames())
 		c.Putln("return %s{cookie}", r.CookieName())
 		c.Putln("}")
 		c.Putln("")
@@ -32,27 +32,27 @@ func (r *Request) Define(c *Context) {
 		r.ReadReply(c)
 	} else {
 		c.Putln("// Write request to wire for %s", r.SrcName())
-		c.Putln("func (c *Conn) %s(%s) %s {",
+		c.Putln("func %s(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
-		c.Putln("cookie := c.newCookie(false, false)")
-		c.Putln("c.newRequest(c.%s(%s), cookie)", r.ReqName(), r.ParamNames())
+		c.Putln("cookie := c.NewCookie(false, false)")
+		c.Putln("c.NewRequest(%s(c, %s), cookie)", r.ReqName(), r.ParamNames())
 		c.Putln("return %s{cookie}", r.CookieName())
 		c.Putln("}")
 		c.Putln("")
 
-		c.Putln("func (c *Conn) %sChecked(%s) %s {",
+		c.Putln("func %sChecked(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
-		c.Putln("cookie := c.newCookie(true, false)")
-		c.Putln("c.newRequest(c.%s(%s), cookie)", r.ReqName(), r.ParamNames())
+		c.Putln("cookie := c.NewCookie(true, false)")
+		c.Putln("c.NewRequest(%s(c, %s), cookie)", r.ReqName(), r.ParamNames())
 		c.Putln("return %s{cookie}", r.CookieName())
+		c.Putln("}")
+		c.Putln("")
+
+		c.Putln("func (cook %s) Check() error {", r.CookieName())
+		c.Putln("return cook.Cookie.Check()")
 		c.Putln("}")
 		c.Putln("")
 	}
-
-	c.Putln("func (cook %s) Check() error {", r.CookieName())
-	c.Putln("return cook.check()")
-	c.Putln("}")
-	c.Putln("")
 	r.WriteRequest(c)
 }
 
@@ -71,7 +71,7 @@ func (r *Request) ReadReply(c *Context) {
 	c.Putln("// Waits and reads reply data from request %s", r.SrcName())
 	c.Putln("func (cook %s) Reply() (*%s, error) {",
 		r.CookieName(), r.ReplyTypeName())
-	c.Putln("buf, err := cook.reply()")
+	c.Putln("buf, err := cook.Cookie.Reply()")
 	c.Putln("if err != nil {")
 	c.Putln("return nil, err")
 	c.Putln("}")
@@ -92,10 +92,10 @@ func (r *Request) ReadReply(c *Context) {
 		field.Read(c, "v.")
 		c.Putln("")
 		if i == 0 {
-			c.Putln("v.Sequence = Get16(buf[b:])")
+			c.Putln("v.Sequence = xgb.Get16(buf[b:])")
 			c.Putln("b += 2")
 			c.Putln("")
-			c.Putln("v.Length = Get32(buf[b:]) // 4-byte units")
+			c.Putln("v.Length = xgb.Get32(buf[b:]) // 4-byte units")
 			c.Putln("b += 4")
 			c.Putln("")
 		}
@@ -107,19 +107,20 @@ func (r *Request) ReadReply(c *Context) {
 
 func (r *Request) WriteRequest(c *Context) {
 	writeSize := func() {
-		c.Putln("Put16(buf[b:], uint16(size / 4)) " +
+		c.Putln("xgb.Put16(buf[b:], uint16(size / 4)) " +
 			"// write request size in 4-byte units")
 		c.Putln("b += 2")
 		c.Putln("")
 	}
 	c.Putln("// Write request to wire for %s", r.SrcName())
-	c.Putln("func (c *Conn) %s(%s) []byte {", r.ReqName(), r.ParamNameTypes())
+	c.Putln("func %s(c *xgb.Conn, %s) []byte {",
+		r.ReqName(), r.ParamNameTypes())
 	c.Putln("size := %s", r.Size(c))
 	c.Putln("b := 0")
 	c.Putln("buf := make([]byte, size)")
 	c.Putln("")
 	if c.protocol.isExt() {
-		c.Putln("buf[b] = c.extensions[\"%s\"]",
+		c.Putln("buf[b] = c.Extensions[\"%s\"]",
 			strings.ToUpper(c.protocol.ExtXName))
 		c.Putln("b += 1")
 		c.Putln("")
@@ -165,7 +166,7 @@ func (r *Request) ParamNames() string {
 			names = append(names, fmt.Sprintf("%s", field.SrcName()))
 		}
 	}
-	return strings.Join(names, ",")
+	return strings.Join(names, ", ")
 }
 
 func (r *Request) ParamNameTypes() string {
@@ -189,5 +190,5 @@ func (r *Request) ParamNameTypes() string {
 				fmt.Sprintf("%s %s", field.SrcName(), field.SrcType()))
 		}
 	}
-	return strings.Join(nameTypes, ",")
+	return strings.Join(nameTypes, ", ")
 }

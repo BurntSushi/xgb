@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"strings"
 	"unicode"
 )
 
@@ -23,7 +22,7 @@ type Request struct {
 func (r *Request) Initialize(p *Protocol) {
 	r.srcName = SrcName(p, r.xmlName)
 	if p.isExt() {
-		r.srcName = strings.Title(strings.ToLower(p.Name)) + r.srcName
+		r.srcName = r.srcName
 	}
 
 	if r.Reply != nil {

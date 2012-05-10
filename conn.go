@@ -38,7 +38,7 @@ func (c *Conn) connect(display string) error {
 		return errors.New("unsupported auth protocol " + authName)
 	}
 
-	buf := make([]byte, 12+pad(len(authName))+pad(len(authData)))
+	buf := make([]byte, 12+Pad(len(authName))+Pad(len(authData)))
 	buf[0] = 0x6c
 	buf[1] = 0
 	Put16(buf[2:], 11)
@@ -47,7 +47,7 @@ func (c *Conn) connect(display string) error {
 	Put16(buf[8:], uint16(len(authData)))
 	Put16(buf[10:], 0)
 	copy(buf[12:], []byte(authName))
-	copy(buf[12+pad(len(authName)):], authData)
+	copy(buf[12+Pad(len(authName)):], authData)
 	if _, err = c.conn.Write(buf); err != nil {
 		return err
 	}
@@ -78,11 +78,14 @@ func (c *Conn) connect(display string) error {
 			string(reason))
 	}
 
-	ReadSetupInfo(buf, &c.Setup)
+	// Unfortunately, it isn't really feasible to read the setup bytes here,
+	// since the code to do so is in a different package.
+	// Users must call 'xproto.Setup(X)' to get the setup info.
+	c.SetupBytes = buf
 
-	if c.defaultScreen >= len(c.Setup.Roots) {
-		c.defaultScreen = 0
-	}
+	// But also read stuff that we *need* to get started.
+	c.setupResourceIdBase = Get32(buf[12:])
+	c.setupResourceIdMask = Get32(buf[16:])
 
 	return nil
 }
@@ -137,7 +140,7 @@ func (c *Conn) dial(display string) error {
 	}
 
 	if len(scr) != 0 {
-		c.defaultScreen, err = strconv.Atoi(scr)
+		c.DefaultScreen, err = strconv.Atoi(scr)
 		if err != nil {
 			return errors.New("bad display string: " + display0)
 		}
