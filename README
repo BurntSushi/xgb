@@ -10,6 +10,11 @@ Please see doc.go for more info.
 Note that unless you know you need XGB, you can probably make your life
 easier by using a slightly higher level library: xgbutil.
 
+Quick Usage
+===========
+go get github.com/BurntSushi/xgb
+go run go/path/src/github.com/BurntSushi/xgb/examples/create-window/main.go
+
 BurntSushi's Fork
 =================
 I've forked the XGB repository from Google Code due to inactivty upstream.

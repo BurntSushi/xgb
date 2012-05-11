@@ -142,14 +142,5 @@ that GLX also does not work (however, there is Go source code for GLX that
 compiles, unlike XKB). I don't currently have any intention of getting XKB 
 working, due to its complexity and my current mental incapacity to test it.
 
-There are so many functions
-
-Indeed. Everything below this initial overview is useful insomuch as your
-browser's "Find" feature is useful. The following list of types and functions
-should act as a reference to the Go representation of a request, type or reply
-of something you *already know about*. To search the following list in hopes
-of attaining understanding is a quest in folly. For understanding, please see
-the X Protocol Reference Manual: http://goo.gl/aMd2e
-
 */
 package xgb
