@@ -68,6 +68,8 @@ func (e *Error) ImplementsError(c *Context) {
 	c.Putln("return err.Sequence")
 	c.Putln("}")
 	c.Putln("")
+	c.Putln("// BadId returns the 'BadValue' number if one exists for the "+
+		"%s error. If no bad value exists, 0 is returned.", e.ErrConst())
 	c.Putln("func (err %s) BadId() uint32 {", e.ErrType())
 	if !c.protocol.isExt() {
 		c.Putln("return err.BadValue")
@@ -75,6 +77,8 @@ func (e *Error) ImplementsError(c *Context) {
 		c.Putln("return 0")
 	}
 	c.Putln("}")
+	c.Putln("// Error returns a rudimentary string representation of the %s "+
+		"error.", e.ErrConst())
 	c.Putln("")
 	c.Putln("func (err %s) Error() string {", e.ErrType())
 	ErrorFieldString(c, e.Fields, e.ErrConst())
@@ -130,6 +134,8 @@ func (e *ErrorCopy) ImplementsError(c *Context) {
 	c.Putln("return err.Sequence")
 	c.Putln("}")
 	c.Putln("")
+	c.Putln("// BadId returns the 'BadValue' number if one exists for the "+
+		"%s error. If no bad value exists, 0 is returned.", e.ErrConst())
 	c.Putln("func (err %s) BadId() uint32 {", e.ErrType())
 	if !c.protocol.isExt() {
 		c.Putln("return err.BadValue")
@@ -138,6 +144,8 @@ func (e *ErrorCopy) ImplementsError(c *Context) {
 	}
 	c.Putln("}")
 	c.Putln("")
+	c.Putln("// Error returns a rudimentary string representation of the %s "+
+		"error.", e.ErrConst())
 	c.Putln("func (err %s) Error() string {", e.ErrType())
 	ErrorFieldString(c, e.Old.(*Error).Fields, e.ErrConst())
 	c.Putln("}")
