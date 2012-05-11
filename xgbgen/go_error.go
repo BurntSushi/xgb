@@ -6,9 +6,7 @@ import (
 
 // Error types
 func (e *Error) Define(c *Context) {
-	c.Putln("// Error definition %s (%d)", e.SrcName(), e.Number)
-	c.Putln("// Size: %s", e.Size())
-	c.Putln("")
+	c.Putln("// %s is the error number for a %s.", e.ErrConst(), e.ErrConst())
 	c.Putln("const %s = %d", e.ErrConst(), e.Number)
 	c.Putln("")
 	c.Putln("type %s struct {", e.ErrType())
@@ -40,7 +38,8 @@ func (e *Error) Define(c *Context) {
 }
 
 func (e *Error) Read(c *Context) {
-	c.Putln("// Error read %s", e.SrcName())
+	c.Putln("// %sNew constructs a %s value that implements xgb.Error from "+
+		"a byte slice.", e.ErrType(), e.ErrType())
 	c.Putln("func %sNew(buf []byte) xgb.Error {", e.ErrType())
 	c.Putln("v := %s{}", e.ErrType())
 	c.Putln("v.NiceName = \"%s\"", e.SrcName())
@@ -62,8 +61,9 @@ func (e *Error) Read(c *Context) {
 
 // ImplementsError writes functions to implement the XGB Error interface.
 func (e *Error) ImplementsError(c *Context) {
-	c.Putln("func (err %s) ImplementsError() { }", e.ErrType())
-	c.Putln("")
+	c.Putln("// SequenceId returns the sequence id attached to the %s error.",
+		e.ErrConst())
+	c.Putln("// This is mostly used internally.")
 	c.Putln("func (err %s) SequenceId() uint16 {", e.ErrType())
 	c.Putln("return err.Sequence")
 	c.Putln("}")
@@ -84,8 +84,7 @@ func (e *Error) ImplementsError(c *Context) {
 
 // ErrorCopy types
 func (e *ErrorCopy) Define(c *Context) {
-	c.Putln("// ErrorCopy definition %s (%d)", e.SrcName(), e.Number)
-	c.Putln("")
+	c.Putln("// %s is the error number for a %s.", e.ErrConst(), e.ErrConst())
 	c.Putln("const %s = %d", e.ErrConst(), e.Number)
 	c.Putln("")
 	c.Putln("type %s %s", e.ErrType(), e.Old.(*Error).ErrType())
@@ -111,6 +110,8 @@ func (e *ErrorCopy) Define(c *Context) {
 }
 
 func (e *ErrorCopy) Read(c *Context) {
+	c.Putln("// %sNew constructs a %s value that implements xgb.Error from "+
+		"a byte slice.", e.ErrType(), e.ErrType())
 	c.Putln("func %sNew(buf []byte) xgb.Error {", e.ErrType())
 	c.Putln("v := %s(%sNew(buf).(%s))",
 		e.ErrType(), e.Old.(*Error).ErrType(), e.Old.(*Error).ErrType())
@@ -122,8 +123,9 @@ func (e *ErrorCopy) Read(c *Context) {
 
 // ImplementsError writes functions to implement the XGB Error interface.
 func (e *ErrorCopy) ImplementsError(c *Context) {
-	c.Putln("func (err %s) ImplementsError() { }", e.ErrType())
-	c.Putln("")
+	c.Putln("// SequenceId returns the sequence id attached to the %s error.",
+		e.ErrConst())
+	c.Putln("// This is mostly used internally.")
 	c.Putln("func (err %s) SequenceId() uint16 {", e.ErrType())
 	c.Putln("return err.Sequence")
 	c.Putln("}")

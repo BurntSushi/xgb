@@ -6,13 +6,16 @@ import (
 )
 
 func (r *Request) Define(c *Context) {
-	c.Putln("// Request %s", r.SrcName())
-	c.Putln("// size: %s", r.Size(c))
+	c.Putln("// %s is a cookie used only for %s requests.",
+		r.CookieName(), r.SrcName())
 	c.Putln("type %s struct {", r.CookieName())
 	c.Putln("*xgb.Cookie")
 	c.Putln("}")
 	c.Putln("")
 	if r.Reply != nil {
+		c.Putln("// %s sends a checked request.", r.SrcName())
+		c.Putln("// If an error occurs, it will be returned with the reply "+
+			"by calling %s.Reply()", r.CookieName())
 		c.Putln("func %s(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
 		c.Putln("cookie := c.NewCookie(true, true)")
@@ -21,6 +24,9 @@ func (r *Request) Define(c *Context) {
 		c.Putln("}")
 		c.Putln("")
 
+		c.Putln("// %sUnchecked sends an unchecked request.", r.SrcName())
+		c.Putln("// If an error occurs, it can only be retrieved using " +
+			"xgb.WaitForEvent or xgb.PollForEvent.")
 		c.Putln("func %sUnchecked(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
 		c.Putln("cookie := c.NewCookie(false, true)")
@@ -31,7 +37,9 @@ func (r *Request) Define(c *Context) {
 
 		r.ReadReply(c)
 	} else {
-		c.Putln("// Write request to wire for %s", r.SrcName())
+		c.Putln("// %s sends an unchecked request.", r.SrcName())
+		c.Putln("// If an error occurs, it can only be retrieved using " +
+			"xgb.WaitForEvent or xgb.PollForEvent.")
 		c.Putln("func %s(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
 		c.Putln("cookie := c.NewCookie(false, false)")
@@ -40,6 +48,9 @@ func (r *Request) Define(c *Context) {
 		c.Putln("}")
 		c.Putln("")
 
+		c.Putln("// %sChecked sends a checked request.", r.SrcName())
+		c.Putln("// If an error occurs, it can be retrieved using "+
+			"%s.Check()", r.CookieName())
 		c.Putln("func %sChecked(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
 		c.Putln("cookie := c.NewCookie(true, false)")
@@ -48,6 +59,10 @@ func (r *Request) Define(c *Context) {
 		c.Putln("}")
 		c.Putln("")
 
+		c.Putln("// Check returns an error if one occurred for checked " +
+			"requests that are not expecting a reply.")
+		c.Putln("// This cannot be called for requests expecting a reply, " +
+			"nor for unchecked requests.")
 		c.Putln("func (cook %s) Check() error {", r.CookieName())
 		c.Putln("return cook.Cookie.Check()")
 		c.Putln("}")
@@ -57,18 +72,19 @@ func (r *Request) Define(c *Context) {
 }
 
 func (r *Request) ReadReply(c *Context) {
-	c.Putln("// Request reply for %s", r.SrcName())
-	c.Putln("// size: %s", r.Reply.Size())
+	c.Putln("// %s represents the data returned from a %s request.",
+		r.ReplyTypeName(), r.SrcName())
 	c.Putln("type %s struct {", r.ReplyTypeName())
-	c.Putln("Sequence uint16")
-	c.Putln("Length uint32")
+	c.Putln("Sequence uint16 // sequence number of the request for this reply")
+	c.Putln("Length uint32 // number of bytes in this reply")
 	for _, field := range r.Reply.Fields {
 		field.Define(c)
 	}
 	c.Putln("}")
 	c.Putln("")
 
-	c.Putln("// Waits and reads reply data from request %s", r.SrcName())
+	c.Putln("// Reply blocks and returns the reply data for a %s request.",
+		r.SrcName())
 	c.Putln("func (cook %s) Reply() (*%s, error) {",
 		r.CookieName(), r.ReplyTypeName())
 	c.Putln("buf, err := cook.Cookie.Reply()")
@@ -82,7 +98,8 @@ func (r *Request) ReadReply(c *Context) {
 	c.Putln("}")
 	c.Putln("")
 
-	c.Putln("// Read reply into structure from buffer for %s", r.SrcName())
+	c.Putln("// %s reads a byte slice into a %s value.",
+		r.ReplyName(), r.ReplyTypeName())
 	c.Putln("func %s(buf []byte) *%s {",
 		r.ReplyName(), r.ReplyTypeName())
 	c.Putln("v := new(%s)", r.ReplyTypeName())
@@ -113,6 +130,8 @@ func (r *Request) WriteRequest(c *Context) {
 		c.Putln("")
 	}
 	c.Putln("// Write request to wire for %s", r.SrcName())
+	c.Putln("// %s writes a %s request to a byte slice.",
+		r.ReqName(), r.SrcName())
 	c.Putln("func %s(c *xgb.Conn, %s) []byte {",
 		r.ReqName(), r.ParamNameTypes())
 	c.Putln("size := %s", r.Size(c))

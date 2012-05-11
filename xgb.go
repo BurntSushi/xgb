@@ -118,7 +118,6 @@ func (c *Conn) Close() {
 // Event is an interface that can contain any of the events returned by the
 // server. Use a type assertion switch to extract the Event structs.
 type Event interface {
-	ImplementsEvent()
 	Bytes() []byte
 	String() string
 }
@@ -141,7 +140,6 @@ var NewExtEventFuncs = make(map[string]map[int]NewEventFun)
 // Error is an interface that can contain any of the errors returned by
 // the server. Use a type assertion switch to extract the Error structs.
 type Error interface {
-	ImplementsError()
 	SequenceId() uint16
 	BadId() uint32
 	Error() string

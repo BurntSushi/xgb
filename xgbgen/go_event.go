@@ -6,9 +6,7 @@ import (
 
 // Event types
 func (e *Event) Define(c *Context) {
-	c.Putln("// Event definition %s (%d)", e.SrcName(), e.Number)
-	c.Putln("// Size: %s", e.Size())
-	c.Putln("")
+	c.Putln("// %s is the event number for a %s.", e.SrcName(), e.EvType())
 	c.Putln("const %s = %d", e.SrcName(), e.Number)
 	c.Putln("")
 	c.Putln("type %s struct {", e.EvType())
@@ -30,8 +28,10 @@ func (e *Event) Define(c *Context) {
 	e.Write(c)
 
 	// Makes sure that this event type is an Event interface.
-	c.Putln("func (v %s) ImplementsEvent() { }", e.EvType())
-	c.Putln("")
+	c.Putln("// SequenceId returns the sequence id attached to the %s event.",
+		e.SrcName())
+	c.Putln("// Events without a sequence number (KeymapNotify) return 0.")
+	c.Putln("// This is mostly used internally.")
 	c.Putln("func (v %s) SequenceId() uint16 {", e.EvType())
 	if e.NoSequence {
 		c.Putln("return uint16(0)")
@@ -40,6 +40,8 @@ func (e *Event) Define(c *Context) {
 	}
 	c.Putln("}")
 	c.Putln("")
+	c.Putln("// String is a rudimentary string representation of %s.",
+		e.EvType())
 	c.Putln("func (v %s) String() string {", e.EvType())
 	EventFieldString(c, e.Fields, e.SrcName())
 	c.Putln("}")
@@ -58,7 +60,8 @@ func (e *Event) Define(c *Context) {
 }
 
 func (e *Event) Read(c *Context) {
-	c.Putln("// Event read %s", e.SrcName())
+	c.Putln("// %sNew constructs a %s value that implements xgb.Event from "+
+		"a byte slice.", e.EvType(), e.EvType())
 	c.Putln("func %sNew(buf []byte) xgb.Event {", e.EvType())
 	c.Putln("v := %s{}", e.EvType())
 	c.Putln("b := 1 // don't read event number")
@@ -78,7 +81,7 @@ func (e *Event) Read(c *Context) {
 }
 
 func (e *Event) Write(c *Context) {
-	c.Putln("// Event write %s", e.SrcName())
+	c.Putln("// Bytes writes a %s value to a byte slice.", e.EvType())
 	c.Putln("func (v %s) Bytes() []byte {", e.EvType())
 	c.Putln("buf := make([]byte, %s)", e.Size())
 	c.Putln("b := 0")
@@ -102,8 +105,7 @@ func (e *Event) Write(c *Context) {
 
 // EventCopy types
 func (e *EventCopy) Define(c *Context) {
-	c.Putln("// EventCopy definition %s (%d)", e.SrcName(), e.Number)
-	c.Putln("")
+	c.Putln("// %s is the event number for a %s.", e.SrcName(), e.EvType())
 	c.Putln("const %s = %d", e.SrcName(), e.Number)
 	c.Putln("")
 	c.Putln("type %s %s", e.EvType(), e.Old.(*Event).EvType())
@@ -118,8 +120,10 @@ func (e *EventCopy) Define(c *Context) {
 	e.Write(c)
 
 	// Makes sure that this event type is an Event interface.
-	c.Putln("func (v %s) ImplementsEvent() { }", e.EvType())
-	c.Putln("")
+	c.Putln("// SequenceId returns the sequence id attached to the %s event.",
+		e.SrcName())
+	c.Putln("// Events without a sequence number (KeymapNotify) return 0.")
+	c.Putln("// This is mostly used internally.")
 	c.Putln("func (v %s) SequenceId() uint16 {", e.EvType())
 	if e.Old.(*Event).NoSequence {
 		c.Putln("return uint16(0)")
@@ -146,6 +150,8 @@ func (e *EventCopy) Define(c *Context) {
 }
 
 func (e *EventCopy) Read(c *Context) {
+	c.Putln("// %sNew constructs a %s value that implements xgb.Event from "+
+		"a byte slice.", e.EvType(), e.EvType())
 	c.Putln("func %sNew(buf []byte) xgb.Event {", e.EvType())
 	c.Putln("return %s(%sNew(buf).(%s))",
 		e.EvType(), e.Old.(*Event).EvType(), e.Old.(*Event).EvType())
@@ -154,6 +160,7 @@ func (e *EventCopy) Read(c *Context) {
 }
 
 func (e *EventCopy) Write(c *Context) {
+	c.Putln("// Bytes writes a %s value to a byte slice.", e.EvType())
 	c.Putln("func (v %s) Bytes() []byte {", e.EvType())
 	c.Putln("return %s(v).Bytes()", e.Old.(*Event).EvType())
 	c.Putln("}")
