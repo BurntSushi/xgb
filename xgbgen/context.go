@@ -51,6 +51,8 @@ func (c *Context) Morph(xmlBytes []byte) {
 	c.protocol = parsedXml.Translate(nil)
 
 	// Start with Go header.
+	c.Putln("// Package %s is the X client API for the %s extension.",
+		c.protocol.PkgName(), c.protocol.ExtXName)
 	c.Putln("package %s", c.protocol.PkgName())
 	c.Putln("")
 	c.Putln("/*")
