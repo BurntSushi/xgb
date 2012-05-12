@@ -81,7 +81,7 @@ func (r *Request) CheckExt(c *Context) {
 	}
 	c.Putln("if _, ok := c.Extensions[\"%s\"]; !ok {",
 		strings.ToUpper(c.protocol.ExtXName))
-	c.Putln("panic(\"Cannot issue request '%s' using the uninitialized " +
+	c.Putln("panic(\"Cannot issue request '%s' using the uninitialized "+
 		"extension '%s'. %s.Init(connObj) must be called first.\")",
 		r.SrcName(), c.protocol.ExtXName, c.protocol.PkgName())
 	c.Putln("}")
