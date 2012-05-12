@@ -18,6 +18,7 @@ func (r *Request) Define(c *Context) {
 			"by calling %s.Reply()", r.CookieName())
 		c.Putln("func %s(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
+		r.CheckExt(c)
 		c.Putln("cookie := c.NewCookie(true, true)")
 		c.Putln("c.NewRequest(%s(c, %s), cookie)", r.ReqName(), r.ParamNames())
 		c.Putln("return %s{cookie}", r.CookieName())
@@ -29,6 +30,7 @@ func (r *Request) Define(c *Context) {
 			"xgb.WaitForEvent or xgb.PollForEvent.")
 		c.Putln("func %sUnchecked(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
+		r.CheckExt(c)
 		c.Putln("cookie := c.NewCookie(false, true)")
 		c.Putln("c.NewRequest(%s(c, %s), cookie)", r.ReqName(), r.ParamNames())
 		c.Putln("return %s{cookie}", r.CookieName())
@@ -42,6 +44,7 @@ func (r *Request) Define(c *Context) {
 			"xgb.WaitForEvent or xgb.PollForEvent.")
 		c.Putln("func %s(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
+		r.CheckExt(c)
 		c.Putln("cookie := c.NewCookie(false, false)")
 		c.Putln("c.NewRequest(%s(c, %s), cookie)", r.ReqName(), r.ParamNames())
 		c.Putln("return %s{cookie}", r.CookieName())
@@ -53,6 +56,7 @@ func (r *Request) Define(c *Context) {
 			"%s.Check()", r.CookieName())
 		c.Putln("func %sChecked(c *xgb.Conn, %s) %s {",
 			r.SrcName(), r.ParamNameTypes(), r.CookieName())
+		r.CheckExt(c)
 		c.Putln("cookie := c.NewCookie(true, false)")
 		c.Putln("c.NewRequest(%s(c, %s), cookie)", r.ReqName(), r.ParamNames())
 		c.Putln("return %s{cookie}", r.CookieName())
@@ -69,6 +73,18 @@ func (r *Request) Define(c *Context) {
 		c.Putln("")
 	}
 	r.WriteRequest(c)
+}
+
+func (r *Request) CheckExt(c *Context) {
+	if !c.protocol.isExt() {
+		return
+	}
+	c.Putln("if _, ok := c.Extensions[\"%s\"]; !ok {",
+		strings.ToUpper(c.protocol.ExtXName))
+	c.Putln("panic(\"Cannot issue request '%s' using the uninitialized " +
+		"extension '%s'. %s.Init(connObj) must be called first.\")",
+		r.SrcName(), c.protocol.ExtXName, c.protocol.PkgName())
+	c.Putln("}")
 }
 
 func (r *Request) ReadReply(c *Context) {
