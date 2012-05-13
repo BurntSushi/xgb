@@ -166,8 +166,11 @@ type eventOrError interface{}
 
 // NewID generates a new unused ID for use with requests like CreateWindow.
 // If no new ids can be generated, the id returned is 0 and error is non-nil.
-// Note that the value returned will need to be converted to the proper
-// type. i.e., xproto.Window(id).
+// This shouldn't be used directly, and is exported for use in the extension
+// sub-packages.
+// If you need identifiers, use the appropriate constructor.
+// e.g., For a window id, use xproto.NewWindowId. For
+// a new pixmap id, use xproto.NewPixmapId. And so on.
 func (c *Conn) NewId() (uint32, error) {
 	xid := <-c.xidChan
 	if xid.err != nil {

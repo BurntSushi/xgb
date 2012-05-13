@@ -1,6 +1,6 @@
 package xgb
 
-// Sync sends a round trip request and wait for the response.
+// Sync sends a round trip request and waits for the response.
 // This forces all pending cookies to be dealt with.
 // You actually shouldn't need to use this like you might with Xlib. Namely,
 // buffers are automatically flushed using Go's channels and round trip requests

@@ -1,5 +1,12 @@
 package xgb
 
+/*
+conn.go contains a couple of functions that do some real dirty work related
+to the initial connection handshake with X.
+
+This code is largely unmodified from the original XGB package that I forked.
+*/
+
 import (
 	"errors"
 	"fmt"

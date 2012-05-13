@@ -1,5 +1,15 @@
 package xgb
 
+/*
+help.go is meant to contain a rough hodge podge of functions that are mainly
+used in the auto generated code. Indeed, several functions here are simple
+wrappers so that the sub-packages don't need to be smart about which stdlib
+packages to import.
+
+Also, the 'Get..' and 'Put..' functions are used through the core xgb package
+too. (xgbutil uses them too.)
+*/
+
 import (
 	"fmt"
 	"strings"
