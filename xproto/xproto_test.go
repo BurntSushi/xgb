@@ -12,7 +12,11 @@ package xproto
 	There are also a couple of benchmarks that show the difference between
 	correctly issuing lots of requests and gathering replies and
 	incorrectly doing the same. (This particular difference is one of the
-	claimed advantages of the XCB, and therefore XGB, family.
+	claimed advantages of the XCB, and therefore XGB, family.)
+
+	In sum, these tests are more focused on testing the core xgb package itself,
+	rather than whether xproto has properly implemented the core X client
+	protocol.
 */
 
 import (
@@ -163,8 +167,6 @@ func TestWindowEvents(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ConfigureWindow: %s", err)
 	}
-
-	TestProperty(t)
 
 	evOrErr := waitForEvent(t, 5)
 	switch event := evOrErr.ev.(type) {
