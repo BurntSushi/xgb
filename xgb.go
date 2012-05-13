@@ -188,10 +188,13 @@ type xid struct {
 }
 
 // generateXids sends new Ids down the channel for NewId to use.
+// generateXids should be run in its own goroutine.
 // This needs to be updated to use the XC Misc extension once we run out of
 // new ids.
 // Thanks to libxcb/src/xcb_xid.c. This code is greatly inspired by it.
 func (conn *Conn) generateXIds() {
+	defer close(conn.xidChan)
+
 	// This requires some explanation. From the horse's mouth:
 	// "The resource-id-mask contains a single contiguous set of bits (at least 
 	// 18).  The client allocates resource IDs for types WINDOW, PIXMAP, 
@@ -234,7 +237,8 @@ func (c *Conn) newSequenceId() uint16 {
 	return <-c.seqChan
 }
 
-// generateSeqIds returns new sequence ids.
+// generateSeqIds returns new sequence ids. It is meant to be run in its
+// own goroutine.
 // A sequence id is generated for *every* request. It's the identifier used
 // to match up replies with requests.
 // Since sequence ids can only be 16 bit integers we start over at zero when it 
@@ -242,6 +246,8 @@ func (c *Conn) newSequenceId() uint16 {
 // N.B. As long as the cookie buffer is less than 2^16, there are no limitations
 // on the number (or kind) of requests made in sequence.
 func (c *Conn) generateSeqIds() {
+	defer close(c.seqChan)
+
 	seqid := uint16(1)
 	for {
 		c.seqChan <- seqid
@@ -271,7 +277,11 @@ func (c *Conn) NewRequest(buf []byte, cookie *Cookie) {
 
 // sendRequests is run as a single goroutine that takes requests and writes
 // the bytes to the wire and adds the cookie to the cookie queue.
+// It is meant to be run as its own goroutine.
 func (c *Conn) sendRequests() {
+	defer close(c.reqChan)
+	defer close(c.cookieChan)
+
 	for req := range c.reqChan {
 		// ho there! if the cookie channel is nearly full, force a round
 		// trip to clear out the cookie buffer.
@@ -309,6 +319,8 @@ func (c *Conn) writeBuffer(buf []byte) {
 // channel. (It is an error if no such cookie exists in this case.)
 // Finally, cookies that came "before" this reply are always cleaned up.
 func (c *Conn) readResponses() {
+	defer close(c.eventChan)
+
 	var (
 		err        Error
 		event      Event
