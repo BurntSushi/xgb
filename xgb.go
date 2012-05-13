@@ -379,12 +379,14 @@ func (c *Conn) readResponses() {
 			// FIXME: I'm not sure if using a goroutine here to guarantee
 			// a non-blocking send is the right way to go. I should implement
 			// a proper dynamic queue.
-			if cap(c.eventChan) == len(c.eventChan) {
+			// I am pretty sure this also loses a guarantee of events being
+			// processed in order of being received.
+			select {
+			case c.eventChan <- event:
+			default:
 				go func() {
 					c.eventChan <- event
 				}()
-			} else {
-				c.eventChan <- event
 			}
 
 			// No more processing for events.
