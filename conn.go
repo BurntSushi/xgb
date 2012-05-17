@@ -33,8 +33,8 @@ func (c *Conn) connect(display string) error {
 	authName, authData, err := readAuthority(c.host, c.display)
 	noauth := false
 	if err != nil {
-		Logger.Printf("Could not get authority info: %v", err)
-		Logger.Println("Trying connection without authority info...")
+		logger.Printf("Could not get authority info: %v", err)
+		logger.Println("Trying connection without authority info...")
 		authName = ""
 		authData = []byte{}
 		noauth = true
