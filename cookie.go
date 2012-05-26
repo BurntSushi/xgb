@@ -16,7 +16,7 @@ type Cookie struct {
 	pingChan  chan bool
 }
 
-// newCookie creates a new cookie with the correct channels initialized
+// NewCookie creates a new cookie with the correct channels initialized
 // depending upon the values of 'checked' and 'reply'. Together, there are
 // four different kinds of cookies. (See more detailed comments in the
 // function for more info on those.)

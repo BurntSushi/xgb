@@ -78,10 +78,10 @@ func NewConn() (*Conn, error) {
 // If 'display' is empty it will be taken from os.Getenv("DISPLAY").
 //
 // Examples:
-// NewConn(":1") -> net.Dial("unix", "", "/tmp/.X11-unix/X1")
-// NewConn("/tmp/launch-123/:0") -> net.Dial("unix", "", "/tmp/launch-123/:0")
-// NewConn("hostname:2.1") -> net.Dial("tcp", "", "hostname:6002")
-// NewConn("tcp/hostname:1.0") -> net.Dial("tcp", "", "hostname:6001")
+//	NewConn(":1") -> net.Dial("unix", "", "/tmp/.X11-unix/X1")
+//	NewConn("/tmp/launch-12/:0") -> net.Dial("unix", "", "/tmp/launch-12/:0")
+//	NewConn("hostname:2.1") -> net.Dial("tcp", "", "hostname:6002")
+//	NewConn("tcp/hostname:1.0") -> net.Dial("tcp", "", "hostname:6001")
 func NewConnDisplay(display string) (*Conn, error) {
 	conn := &Conn{}
 
@@ -265,10 +265,10 @@ type request struct {
 	cookie *Cookie
 }
 
-// NewRequest takes the bytes an a cookie, constructs a request type,
-// and sends it over the Conn.reqChan channel.
+// NewRequest takes the bytes and a cookie of a particular request, constructs 
+// a request type, and sends it over the Conn.reqChan channel.
 // Note that the sequence number is added to the cookie after it is sent
-// over the request channel.
+// over the request channel, but before it is sent to X.
 func (c *Conn) NewRequest(buf []byte, cookie *Cookie) {
 	c.reqChan <- &request{buf: buf, cookie: cookie}
 }
@@ -476,13 +476,18 @@ func processEventOrError(everr eventOrError) (Event, Error) {
 
 // WaitForEvent returns the next event from the server.
 // It will block until an event is available.
+// WaitForEvent returns either an Event or an Error. (Returning neither or both
+// is a bug.) Note than an Error here is an X error and not an XGB error. That
+// is, X errors are sometimes completely expected (and you may want to ignore
+// them in some cases).
 func (c *Conn) WaitForEvent() (Event, Error) {
 	return processEventOrError(<-c.eventChan)
 }
 
 // PollForEvent returns the next event from the server if one is available in 
-// the internal queue.
-// It will not block.
+// the internal queue without blocking. Note that unlike WaitForEvent, both 
+// Event and Error could be nil. Indeed, they are both nil when the event queue 
+// is empty.
 func (c *Conn) PollForEvent() (Event, Error) {
 	select {
 	case everr := <-c.eventChan:

@@ -107,16 +107,16 @@ can be found in examples/xinerama.
 Parallelism
 
 XGB can benefit greatly from parallelism due to its concurrent design. For
-evidence of this claim, please see the benchmarks in xgb_test.go.
+evidence of this claim, please see the benchmarks in xproto/xproto_test.go.
 
 Tests
 
-xgb_test.go contains a number of contrived tests that stress particular corners
-of XGB that I presume could be problem areas. Namely: requests with no replies,
-requests with replies, checked errors, unchecked errors, sequence number
-wrapping, cookie buffer flushing (i.e., forcing a round trip every N requests
-made that don't have a reply), getting/setting properties and creating a window
-and listening to StructureNotify events.
+xproto/xproto_test.go contains a number of contrived tests that stress 
+particular corners of XGB that I presume could be problem areas. Namely: 
+requests with no replies, requests with replies, checked errors, unchecked 
+errors, sequence number wrapping, cookie buffer flushing (i.e., forcing a round 
+trip every N requests made that don't have a reply), getting/setting properties 
+and creating a window and listening to StructureNotify events.
 
 Code Generator
 
