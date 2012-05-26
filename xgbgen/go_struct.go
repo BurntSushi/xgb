@@ -85,7 +85,7 @@ func (s *Struct) Write(c *Context) {
 
 func (s *Struct) WriteList(c *Context) {
 	c.Putln("// %sListBytes writes a list of %s values to a byte slice.",
-		s.SrcName())
+		s.SrcName(), s.SrcName())
 	c.Putln("func %sListBytes(buf []byte, list []%s) int {",
 		s.SrcName(), s.SrcName())
 	c.Putln("b := 0")
