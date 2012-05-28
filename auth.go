@@ -7,7 +7,7 @@ It is largely unmodified from the original XGB package that I forked.
 */
 
 import (
-	"bufio"
+	"encoding/binary"
 	"errors"
 	"io"
 	"os"
@@ -21,7 +21,7 @@ func readAuthority(hostname, display string) (
 
 	// b is a scratch buffer to use and should be at least 256 bytes long
 	// (i.e. it should be able to hold a hostname).
-	var b [256]byte
+	b := make([]byte, 256)
 
 	// As per /usr/include/X11/Xauth.h.
 	const familyLocal = 256
@@ -49,29 +49,28 @@ func readAuthority(hostname, display string) (
 	}
 	defer r.Close()
 
-	br := bufio.NewReader(r)
 	for {
-		family, err := getU16BE(br, b[0:2])
+		var family uint16
+		if err := binary.Read(r, binary.BigEndian, &family); err != nil {
+			return "", nil, err
+		}
+
+		addr, err := getString(r, b)
 		if err != nil {
 			return "", nil, err
 		}
 
-		addr, err := getString(br, b[0:])
+		disp, err := getString(r, b)
 		if err != nil {
 			return "", nil, err
 		}
 
-		disp, err := getString(br, b[0:])
+		name0, err := getString(r, b)
 		if err != nil {
 			return "", nil, err
 		}
 
-		name0, err := getString(br, b[0:])
-		if err != nil {
-			return "", nil, err
-		}
-
-		data0, err := getBytes(br, b[0:])
+		data0, err := getBytes(r, b)
 		if err != nil {
 			return "", nil, err
 		}
@@ -83,24 +82,15 @@ func readAuthority(hostname, display string) (
 	panic("unreachable")
 }
 
-func getU16BE(r io.Reader, b []byte) (uint16, error) {
-	_, err := io.ReadFull(r, b[0:2])
-	if err != nil {
-		return 0, err
-	}
-	return uint16(b[0])<<8 + uint16(b[1]), nil
-}
-
 func getBytes(r io.Reader, b []byte) ([]byte, error) {
-	n, err := getU16BE(r, b)
-	if err != nil {
+	var n uint16
+	if err := binary.Read(r, binary.BigEndian, &n); err != nil {
 		return nil, err
-	}
-	if int(n) > len(b) {
+	} else if n > uint16(len(b)) {
 		return nil, errors.New("bytes too long for buffer")
 	}
-	_, err = io.ReadFull(r, b[0:n])
-	if err != nil {
+
+	if _, err := io.ReadFull(r, b[0:n]); err != nil {
 		return nil, err
 	}
 	return b[0:n], nil
