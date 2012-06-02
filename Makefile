@@ -51,7 +51,7 @@ test:
 
 # Force all xproto benchmarks to run and no tests.
 bench:
-	(cd xproto ; go test -run 'nomatch' -bench '.*' -cpu 1,2,6)
+	(cd xproto ; go test -run 'nomatch' -bench '.*' -cpu 1,2,3,6)
 
 # gofmt all non-auto-generated code.
 # (auto-generated code is already gofmt'd.)
