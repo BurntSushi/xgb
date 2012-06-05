@@ -37,7 +37,7 @@ func Pad(n int) int {
 	return (n + 3) & ^3
 }
 
-// popCount counts the number of bits set in a value list mask.
+// PopCount counts the number of bits set in a value list mask.
 func PopCount(mask0 int) int {
 	mask := uint32(mask0)
 	n := 0
