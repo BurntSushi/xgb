@@ -35,6 +35,16 @@ build-all: bigreq.b composite.b damage.b dpms.b dri2.b ge.b glx.b randr.b \
 %.b:
 	(cd $* ; go build)
 
+# Installs each individual sub-package.
+install: bigreq.i composite.i damage.i dpms.i dri2.i ge.i glx.i randr.i \
+					 record.i render.i res.i screensaver.i shape.i shm.i sync.i xcmisc.i \
+					 xevie.i xf86dri.i xf86vidmode.i xfixes.i xinerama.i xinput.i \
+					 xprint.i xproto.i xselinux.i xtest.i xv.i xvmc.i
+	go install
+
+%.i:
+	(cd $* ; go install)
+
 # xc_misc is special because it has an underscore.
 # There's probably a way to do this better, but Makefiles aren't my strong suit.
 xc_misc.xml: build-xgbgen
