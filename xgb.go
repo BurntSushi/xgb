@@ -162,7 +162,7 @@ var NewExtErrorFuncs = make(map[string]map[int]NewErrorFun)
 // error.
 type eventOrError interface{}
 
-// NewID generates a new unused ID for use with requests like CreateWindow.
+// NewId generates a new unused ID for use with requests like CreateWindow.
 // If no new ids can be generated, the id returned is 0 and error is non-nil.
 // This shouldn't be used directly, and is exported for use in the extension
 // sub-packages.
@@ -269,6 +269,20 @@ type request struct {
 // a request type, and sends it over the Conn.reqChan channel.
 // Note that the sequence number is added to the cookie after it is sent
 // over the request channel, but before it is sent to X.
+//
+// Note that you may safely use NewRequest to send arbitrary byte requests
+// to X. The resulting cookie can be used just like any normal cookie and
+// abides by the same rules, except that for replies, you'll get back the
+// raw byte data. This may be useful for performance critical sections where
+// every allocation counts, since all X requests in XGB allocate a new byte
+// slice. In contrast, NewRequest allocates one small request struct and
+// nothing else. (Except when the cookie buffer is full and has to be flushed.)
+//
+// If you're using NewRequest manually, you'll need to use NewCookie to create
+// a new cookie.
+//
+// In all likelihood, you should be able to copy and paste with some minor
+// edits the generated code for the request you want to issue.
 func (c *Conn) NewRequest(buf []byte, cookie *Cookie) {
 	c.reqChan <- &request{buf: buf, cookie: cookie}
 }

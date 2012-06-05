@@ -22,8 +22,9 @@ type Cookie struct {
 // function for more info on those.)
 // Note that a sequence number is not set until just before the request
 // corresponding to this cookie is sent over the wire.
-// This function should not be used. It is exported for use in the extension
-// sub-packages.
+//
+// Unless you're building requests from bytes by hand, this method should
+// not be used.
 func (c *Conn) NewCookie(checked, reply bool) *Cookie {
 	cookie := &Cookie{
 		conn:      c,
@@ -64,21 +65,25 @@ func (c *Conn) NewCookie(checked, reply bool) *Cookie {
 
 // Reply detects whether this is a checked or unchecked cookie, and calls
 // 'replyChecked' or 'replyUnchecked' appropriately.
-// This should not be used. It is exported for use in extension sub-packages.
+//
+// Unless you're building requests from bytes by hand, this method should
+// not be used.
 func (c Cookie) Reply() ([]byte, error) {
 	// checked
 	if c.errorChan != nil {
-		return c.ReplyChecked()
+		return c.replyChecked()
 	}
-	return c.ReplyUnchecked()
+	return c.replyUnchecked()
 }
 
-// ReplyChecked waits for a response on either the replyChan or errorChan
+// replyChecked waits for a response on either the replyChan or errorChan
 // channels. If the former arrives, the bytes are returned with a nil error.
 // If the latter arrives, no bytes are returned (nil) and the error received
 // is returned.
-// This should not be used. It is exported for use in extension sub-packages.
-func (c Cookie) ReplyChecked() ([]byte, error) {
+//
+// Unless you're building requests from bytes by hand, this method should
+// not be used.
+func (c Cookie) replyChecked() ([]byte, error) {
 	if c.replyChan == nil {
 		return nil, errors.New("Cannot call 'replyChecked' on a cookie that " +
 			"is not expecting a *reply* or an error.")
@@ -97,14 +102,16 @@ func (c Cookie) ReplyChecked() ([]byte, error) {
 	panic("unreachable")
 }
 
-// ReplyChecked waits for a response on either the replyChan or pingChan
+// replyUnchecked waits for a response on either the replyChan or pingChan
 // channels. If the former arrives, the bytes are returned with a nil error.
 // If the latter arrives, no bytes are returned (nil) and a nil error
 // is returned. (In the latter case, the corresponding error can be retrieved
 // from (Wait|Poll)ForEvent asynchronously.)
 // In all honesty, you *probably* don't want to use this method.
-// This should not be used. It is exported for use in extension sub-packages.
-func (c Cookie) ReplyUnchecked() ([]byte, error) {
+//
+// Unless you're building requests from bytes by hand, this method should
+// not be used.
+func (c Cookie) replyUnchecked() ([]byte, error) {
 	if c.replyChan == nil {
 		return nil, errors.New("Cannot call 'replyUnchecked' on a cookie " +
 			"that is not expecting a *reply*.")
@@ -127,7 +134,9 @@ func (c Cookie) ReplyUnchecked() ([]byte, error) {
 // Thus, pingChan is sent a value when the *next* reply is read.
 // If no more replies are being processed, we force a round trip request with
 // GetInputFocus.
-// This should not be used. It is exported for use in extension sub-packages.
+//
+// Unless you're building requests from bytes by hand, this method should
+// not be used.
 func (c Cookie) Check() error {
 	if c.replyChan != nil {
 		return errors.New("Cannot call 'Check' on a cookie that is " +
