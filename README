@@ -3,7 +3,7 @@ core X protocol and many of the X extensions. It is closely modeled after
 XCB and xpyb.
 
 It is thread safe and gets immediate improvement from parallelism when
-GOMAXPROCS > 1. (See the benchmarks in xgb_test.go for evidence.)
+GOMAXPROCS > 1. (See the benchmarks in xproto/xproto_test.go for evidence.)
 
 Please see doc.go for more info.
 
