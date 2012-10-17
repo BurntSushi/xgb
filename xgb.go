@@ -41,7 +41,7 @@ const (
 	// that can be loaded off the wire and not grabbed with WaitForEvent
 	// until reading an event blocks. This value should be big enough to handle
 	// bursts of events.
-	eventBuffer = 500
+	eventBuffer = 5000
 )
 
 // A Conn represents a connection to an X server.
@@ -409,6 +409,7 @@ func (c *Conn) readResponses() {
 			case c.eventChan <- event:
 			default:
 				go func() {
+					println("overflowing...")
 					c.eventChan <- event
 				}()
 			}
