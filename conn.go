@@ -141,8 +141,9 @@ func (c *Conn) dial(display string) error {
 		scr = display[dotIdx+1:]
 	}
 
-	dispnum, err := strconv.Atoi(c.display)
-	if err != nil || dispnum < 0 {
+	var err error
+	c.DisplayNumber, err = strconv.Atoi(c.display)
+	if err != nil || c.DisplayNumber < 0 {
 		return errors.New("bad display string: " + display0)
 	}
 
@@ -160,7 +161,8 @@ func (c *Conn) dial(display string) error {
 		if protocol == "" {
 			protocol = "tcp"
 		}
-		c.conn, err = net.Dial(protocol, c.host+":"+strconv.Itoa(6000+dispnum))
+		c.conn, err = net.Dial(protocol,
+							   c.host+":"+strconv.Itoa(6000+c.DisplayNumber))
 	} else {
 		c.conn, err = net.Dial("unix", "/tmp/.X11-unix/X"+c.display)
 	}

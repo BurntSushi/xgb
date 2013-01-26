@@ -49,6 +49,7 @@ type Conn struct {
 	host          string
 	conn          net.Conn
 	display       string
+	DisplayNumber int
 	DefaultScreen int
 	SetupBytes    []byte
 
