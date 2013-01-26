@@ -138,7 +138,7 @@ func (f *ListField) Length() Size {
 // Size computes the *size* of a list (in bytes).
 // It it typically a simple matter of multiplying the length of the list by
 // the size of the type of the list.
-// But if it's a list of struct where the struct has a list field, we use a 
+// But if it's a list of struct where the struct has a list field, we use a
 // special function written in go_struct.go to compute the size (since the
 // size in this case can only be computed recursively).
 func (f *ListField) Size() Size {

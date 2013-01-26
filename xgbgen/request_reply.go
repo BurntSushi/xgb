@@ -88,7 +88,7 @@ func (r *Request) Size(c *Context) Size {
 	size := newFixedSize(0)
 
 	// If this is a core protocol request, we squeeze in an extra byte of
-	// data (from the fields below) between the opcode and the size of the 
+	// data (from the fields below) between the opcode and the size of the
 	// request. In an extension request, this byte is always occupied
 	// by the opcode of the request (while the first byte is always occupied
 	// by the opcode of the extension).

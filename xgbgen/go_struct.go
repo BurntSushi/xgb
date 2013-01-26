@@ -27,7 +27,7 @@ func (s *Struct) Define(c *Context) {
 	}
 }
 
-// Read for a struct creates a function 'ReadStructName' that takes a source 
+// Read for a struct creates a function 'ReadStructName' that takes a source
 // byte slice (i.e., the buffer) and a destination struct, and returns
 // the number of bytes read off the buffer.
 // 'ReadStructName' should only be used to read raw reply data from the wire.
@@ -49,7 +49,7 @@ func (s *Struct) Read(c *Context) {
 }
 
 // ReadList for a struct creates a function 'ReadStructNameList' that takes
-// a source (i.e., the buffer) byte slice, and a destination slice and returns 
+// a source (i.e., the buffer) byte slice, and a destination slice and returns
 // the number of bytes read from the byte slice.
 func (s *Struct) ReadList(c *Context) {
 	c.Putln("// %sReadList reads a byte slice into a list of %s values.",

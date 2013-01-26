@@ -322,7 +322,7 @@ func (e *FieldRef) Initialize(p *Protocol) {
 }
 
 // EnumRef represents a reference to some enumeration field.
-// EnumKind is the "group" an EnumItem is the name of the specific enumeration 
+// EnumKind is the "group" an EnumItem is the name of the specific enumeration
 // value inside that group.
 type EnumRef struct {
 	EnumKind Type

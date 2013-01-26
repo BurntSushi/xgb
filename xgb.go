@@ -29,7 +29,7 @@ const (
 	xidBuffer = 5
 
 	// seqBuffer represents the queue size of the sequence number channel.
-	// I don't think this value matters much, since sequence number generation 
+	// I don't think this value matters much, since sequence number generation
 	// is not that expensive.
 	seqBuffer = 5
 
@@ -132,7 +132,7 @@ var NewEventFuncs = make(map[int]NewEventFun)
 
 // NewExtEventFuncs is a temporary map that stores event constructor functions
 // for each extension. When an extension is initialized, each event for that
-// extension is added to the 'NewEventFuncs' map. It should not be used. It is 
+// extension is added to the 'NewEventFuncs' map. It should not be used. It is
 // exported for use in the extension sub-packages.
 var NewExtEventFuncs = make(map[string]map[int]NewEventFun)
 
@@ -195,11 +195,11 @@ func (conn *Conn) generateXIds() {
 	defer close(conn.xidChan)
 
 	// This requires some explanation. From the horse's mouth:
-	// "The resource-id-mask contains a single contiguous set of bits (at least 
-	// 18).  The client allocates resource IDs for types WINDOW, PIXMAP, 
-	// CURSOR, FONT, GCONTEXT, and COLORMAP by choosing a value with only some 
-	// subset of these bits set and ORing it with resource-id-base. Only values 
-	// constructed in this way can be used to name newly created resources over 
+	// "The resource-id-mask contains a single contiguous set of bits (at least
+	// 18).  The client allocates resource IDs for types WINDOW, PIXMAP,
+	// CURSOR, FONT, GCONTEXT, and COLORMAP by choosing a value with only some
+	// subset of these bits set and ORing it with resource-id-base. Only values
+	// constructed in this way can be used to name newly created resources over
 	// this connection."
 	// So for example (using 8 bit integers), the mask might look like:
 	// 00111000
@@ -240,7 +240,7 @@ func (c *Conn) newSequenceId() uint16 {
 // own goroutine.
 // A sequence id is generated for *every* request. It's the identifier used
 // to match up replies with requests.
-// Since sequence ids can only be 16 bit integers we start over at zero when it 
+// Since sequence ids can only be 16 bit integers we start over at zero when it
 // comes time to wrap.
 // N.B. As long as the cookie buffer is less than 2^16, there are no limitations
 // on the number (or kind) of requests made in sequence.
@@ -266,7 +266,7 @@ type request struct {
 	cookie *Cookie
 }
 
-// NewRequest takes the bytes and a cookie of a particular request, constructs 
+// NewRequest takes the bytes and a cookie of a particular request, constructs
 // a request type, and sends it over the Conn.reqChan channel.
 // Note that the sequence number is added to the cookie after it is sent
 // over the request channel, but before it is sent to X.
@@ -500,9 +500,9 @@ func (c *Conn) WaitForEvent() (Event, Error) {
 	return processEventOrError(<-c.eventChan)
 }
 
-// PollForEvent returns the next event from the server if one is available in 
-// the internal queue without blocking. Note that unlike WaitForEvent, both 
-// Event and Error could be nil. Indeed, they are both nil when the event queue 
+// PollForEvent returns the next event from the server if one is available in
+// the internal queue without blocking. Note that unlike WaitForEvent, both
+// Event and Error could be nil. Indeed, they are both nil when the event queue
 // is empty.
 func (c *Conn) PollForEvent() (Event, Error) {
 	select {

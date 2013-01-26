@@ -162,7 +162,7 @@ func (c *Conn) dial(display string) error {
 			protocol = "tcp"
 		}
 		c.conn, err = net.Dial(protocol,
-							   c.host+":"+strconv.Itoa(6000+c.DisplayNumber))
+			c.host+":"+strconv.Itoa(6000+c.DisplayNumber))
 	} else {
 		c.conn, err = net.Dial("unix", "/tmp/.X11-unix/X"+c.display)
 	}

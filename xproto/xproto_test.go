@@ -88,8 +88,8 @@ func TestCookieBuffer(t *testing.T) {
 	TestProperty(t)
 }
 
-// TestSequenceWrap issues (2^16) + n requests w/ replies to guarantee that the 
-// sequence number (which is a 16 bit integer) will wrap. It then issues one 
+// TestSequenceWrap issues (2^16) + n requests w/ replies to guarantee that the
+// sequence number (which is a 16 bit integer) will wrap. It then issues one
 // final request to ensure things still work properly.
 func TestSequenceWrap(t *testing.T) {
 	n := (1 << 16) + 10

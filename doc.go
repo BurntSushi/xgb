@@ -15,8 +15,8 @@ https://github.com/BurntSushi/xgbutil
 Example
 
 This is an extremely terse example that demonstrates how to connect to X,
-create a window, listen to StructureNotify events and Key{Press,Release} 
-events, map the window, and print out all events received. An example with 
+create a window, listen to StructureNotify events and Key{Press,Release}
+events, map the window, and print out all events received. An example with
 accompanying documentation can be found in examples/create-window.
 
 	package main
@@ -111,11 +111,11 @@ evidence of this claim, please see the benchmarks in xproto/xproto_test.go.
 
 Tests
 
-xproto/xproto_test.go contains a number of contrived tests that stress 
-particular corners of XGB that I presume could be problem areas. Namely: 
-requests with no replies, requests with replies, checked errors, unchecked 
-errors, sequence number wrapping, cookie buffer flushing (i.e., forcing a round 
-trip every N requests made that don't have a reply), getting/setting properties 
+xproto/xproto_test.go contains a number of contrived tests that stress
+particular corners of XGB that I presume could be problem areas. Namely:
+requests with no replies, requests with replies, checked errors, unchecked
+errors, sequence number wrapping, cookie buffer flushing (i.e., forcing a round
+trip every N requests made that don't have a reply), getting/setting properties
 and creating a window and listening to StructureNotify events.
 
 Code Generator
@@ -131,15 +131,15 @@ What works
 
 I am reasonably confident that the core X protocol is in full working form. I've
 also tested the Xinerama and RandR extensions sparingly. Many of the other
-existing extensions have Go source generated (and are compilable) and are 
-included in this package, but I am currently unsure of their status. They 
+existing extensions have Go source generated (and are compilable) and are
+included in this package, but I am currently unsure of their status. They
 *should* work.
 
 What does not work
 
 XKB is the only extension that intentionally does not work, although I suspect
 that GLX also does not work (however, there is Go source code for GLX that
-compiles, unlike XKB). I don't currently have any intention of getting XKB 
+compiles, unlike XKB). I don't currently have any intention of getting XKB
 working, due to its complexity and my current mental incapacity to test it.
 
 */
