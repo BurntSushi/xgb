@@ -61,6 +61,7 @@ type Conn struct {
 	xidChan    chan xid
 	seqChan    chan uint16
 	reqChan    chan *request
+	closing    chan chan struct{}
 
 	// Extensions is a map from extension name to major opcode. It should
 	// not be used. It is exported for use in the extension sub-packages.
@@ -100,6 +101,7 @@ func NewConnDisplay(display string) (*Conn, error) {
 	conn.seqChan = make(chan uint16, seqBuffer)
 	conn.reqChan = make(chan *request, reqBuffer)
 	conn.eventChan = make(chan eventOrError, eventBuffer)
+	conn.closing = make(chan chan struct{}, 1)
 
 	go conn.generateXIds()
 	go conn.generateSeqIds()
@@ -109,9 +111,9 @@ func NewConnDisplay(display string) (*Conn, error) {
 	return conn, nil
 }
 
-// Close closes the connection to the X server.
+// Close gracefully closes the connection to the X server.
 func (c *Conn) Close() {
-	c.conn.Close()
+	close(c.reqChan)
 }
 
 // Event is an interface that can contain any of the events returned by the
@@ -292,7 +294,6 @@ func (c *Conn) NewRequest(buf []byte, cookie *Cookie) {
 // the bytes to the wire and adds the cookie to the cookie queue.
 // It is meant to be run as its own goroutine.
 func (c *Conn) sendRequests() {
-	defer close(c.reqChan)
 	defer close(c.cookieChan)
 
 	for req := range c.reqChan {
@@ -301,17 +302,27 @@ func (c *Conn) sendRequests() {
 		// Note that we circumvent the request channel, because we're *in*
 		// the request channel.
 		if len(c.cookieChan) == cookieBuffer-1 {
-			cookie := c.NewCookie(true, true)
-			cookie.Sequence = c.newSequenceId()
-			c.cookieChan <- cookie
-			c.writeBuffer(c.getInputFocusRequest())
-			cookie.Reply() // wait for the buffer to clear
+			c.noop()
 		}
-
 		req.cookie.Sequence = c.newSequenceId()
 		c.cookieChan <- req.cookie
 		c.writeBuffer(req.buf)
 	}
+	response := make(chan struct{})
+	c.closing <- response
+	c.noop() // Flush the response reading goroutine.
+	<-response
+	c.conn.Close()
+}
+
+// noop circumvents the usual request sending goroutines and forces a round
+// trip request manually.
+func (c *Conn) noop() {
+	cookie := c.NewCookie(true, true)
+	cookie.Sequence = c.newSequenceId()
+	c.cookieChan <- cookie
+	c.writeBuffer(c.getInputFocusRequest())
+	cookie.Reply() // wait for the buffer to clear
 }
 
 // writeBuffer is a convenience function for writing a byte slice to the wire.
@@ -342,12 +353,19 @@ func (c *Conn) readResponses() {
 	)
 
 	for {
+		select {
+		case respond := <-c.closing:
+			respond <- struct{}{}
+			return
+		default:
+		}
+
 		buf := make([]byte, 32)
 		err, event, seq = nil, nil, 0
 
 		if _, err := io.ReadFull(c.conn, buf); err != nil {
-			logger.Printf("Read error: %s", err)
-			logger.Fatal("A read error is unrecoverable. Exiting...")
+			logger.Println("A read error is unrecoverable.")
+			panic(err)
 		}
 
 		switch buf[0] {
