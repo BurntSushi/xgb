@@ -93,9 +93,9 @@ func AxisInfoListBytes(buf []byte, list []AxisInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type BellFeedbackCtl struct {
@@ -180,9 +180,9 @@ func BellFeedbackCtlListBytes(buf []byte, list []BellFeedbackCtl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type BellFeedbackState struct {
@@ -267,9 +267,9 @@ func BellFeedbackStateListBytes(buf []byte, list []BellFeedbackState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type ButtonInfo struct {
@@ -328,9 +328,9 @@ func ButtonInfoListBytes(buf []byte, list []ButtonInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type ButtonState struct {
@@ -402,9 +402,9 @@ func ButtonStateListBytes(buf []byte, list []ButtonState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // ButtonStateListSize computes the size (bytes) of a list of ButtonState values.
@@ -678,9 +678,9 @@ func DeviceAbsAreaCtrlListBytes(buf []byte, list []DeviceAbsAreaCtrl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type DeviceAbsAreaState struct {
@@ -774,9 +774,9 @@ func DeviceAbsAreaStateListBytes(buf []byte, list []DeviceAbsAreaState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type DeviceAbsCalibCtl struct {
@@ -884,9 +884,9 @@ func DeviceAbsCalibCtlListBytes(buf []byte, list []DeviceAbsCalibCtl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type DeviceAbsCalibState struct {
@@ -994,9 +994,9 @@ func DeviceAbsCalibStateListBytes(buf []byte, list []DeviceAbsCalibState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // BadDeviceBusy is the error number for a BadDeviceBusy.
@@ -1260,9 +1260,9 @@ func DeviceCoreCtrlListBytes(buf []byte, list []DeviceCoreCtrl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type DeviceCoreState struct {
@@ -1333,9 +1333,9 @@ func DeviceCoreStateListBytes(buf []byte, list []DeviceCoreState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type DeviceCtl struct {
@@ -1387,9 +1387,9 @@ func DeviceCtlListBytes(buf []byte, list []DeviceCtl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type DeviceEnableCtrl struct {
@@ -1453,9 +1453,9 @@ func DeviceEnableCtrlListBytes(buf []byte, list []DeviceEnableCtrl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type DeviceEnableState struct {
@@ -1519,9 +1519,9 @@ func DeviceEnableStateListBytes(buf []byte, list []DeviceEnableState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type DeviceInfo struct {
@@ -1592,9 +1592,9 @@ func DeviceInfoListBytes(buf []byte, list []DeviceInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -2183,9 +2183,9 @@ func DeviceResolutionCtlListBytes(buf []byte, list []DeviceResolutionCtl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // DeviceResolutionCtlListSize computes the size (bytes) of a list of DeviceResolutionCtl values.
@@ -2295,9 +2295,9 @@ func DeviceResolutionStateListBytes(buf []byte, list []DeviceResolutionState) in
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // DeviceResolutionStateListSize computes the size (bytes) of a list of DeviceResolutionState values.
@@ -2358,9 +2358,9 @@ func DeviceStateListBytes(buf []byte, list []DeviceState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // DeviceStateNotify is the event number for a DeviceStateNotifyEvent.
@@ -2533,9 +2533,9 @@ func DeviceTimeCoordListBytes(buf []byte, list []DeviceTimeCoord) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -2755,9 +2755,9 @@ func FeedbackCtlListBytes(buf []byte, list []FeedbackCtl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type FeedbackState struct {
@@ -2816,9 +2816,9 @@ func FeedbackStateListBytes(buf []byte, list []FeedbackState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // FocusIn is the event number for a FocusInEvent.
@@ -3012,9 +3012,9 @@ func InputClassInfoListBytes(buf []byte, list []InputClassInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type InputInfo struct {
@@ -3066,9 +3066,9 @@ func InputInfoListBytes(buf []byte, list []InputInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type InputState struct {
@@ -3127,9 +3127,9 @@ func InputStateListBytes(buf []byte, list []InputState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type IntegerFeedbackCtl struct {
@@ -3195,9 +3195,9 @@ func IntegerFeedbackCtlListBytes(buf []byte, list []IntegerFeedbackCtl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type IntegerFeedbackState struct {
@@ -3277,9 +3277,9 @@ func IntegerFeedbackStateListBytes(buf []byte, list []IntegerFeedbackState) int 
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type KbdFeedbackCtl struct {
@@ -3394,9 +3394,9 @@ func KbdFeedbackCtlListBytes(buf []byte, list []KbdFeedbackCtl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type KbdFeedbackState struct {
@@ -3525,9 +3525,9 @@ func KbdFeedbackStateListBytes(buf []byte, list []KbdFeedbackState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // KbdFeedbackStateListSize computes the size (bytes) of a list of KbdFeedbackState values.
@@ -3616,9 +3616,9 @@ func KeyInfoListBytes(buf []byte, list []KeyInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type KeyState struct {
@@ -3690,9 +3690,9 @@ func KeyStateListBytes(buf []byte, list []KeyState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // KeyStateListSize computes the size (bytes) of a list of KeyState values.
@@ -3774,9 +3774,9 @@ func LedFeedbackCtlListBytes(buf []byte, list []LedFeedbackCtl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type LedFeedbackState struct {
@@ -3849,9 +3849,9 @@ func LedFeedbackStateListBytes(buf []byte, list []LedFeedbackState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // BadMode is the error number for a BadMode.
@@ -4075,9 +4075,9 @@ func PtrFeedbackCtlListBytes(buf []byte, list []PtrFeedbackCtl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type PtrFeedbackState struct {
@@ -4162,9 +4162,9 @@ func PtrFeedbackStateListBytes(buf []byte, list []PtrFeedbackState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type StringFeedbackCtl struct {
@@ -4249,9 +4249,9 @@ func StringFeedbackCtlListBytes(buf []byte, list []StringFeedbackCtl) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // StringFeedbackCtlListSize computes the size (bytes) of a list of StringFeedbackCtl values.
@@ -4347,9 +4347,9 @@ func StringFeedbackStateListBytes(buf []byte, list []StringFeedbackState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // StringFeedbackStateListSize computes the size (bytes) of a list of StringFeedbackState values.
@@ -4437,9 +4437,9 @@ func ValuatorInfoListBytes(buf []byte, list []ValuatorInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // ValuatorInfoListSize computes the size (bytes) of a list of ValuatorInfo values.
@@ -4533,9 +4533,9 @@ func ValuatorStateListBytes(buf []byte, list []ValuatorState) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // ValuatorStateListSize computes the size (bytes) of a list of ValuatorState values.

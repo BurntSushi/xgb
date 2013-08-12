@@ -189,9 +189,9 @@ func ArcListBytes(buf []byte, list []Arc) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -613,9 +613,9 @@ func Char2bListBytes(buf []byte, list []Char2b) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Charinfo struct {
@@ -695,9 +695,9 @@ func CharinfoListBytes(buf []byte, list []Charinfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -1199,9 +1199,9 @@ func ColoritemListBytes(buf []byte, list []Coloritem) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Colormap uint32
@@ -1918,9 +1918,9 @@ func DepthInfoListBytes(buf []byte, list []DepthInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // DepthInfoListSize computes the size (bytes) of a list of DepthInfo values.
@@ -2590,9 +2590,9 @@ func FontpropListBytes(buf []byte, list []Fontprop) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Format struct {
@@ -2656,9 +2656,9 @@ func FormatListBytes(buf []byte, list []Format) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // BadGContext is the error number for a BadGContext.
@@ -3063,9 +3063,9 @@ func HostListBytes(buf []byte, list []Host) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // HostListSize computes the size (bytes) of a list of Host values.
@@ -4283,9 +4283,9 @@ func PointListBytes(buf []byte, list []Point) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -4466,9 +4466,9 @@ func RectangleListBytes(buf []byte, list []Rectangle) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // ReparentNotify is the event number for a ReparentNotifyEvent.
@@ -4791,9 +4791,9 @@ func RgbListBytes(buf []byte, list []Rgb) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type ScreenInfo struct {
@@ -4957,9 +4957,9 @@ func ScreenInfoListBytes(buf []byte, list []ScreenInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // ScreenInfoListSize computes the size (bytes) of a list of ScreenInfo values.
@@ -5039,9 +5039,9 @@ func SegmentListBytes(buf []byte, list []Segment) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // SelectionClear is the event number for a SelectionClearEvent.
@@ -5396,9 +5396,9 @@ func SetupAuthenticateListBytes(buf []byte, list []SetupAuthenticate) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // SetupAuthenticateListSize computes the size (bytes) of a list of SetupAuthenticate values.
@@ -5491,9 +5491,9 @@ func SetupFailedListBytes(buf []byte, list []SetupFailed) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // SetupFailedListSize computes the size (bytes) of a list of SetupFailed values.
@@ -5699,9 +5699,9 @@ func SetupInfoListBytes(buf []byte, list []SetupInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // SetupInfoListSize computes the size (bytes) of a list of SetupInfo values.
@@ -5815,9 +5815,9 @@ func SetupRequestListBytes(buf []byte, list []SetupRequest) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // SetupRequestListSize computes the size (bytes) of a list of SetupRequest values.
@@ -5890,9 +5890,9 @@ func StrListBytes(buf []byte, list []Str) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // StrListSize computes the size (bytes) of a list of Str values.
@@ -5969,9 +5969,9 @@ func TimecoordListBytes(buf []byte, list []Timecoord) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Timestamp uint32
@@ -6312,9 +6312,9 @@ func VisualInfoListBytes(buf []byte, list []VisualInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Visualid uint32

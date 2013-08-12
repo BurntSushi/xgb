@@ -143,9 +143,9 @@ func ClientInfoListBytes(buf []byte, list []ClientInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // ClientInfoListSize computes the size (bytes) of a list of ClientInfo values.
@@ -232,9 +232,9 @@ func ExtRangeListBytes(buf []byte, list []ExtRange) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -378,9 +378,9 @@ func RangeListBytes(buf []byte, list []Range) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Range16 struct {
@@ -432,9 +432,9 @@ func Range16ListBytes(buf []byte, list []Range16) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Range8 struct {
@@ -486,9 +486,9 @@ func Range8ListBytes(buf []byte, list []Range8) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // Skipping definition for base type 'Bool'

@@ -86,9 +86,9 @@ func AttachFormatListBytes(buf []byte, list []AttachFormat) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -291,9 +291,9 @@ func DRI2BufferListBytes(buf []byte, list []DRI2Buffer) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (

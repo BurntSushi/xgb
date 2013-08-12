@@ -483,9 +483,9 @@ func Int64ListBytes(buf []byte, list []Int64) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Systemcounter struct {
@@ -558,9 +558,9 @@ func SystemcounterListBytes(buf []byte, list []Systemcounter) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // SystemcounterListSize computes the size (bytes) of a list of Systemcounter values.
@@ -645,9 +645,9 @@ func TriggerListBytes(buf []byte, list []Trigger) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -710,9 +710,9 @@ func WaitconditionListBytes(buf []byte, list []Waitcondition) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // Skipping definition for base type 'Bool'

@@ -86,9 +86,9 @@ func AnimcursoreltListBytes(buf []byte, list []Animcursorelt) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Color struct {
@@ -154,9 +154,9 @@ func ColorListBytes(buf []byte, list []Color) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -266,9 +266,9 @@ func DirectformatListBytes(buf []byte, list []Directformat) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Fixed int32
@@ -444,9 +444,9 @@ func GlyphinfoListBytes(buf []byte, list []Glyphinfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Glyphset uint32
@@ -529,9 +529,9 @@ func IndexvalueListBytes(buf []byte, list []Indexvalue) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Linefix struct {
@@ -589,9 +589,9 @@ func LinefixListBytes(buf []byte, list []Linefix) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // BadPictFormat is the error number for a BadPictFormat.
@@ -812,9 +812,9 @@ func PictdepthListBytes(buf []byte, list []Pictdepth) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // PictdepthListSize computes the size (bytes) of a list of Pictdepth values.
@@ -914,9 +914,9 @@ func PictforminfoListBytes(buf []byte, list []Pictforminfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Pictscreen struct {
@@ -974,9 +974,9 @@ func PictscreenListBytes(buf []byte, list []Pictscreen) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // PictscreenListSize computes the size (bytes) of a list of Pictscreen values.
@@ -1097,9 +1097,9 @@ func PictvisualListBytes(buf []byte, list []Pictvisual) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Pointfix struct {
@@ -1151,9 +1151,9 @@ func PointfixListBytes(buf []byte, list []Pointfix) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -1229,9 +1229,9 @@ func SpanfixListBytes(buf []byte, list []Spanfix) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -1341,9 +1341,9 @@ func TransformListBytes(buf []byte, list []Transform) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Trap struct {
@@ -1401,9 +1401,9 @@ func TrapListBytes(buf []byte, list []Trap) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Trapezoid struct {
@@ -1475,9 +1475,9 @@ func TrapezoidListBytes(buf []byte, list []Trapezoid) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Triangle struct {
@@ -1545,9 +1545,9 @@ func TriangleListBytes(buf []byte, list []Triangle) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // Skipping definition for base type 'Bool'

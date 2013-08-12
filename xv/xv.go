@@ -130,9 +130,9 @@ func AdaptorInfoListBytes(buf []byte, list []AdaptorInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // AdaptorInfoListSize computes the size (bytes) of a list of AdaptorInfo values.
@@ -223,9 +223,9 @@ func AttributeInfoListBytes(buf []byte, list []AttributeInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // AttributeInfoListSize computes the size (bytes) of a list of AttributeInfo values.
@@ -474,9 +474,9 @@ func EncodingInfoListBytes(buf []byte, list []EncodingInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // EncodingInfoListSize computes the size (bytes) of a list of EncodingInfo values.
@@ -542,9 +542,9 @@ func FormatListBytes(buf []byte, list []Format) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (
@@ -662,9 +662,9 @@ func ImageListBytes(buf []byte, list []Image) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // ImageListSize computes the size (bytes) of a list of Image values.
@@ -892,9 +892,9 @@ func ImageFormatInfoListBytes(buf []byte, list []ImageFormatInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // ImageFormatInfoListSize computes the size (bytes) of a list of ImageFormatInfo values.
@@ -1062,9 +1062,9 @@ func RationalListBytes(buf []byte, list []Rational) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (

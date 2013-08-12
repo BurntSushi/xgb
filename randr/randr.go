@@ -295,9 +295,9 @@ func CrtcChangeListBytes(buf []byte, list []CrtcChange) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type Mode uint32
@@ -453,10 +453,16 @@ func ModeInfoListBytes(buf []byte, list []ModeInfo) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
+
+const (
+	NotifyCrtcChange     = 0
+	NotifyOutputChange   = 1
+	NotifyOutputProperty = 2
+)
 
 // Notify is the event number for a NotifyEvent.
 const Notify = 1
@@ -525,12 +531,6 @@ func (v NotifyEvent) String() string {
 func init() {
 	xgb.NewExtEventFuncs["RANDR"][1] = NotifyEventNew
 }
-
-const (
-	NotifyCrtcChange     = 0
-	NotifyOutputChange   = 1
-	NotifyOutputProperty = 2
-)
 
 // NotifyDataUnion is a represention of the NotifyDataUnion union type.
 // Note that to *create* a Union, you should *never* create
@@ -809,9 +809,9 @@ func OutputChangeListBytes(buf []byte, list []OutputChange) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type OutputProperty struct {
@@ -889,9 +889,9 @@ func OutputPropertyListBytes(buf []byte, list []OutputProperty) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 type RefreshRates struct {
@@ -950,9 +950,9 @@ func RefreshRatesListBytes(buf []byte, list []RefreshRates) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // RefreshRatesListSize computes the size (bytes) of a list of RefreshRates values.
@@ -1174,9 +1174,9 @@ func ScreenSizeListBytes(buf []byte, list []ScreenSize) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 const (

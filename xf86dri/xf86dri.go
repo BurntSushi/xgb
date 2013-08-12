@@ -100,9 +100,9 @@ func DrmClipRectListBytes(buf []byte, list []DrmClipRect) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // Skipping definition for base type 'Bool'

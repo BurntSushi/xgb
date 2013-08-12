@@ -115,9 +115,9 @@ func ListItemListBytes(buf []byte, list []ListItem) int {
 	for _, item := range list {
 		structBytes = item.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
-	return b
+	return xgb.Pad(b)
 }
 
 // ListItemListSize computes the size (bytes) of a list of ListItem values.

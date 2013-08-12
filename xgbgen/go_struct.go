@@ -93,9 +93,9 @@ func (s *Struct) WriteList(c *Context) {
 	c.Putln("for _, item := range list {")
 	c.Putln("structBytes = item.Bytes()")
 	c.Putln("copy(buf[b:], structBytes)")
-	c.Putln("b += xgb.Pad(len(structBytes))")
+	c.Putln("b += len(structBytes)")
 	c.Putln("}")
-	c.Putln("return b")
+	c.Putln("return xgb.Pad(b)")
 	c.Putln("}")
 	c.Putln("")
 }
