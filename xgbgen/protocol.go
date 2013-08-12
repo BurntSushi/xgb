@@ -22,6 +22,12 @@ type Protocol struct {
 	Requests []*Request
 }
 
+type Protocols []*Protocol
+
+func (ps Protocols) Len() int           { return len(ps) }
+func (ps Protocols) Swap(i, j int)      { ps[i], ps[j] = ps[j], ps[i] }
+func (ps Protocols) Less(i, j int) bool { return ps[i].ExtName < ps[j].ExtName }
+
 // Initialize traverses all structures, looks for 'Translation' type,
 // and looks up the real type in the namespace. It also sets the source
 // name for all relevant fields/structures.

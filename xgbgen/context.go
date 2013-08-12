@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 )
 
@@ -70,6 +71,8 @@ func (c *Context) Morph(xmlBytes []byte) {
 	if c.protocol.isExt() {
 		c.Putln("\"github.com/BurntSushi/xgb/xproto\"")
 	}
+
+	sort.Sort(Protocols(c.protocol.Imports))
 	for _, imp := range c.protocol.Imports {
 		// We always import xproto, so skip it if it's explicitly imported
 		if imp.Name == "xproto" {
@@ -142,6 +145,8 @@ func (c *Context) Morph(xmlBytes []byte) {
 	}
 
 	// Now write Go source code
+	sort.Sort(Types(c.protocol.Types))
+	sort.Sort(Requests(c.protocol.Requests))
 	for _, typ := range c.protocol.Types {
 		typ.Define(c)
 	}

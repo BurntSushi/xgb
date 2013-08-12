@@ -14,6 +14,16 @@ type Type interface {
 	Define(c *Context)
 }
 
+type Types []Type
+
+func (ts Types) Len() int      { return len(ts) }
+func (ts Types) Swap(i, j int) { ts[i], ts[j] = ts[j], ts[i] }
+func (ts Types) Less(i, j int) bool {
+	x1, x2 := ts[i].XmlName(), ts[j].XmlName()
+	s1, s2 := ts[i].SrcName(), ts[j].SrcName()
+	return (s1 == s2 && x1 < x2) || s1 < s2
+}
+
 // Translation is used *only* when transitioning from XML types to
 // our better representation. They are placeholders for the real types (below)
 // that will replace them.

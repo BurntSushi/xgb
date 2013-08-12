@@ -17,6 +17,12 @@ type Request struct {
 	Reply   *Reply  // A reply, if one exists for this request.
 }
 
+type Requests []*Request
+
+func (rs Requests) Len() int           { return len(rs) }
+func (rs Requests) Swap(i, j int)      { rs[i], rs[j] = rs[j], rs[i] }
+func (rs Requests) Less(i, j int) bool { return rs[i].xmlName < rs[j].xmlName }
+
 // Initialize creates the proper Go source name for this request.
 // It also initializes the reply if one exists, and all fields in this request.
 func (r *Request) Initialize(p *Protocol) {

@@ -137,10 +137,13 @@ func (x *XMLEvent) Translate() *Event {
 		xmlName:    x.Name,
 		Number:     x.Number,
 		NoSequence: x.NoSequence,
-		Fields:     make([]Field, len(x.Fields)),
+		Fields:     make([]Field, 0, len(x.Fields)),
 	}
-	for i, field := range x.Fields {
-		ev.Fields[i] = field.Translate(ev)
+	for _, field := range x.Fields {
+		if field.XMLName.Local == "doc" {
+			continue
+		}
+		ev.Fields = append(ev.Fields, field.Translate(ev))
 	}
 	return ev
 }
@@ -200,11 +203,14 @@ func (x *XMLRequest) Translate() *Request {
 		xmlName: x.Name,
 		Opcode:  x.Opcode,
 		Combine: x.Combine,
-		Fields:  make([]Field, len(x.Fields)),
+		Fields:  make([]Field, 0, len(x.Fields)),
 		Reply:   x.Reply.Translate(),
 	}
-	for i, field := range x.Fields {
-		r.Fields[i] = field.Translate(r)
+	for _, field := range x.Fields {
+		if field.XMLName.Local == "doc" {
+			continue
+		}
+		r.Fields = append(r.Fields, field.Translate(r))
 	}
 
 	// Address bug (or legacy code) in QueryTextExtents.
@@ -229,10 +235,13 @@ func (x *XMLReply) Translate() *Reply {
 	}
 
 	r := &Reply{
-		Fields: make([]Field, len(x.Fields)),
+		Fields: make([]Field, 0, len(x.Fields)),
 	}
-	for i, field := range x.Fields {
-		r.Fields[i] = field.Translate(r)
+	for _, field := range x.Fields {
+		if field.XMLName.Local == "doc" {
+			continue
+		}
+		r.Fields = append(r.Fields, field.Translate(r))
 	}
 	return r
 }
@@ -380,7 +389,6 @@ func SrcName(p *Protocol, name string) string {
 	if newn, ok := NameMap[name]; ok {
 		return newn
 	}
-
 	return splitAndTitle(name)
 }
 
