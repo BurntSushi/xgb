@@ -3,12 +3,16 @@ package xgb
 import (
 	"errors"
 	"io"
+	"log"
 	"net"
+	"os"
 	"sync"
 )
 
 var (
-	logger = newLogger()
+	// Where to log error-messages. Defaults to stderr.
+	// To disable logging, just set this to log.New(ioutil.Discard, "", 0)
+	Logger = log.New(os.Stderr, "XGB: ", log.Lshortfile)
 
 	// ExtLock is a lock used whenever new extensions are initialized.
 	// It should not be used. It is exported for use in the extension
@@ -328,8 +332,8 @@ func (c *Conn) noop() {
 // writeBuffer is a convenience function for writing a byte slice to the wire.
 func (c *Conn) writeBuffer(buf []byte) {
 	if _, err := c.conn.Write(buf); err != nil {
-		logger.Printf("Write error: %s", err)
-		logger.Fatal("A write error is unrecoverable. Exiting...")
+		Logger.Printf("Write error: %s", err)
+		Logger.Fatal("A write error is unrecoverable. Exiting...")
 	}
 }
 
@@ -364,7 +368,7 @@ func (c *Conn) readResponses() {
 		err, event, seq = nil, nil, 0
 
 		if _, err := io.ReadFull(c.conn, buf); err != nil {
-			logger.Println("A read error is unrecoverable.")
+			Logger.Println("A read error is unrecoverable.")
 			panic(err)
 		}
 
@@ -374,7 +378,7 @@ func (c *Conn) readResponses() {
 			// generated) by looking it up by the error number.
 			newErrFun, ok := NewErrorFuncs[int(buf[1])]
 			if !ok {
-				logger.Printf("BUG: Could not find error constructor function "+
+				Logger.Printf("BUG: Could not find error constructor function "+
 					"for error with number %d.", buf[1])
 				continue
 			}
@@ -393,8 +397,8 @@ func (c *Conn) readResponses() {
 				biggerBuf := make([]byte, byteCount)
 				copy(biggerBuf[:32], buf)
 				if _, err := io.ReadFull(c.conn, biggerBuf[32:]); err != nil {
-					logger.Printf("Read error: %s", err)
-					logger.Fatal("A read error is unrecoverable. Exiting...")
+					Logger.Printf("Read error: %s", err)
+					Logger.Fatal("A read error is unrecoverable. Exiting...")
 				}
 				replyBytes = biggerBuf
 			} else {
@@ -411,7 +415,7 @@ func (c *Conn) readResponses() {
 			evNum := int(buf[0] & 127)
 			newEventFun, ok := NewEventFuncs[evNum]
 			if !ok {
-				logger.Printf("BUG: Could not find event construct function "+
+				Logger.Printf("BUG: Could not find event construct function "+
 					"for event with number %d.", evNum)
 				continue
 			}
@@ -461,7 +465,7 @@ func (c *Conn) readResponses() {
 					}
 				} else { // this is a reply
 					if cookie.replyChan == nil {
-						logger.Printf("Reply with sequence id %d does not "+
+						Logger.Printf("Reply with sequence id %d does not "+
 							"have a cookie with a valid reply channel.", seq)
 						continue
 					} else {
@@ -474,12 +478,12 @@ func (c *Conn) readResponses() {
 			switch {
 			// Checked requests with replies
 			case cookie.replyChan != nil && cookie.errorChan != nil:
-				logger.Printf("Found cookie with sequence id %d that is "+
+				Logger.Printf("Found cookie with sequence id %d that is "+
 					"expecting a reply but will never get it. Currently "+
 					"on sequence number %d", cookie.Sequence, seq)
 			// Unchecked requests with replies
 			case cookie.replyChan != nil && cookie.pingChan != nil:
-				logger.Printf("Found cookie with sequence id %d that is "+
+				Logger.Printf("Found cookie with sequence id %d that is "+
 					"expecting a reply (and not an error) but will never "+
 					"get it. Currently on sequence number %d",
 					cookie.Sequence, seq)
@@ -502,7 +506,7 @@ func processEventOrError(everr eventOrError) (Event, Error) {
 	case Error:
 		return nil, ee
 	default:
-		logger.Printf("Invalid event/error type: %T", everr)
+		Logger.Printf("Invalid event/error type: %T", everr)
 		return nil, nil
 	}
 	panic("unreachable")
