@@ -442,7 +442,7 @@ type CreateContextCookie struct {
 // CreateContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateContext(c *xgb.Conn, ContextId uint32, PrinterNameLen uint32, LocaleLen uint32, PrinterName []String8, Locale []String8) CreateContextCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'CreateContext' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -453,7 +453,7 @@ func CreateContext(c *xgb.Conn, ContextId uint32, PrinterNameLen uint32, LocaleL
 // CreateContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateContextCookie.Check()
 func CreateContextChecked(c *xgb.Conn, ContextId uint32, PrinterNameLen uint32, LocaleLen uint32, PrinterName []String8, Locale []String8) CreateContextCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'CreateContext' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -474,7 +474,7 @@ func createContextRequest(c *xgb.Conn, ContextId uint32, PrinterNameLen uint32, 
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -515,7 +515,7 @@ type PrintDestroyContextCookie struct {
 // PrintDestroyContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintDestroyContext(c *xgb.Conn, Context uint32) PrintDestroyContextCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintDestroyContext' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -526,7 +526,7 @@ func PrintDestroyContext(c *xgb.Conn, Context uint32) PrintDestroyContextCookie 
 // PrintDestroyContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintDestroyContextCookie.Check()
 func PrintDestroyContextChecked(c *xgb.Conn, Context uint32) PrintDestroyContextCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintDestroyContext' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -547,7 +547,7 @@ func printDestroyContextRequest(c *xgb.Conn, Context uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -570,7 +570,7 @@ type PrintEndDocCookie struct {
 // PrintEndDoc sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintEndDoc(c *xgb.Conn, Cancel bool) PrintEndDocCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintEndDoc' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -581,7 +581,7 @@ func PrintEndDoc(c *xgb.Conn, Cancel bool) PrintEndDocCookie {
 // PrintEndDocChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintEndDocCookie.Check()
 func PrintEndDocChecked(c *xgb.Conn, Cancel bool) PrintEndDocCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintEndDoc' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -602,7 +602,7 @@ func printEndDocRequest(c *xgb.Conn, Cancel bool) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 10 // request opcode
@@ -629,7 +629,7 @@ type PrintEndJobCookie struct {
 // PrintEndJob sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintEndJob(c *xgb.Conn, Cancel bool) PrintEndJobCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintEndJob' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -640,7 +640,7 @@ func PrintEndJob(c *xgb.Conn, Cancel bool) PrintEndJobCookie {
 // PrintEndJobChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintEndJobCookie.Check()
 func PrintEndJobChecked(c *xgb.Conn, Cancel bool) PrintEndJobCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintEndJob' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -661,7 +661,7 @@ func printEndJobRequest(c *xgb.Conn, Cancel bool) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -688,7 +688,7 @@ type PrintEndPageCookie struct {
 // PrintEndPage sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintEndPage(c *xgb.Conn, Cancel bool) PrintEndPageCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintEndPage' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -699,7 +699,7 @@ func PrintEndPage(c *xgb.Conn, Cancel bool) PrintEndPageCookie {
 // PrintEndPageChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintEndPageCookie.Check()
 func PrintEndPageChecked(c *xgb.Conn, Cancel bool) PrintEndPageCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintEndPage' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -720,7 +720,7 @@ func printEndPageRequest(c *xgb.Conn, Cancel bool) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 14 // request opcode
@@ -749,7 +749,7 @@ type PrintGetAttributesCookie struct {
 // PrintGetAttributes sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintGetAttributesCookie.Reply()
 func PrintGetAttributes(c *xgb.Conn, Context Pcontext, Pool byte) PrintGetAttributesCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetAttributes' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -760,7 +760,7 @@ func PrintGetAttributes(c *xgb.Conn, Context Pcontext, Pool byte) PrintGetAttrib
 // PrintGetAttributesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintGetAttributesUnchecked(c *xgb.Conn, Context Pcontext, Pool byte) PrintGetAttributesCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetAttributes' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -821,7 +821,7 @@ func printGetAttributesRequest(c *xgb.Conn, Context Pcontext, Pool byte) []byte 
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 17 // request opcode
@@ -849,7 +849,7 @@ type PrintGetContextCookie struct {
 // PrintGetContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintGetContextCookie.Reply()
 func PrintGetContext(c *xgb.Conn) PrintGetContextCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetContext' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -860,7 +860,7 @@ func PrintGetContext(c *xgb.Conn) PrintGetContextCookie {
 // PrintGetContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintGetContextUnchecked(c *xgb.Conn) PrintGetContextCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetContext' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -914,7 +914,7 @@ func printGetContextRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -934,7 +934,7 @@ type PrintGetDocumentDataCookie struct {
 // PrintGetDocumentData sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintGetDocumentDataCookie.Reply()
 func PrintGetDocumentData(c *xgb.Conn, Context Pcontext, MaxBytes uint32) PrintGetDocumentDataCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetDocumentData' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -945,7 +945,7 @@ func PrintGetDocumentData(c *xgb.Conn, Context Pcontext, MaxBytes uint32) PrintG
 // PrintGetDocumentDataUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintGetDocumentDataUnchecked(c *xgb.Conn, Context Pcontext, MaxBytes uint32) PrintGetDocumentDataCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetDocumentData' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -1015,7 +1015,7 @@ func printGetDocumentDataRequest(c *xgb.Conn, Context Pcontext, MaxBytes uint32)
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 12 // request opcode
@@ -1041,7 +1041,7 @@ type PrintGetImageResolutionCookie struct {
 // PrintGetImageResolution sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintGetImageResolutionCookie.Reply()
 func PrintGetImageResolution(c *xgb.Conn, Context Pcontext) PrintGetImageResolutionCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetImageResolution' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -1052,7 +1052,7 @@ func PrintGetImageResolution(c *xgb.Conn, Context Pcontext) PrintGetImageResolut
 // PrintGetImageResolutionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintGetImageResolutionUnchecked(c *xgb.Conn, Context Pcontext) PrintGetImageResolutionCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetImageResolution' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -1106,7 +1106,7 @@ func printGetImageResolutionRequest(c *xgb.Conn, Context Pcontext) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 24 // request opcode
@@ -1129,7 +1129,7 @@ type PrintGetOneAttributesCookie struct {
 // PrintGetOneAttributes sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintGetOneAttributesCookie.Reply()
 func PrintGetOneAttributes(c *xgb.Conn, Context Pcontext, NameLen uint32, Pool byte, Name []String8) PrintGetOneAttributesCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetOneAttributes' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -1140,7 +1140,7 @@ func PrintGetOneAttributes(c *xgb.Conn, Context Pcontext, NameLen uint32, Pool b
 // PrintGetOneAttributesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintGetOneAttributesUnchecked(c *xgb.Conn, Context Pcontext, NameLen uint32, Pool byte, Name []String8) PrintGetOneAttributesCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetOneAttributes' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -1205,7 +1205,7 @@ func printGetOneAttributesRequest(c *xgb.Conn, Context Pcontext, NameLen uint32,
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 19 // request opcode
@@ -1242,7 +1242,7 @@ type PrintGetPageDimensionsCookie struct {
 // PrintGetPageDimensions sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintGetPageDimensionsCookie.Reply()
 func PrintGetPageDimensions(c *xgb.Conn, Context Pcontext) PrintGetPageDimensionsCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetPageDimensions' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -1253,7 +1253,7 @@ func PrintGetPageDimensions(c *xgb.Conn, Context Pcontext) PrintGetPageDimension
 // PrintGetPageDimensionsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintGetPageDimensionsUnchecked(c *xgb.Conn, Context Pcontext) PrintGetPageDimensionsCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetPageDimensions' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -1327,7 +1327,7 @@ func printGetPageDimensionsRequest(c *xgb.Conn, Context Pcontext) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 21 // request opcode
@@ -1350,7 +1350,7 @@ type PrintGetPrinterListCookie struct {
 // PrintGetPrinterList sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintGetPrinterListCookie.Reply()
 func PrintGetPrinterList(c *xgb.Conn, PrinterNameLen uint32, LocaleLen uint32, PrinterName []String8, Locale []String8) PrintGetPrinterListCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetPrinterList' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -1361,7 +1361,7 @@ func PrintGetPrinterList(c *xgb.Conn, PrinterNameLen uint32, LocaleLen uint32, P
 // PrintGetPrinterListUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintGetPrinterListUnchecked(c *xgb.Conn, PrinterNameLen uint32, LocaleLen uint32, PrinterName []String8, Locale []String8) PrintGetPrinterListCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetPrinterList' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -1422,7 +1422,7 @@ func printGetPrinterListRequest(c *xgb.Conn, PrinterNameLen uint32, LocaleLen ui
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -1460,7 +1460,7 @@ type PrintGetScreenOfContextCookie struct {
 // PrintGetScreenOfContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintGetScreenOfContextCookie.Reply()
 func PrintGetScreenOfContext(c *xgb.Conn) PrintGetScreenOfContextCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetScreenOfContext' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -1471,7 +1471,7 @@ func PrintGetScreenOfContext(c *xgb.Conn) PrintGetScreenOfContextCookie {
 // PrintGetScreenOfContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintGetScreenOfContextUnchecked(c *xgb.Conn) PrintGetScreenOfContextCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintGetScreenOfContext' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -1525,7 +1525,7 @@ func printGetScreenOfContextRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -1545,7 +1545,7 @@ type PrintInputSelectedCookie struct {
 // PrintInputSelected sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintInputSelectedCookie.Reply()
 func PrintInputSelected(c *xgb.Conn, Context Pcontext) PrintInputSelectedCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintInputSelected' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -1556,7 +1556,7 @@ func PrintInputSelected(c *xgb.Conn, Context Pcontext) PrintInputSelectedCookie 
 // PrintInputSelectedUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintInputSelectedUnchecked(c *xgb.Conn, Context Pcontext) PrintInputSelectedCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintInputSelected' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -1630,7 +1630,7 @@ func printInputSelectedRequest(c *xgb.Conn, Context Pcontext) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 16 // request opcode
@@ -1653,7 +1653,7 @@ type PrintPutDocumentDataCookie struct {
 // PrintPutDocumentData sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintPutDocumentData(c *xgb.Conn, Drawable xproto.Drawable, LenData uint32, LenFmt uint16, LenOptions uint16, Data []byte, DocFormat []String8, Options []String8) PrintPutDocumentDataCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintPutDocumentData' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -1664,7 +1664,7 @@ func PrintPutDocumentData(c *xgb.Conn, Drawable xproto.Drawable, LenData uint32,
 // PrintPutDocumentDataChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintPutDocumentDataCookie.Check()
 func PrintPutDocumentDataChecked(c *xgb.Conn, Drawable xproto.Drawable, LenData uint32, LenFmt uint16, LenOptions uint16, Data []byte, DocFormat []String8, Options []String8) PrintPutDocumentDataCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintPutDocumentData' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -1685,7 +1685,7 @@ func printPutDocumentDataRequest(c *xgb.Conn, Drawable xproto.Drawable, LenData 
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 11 // request opcode
@@ -1732,7 +1732,7 @@ type PrintQueryScreensCookie struct {
 // PrintQueryScreens sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintQueryScreensCookie.Reply()
 func PrintQueryScreens(c *xgb.Conn) PrintQueryScreensCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintQueryScreens' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -1743,7 +1743,7 @@ func PrintQueryScreens(c *xgb.Conn) PrintQueryScreensCookie {
 // PrintQueryScreensUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintQueryScreensUnchecked(c *xgb.Conn) PrintQueryScreensCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintQueryScreens' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -1808,7 +1808,7 @@ func printQueryScreensRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 22 // request opcode
@@ -1828,7 +1828,7 @@ type PrintQueryVersionCookie struct {
 // PrintQueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintQueryVersionCookie.Reply()
 func PrintQueryVersion(c *xgb.Conn) PrintQueryVersionCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintQueryVersion' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -1839,7 +1839,7 @@ func PrintQueryVersion(c *xgb.Conn) PrintQueryVersionCookie {
 // PrintQueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintQueryVersionUnchecked(c *xgb.Conn) PrintQueryVersionCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintQueryVersion' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -1897,7 +1897,7 @@ func printQueryVersionRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -1917,7 +1917,7 @@ type PrintRehashPrinterListCookie struct {
 // PrintRehashPrinterList sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintRehashPrinterList(c *xgb.Conn) PrintRehashPrinterListCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintRehashPrinterList' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -1928,7 +1928,7 @@ func PrintRehashPrinterList(c *xgb.Conn) PrintRehashPrinterListCookie {
 // PrintRehashPrinterListChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintRehashPrinterListCookie.Check()
 func PrintRehashPrinterListChecked(c *xgb.Conn) PrintRehashPrinterListCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintRehashPrinterList' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -1949,7 +1949,7 @@ func printRehashPrinterListRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 20 // request opcode
@@ -1969,7 +1969,7 @@ type PrintSelectInputCookie struct {
 // PrintSelectInput sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintSelectInput(c *xgb.Conn, Context Pcontext, EventMask uint32, EventList []uint32) PrintSelectInputCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintSelectInput' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -1980,7 +1980,7 @@ func PrintSelectInput(c *xgb.Conn, Context Pcontext, EventMask uint32, EventList
 // PrintSelectInputChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintSelectInputCookie.Check()
 func PrintSelectInputChecked(c *xgb.Conn, Context Pcontext, EventMask uint32, EventList []uint32) PrintSelectInputCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintSelectInput' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -2001,7 +2001,7 @@ func printSelectInputRequest(c *xgb.Conn, Context Pcontext, EventMask uint32, Ev
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 15 // request opcode
@@ -2032,7 +2032,7 @@ type PrintSetAttributesCookie struct {
 // PrintSetAttributes sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintSetAttributes(c *xgb.Conn, Context Pcontext, StringLen uint32, Pool byte, Rule byte, Attributes []String8) PrintSetAttributesCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintSetAttributes' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -2043,7 +2043,7 @@ func PrintSetAttributes(c *xgb.Conn, Context Pcontext, StringLen uint32, Pool by
 // PrintSetAttributesChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintSetAttributesCookie.Check()
 func PrintSetAttributesChecked(c *xgb.Conn, Context Pcontext, StringLen uint32, Pool byte, Rule byte, Attributes []String8) PrintSetAttributesCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintSetAttributes' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -2064,7 +2064,7 @@ func printSetAttributesRequest(c *xgb.Conn, Context Pcontext, StringLen uint32, 
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 18 // request opcode
@@ -2104,7 +2104,7 @@ type PrintSetContextCookie struct {
 // PrintSetContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintSetContext(c *xgb.Conn, Context uint32) PrintSetContextCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintSetContext' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -2115,7 +2115,7 @@ func PrintSetContext(c *xgb.Conn, Context uint32) PrintSetContextCookie {
 // PrintSetContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintSetContextCookie.Check()
 func PrintSetContextChecked(c *xgb.Conn, Context uint32) PrintSetContextCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintSetContext' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -2136,7 +2136,7 @@ func printSetContextRequest(c *xgb.Conn, Context uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -2159,7 +2159,7 @@ type PrintSetImageResolutionCookie struct {
 // PrintSetImageResolution sends a checked request.
 // If an error occurs, it will be returned with the reply by calling PrintSetImageResolutionCookie.Reply()
 func PrintSetImageResolution(c *xgb.Conn, Context Pcontext, ImageResolution uint16) PrintSetImageResolutionCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintSetImageResolution' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -2170,7 +2170,7 @@ func PrintSetImageResolution(c *xgb.Conn, Context Pcontext, ImageResolution uint
 // PrintSetImageResolutionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintSetImageResolutionUnchecked(c *xgb.Conn, Context Pcontext, ImageResolution uint16) PrintSetImageResolutionCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintSetImageResolution' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -2229,7 +2229,7 @@ func printSetImageResolutionRequest(c *xgb.Conn, Context Pcontext, ImageResoluti
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 23 // request opcode
@@ -2255,7 +2255,7 @@ type PrintStartDocCookie struct {
 // PrintStartDoc sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintStartDoc(c *xgb.Conn, DriverMode byte) PrintStartDocCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintStartDoc' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -2266,7 +2266,7 @@ func PrintStartDoc(c *xgb.Conn, DriverMode byte) PrintStartDocCookie {
 // PrintStartDocChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintStartDocCookie.Check()
 func PrintStartDocChecked(c *xgb.Conn, DriverMode byte) PrintStartDocCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintStartDoc' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -2287,7 +2287,7 @@ func printStartDocRequest(c *xgb.Conn, DriverMode byte) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 9 // request opcode
@@ -2310,7 +2310,7 @@ type PrintStartJobCookie struct {
 // PrintStartJob sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintStartJob(c *xgb.Conn, OutputMode byte) PrintStartJobCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintStartJob' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -2321,7 +2321,7 @@ func PrintStartJob(c *xgb.Conn, OutputMode byte) PrintStartJobCookie {
 // PrintStartJobChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintStartJobCookie.Check()
 func PrintStartJobChecked(c *xgb.Conn, OutputMode byte) PrintStartJobCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintStartJob' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -2342,7 +2342,7 @@ func printStartJobRequest(c *xgb.Conn, OutputMode byte) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -2365,7 +2365,7 @@ type PrintStartPageCookie struct {
 // PrintStartPage sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PrintStartPage(c *xgb.Conn, Window xproto.Window) PrintStartPageCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintStartPage' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -2376,7 +2376,7 @@ func PrintStartPage(c *xgb.Conn, Window xproto.Window) PrintStartPageCookie {
 // PrintStartPageChecked sends a checked request.
 // If an error occurs, it can be retrieved using PrintStartPageCookie.Check()
 func PrintStartPageChecked(c *xgb.Conn, Window xproto.Window) PrintStartPageCookie {
-	if _, ok := c.Extensions["XPEXTENSION"]; !ok {
+	if _, ok := c.Extensions["XpExtension"]; !ok {
 		panic("Cannot issue request 'PrintStartPage' using the uninitialized extension 'XpExtension'. xprint.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -2397,7 +2397,7 @@ func printStartPageRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["XPEXTENSION"]
+	buf[b] = c.Extensions["XpExtension"]
 	b += 1
 
 	buf[b] = 13 // request opcode

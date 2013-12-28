@@ -75,7 +75,7 @@ type CreateRegionFromBorderClipCookie struct {
 // CreateRegionFromBorderClip sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateRegionFromBorderClip(c *xgb.Conn, Region xfixes.Region, Window xproto.Window) CreateRegionFromBorderClipCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'CreateRegionFromBorderClip' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -86,7 +86,7 @@ func CreateRegionFromBorderClip(c *xgb.Conn, Region xfixes.Region, Window xproto
 // CreateRegionFromBorderClipChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateRegionFromBorderClipCookie.Check()
 func CreateRegionFromBorderClipChecked(c *xgb.Conn, Region xfixes.Region, Window xproto.Window) CreateRegionFromBorderClipCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'CreateRegionFromBorderClip' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -107,7 +107,7 @@ func createRegionFromBorderClipRequest(c *xgb.Conn, Region xfixes.Region, Window
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["COMPOSITE"]
+	buf[b] = c.Extensions["Composite"]
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -133,7 +133,7 @@ type GetOverlayWindowCookie struct {
 // GetOverlayWindow sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetOverlayWindowCookie.Reply()
 func GetOverlayWindow(c *xgb.Conn, Window xproto.Window) GetOverlayWindowCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'GetOverlayWindow' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -144,7 +144,7 @@ func GetOverlayWindow(c *xgb.Conn, Window xproto.Window) GetOverlayWindowCookie 
 // GetOverlayWindowUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetOverlayWindowUnchecked(c *xgb.Conn, Window xproto.Window) GetOverlayWindowCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'GetOverlayWindow' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -201,7 +201,7 @@ func getOverlayWindowRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["COMPOSITE"]
+	buf[b] = c.Extensions["Composite"]
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -224,7 +224,7 @@ type NameWindowPixmapCookie struct {
 // NameWindowPixmap sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func NameWindowPixmap(c *xgb.Conn, Window xproto.Window, Pixmap xproto.Pixmap) NameWindowPixmapCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'NameWindowPixmap' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -235,7 +235,7 @@ func NameWindowPixmap(c *xgb.Conn, Window xproto.Window, Pixmap xproto.Pixmap) N
 // NameWindowPixmapChecked sends a checked request.
 // If an error occurs, it can be retrieved using NameWindowPixmapCookie.Check()
 func NameWindowPixmapChecked(c *xgb.Conn, Window xproto.Window, Pixmap xproto.Pixmap) NameWindowPixmapCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'NameWindowPixmap' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -256,7 +256,7 @@ func nameWindowPixmapRequest(c *xgb.Conn, Window xproto.Window, Pixmap xproto.Pi
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["COMPOSITE"]
+	buf[b] = c.Extensions["Composite"]
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -282,7 +282,7 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uint32) QueryVersionCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -293,7 +293,7 @@ func QueryVersion(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uin
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uint32) QueryVersionCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -354,7 +354,7 @@ func queryVersionRequest(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVers
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["COMPOSITE"]
+	buf[b] = c.Extensions["Composite"]
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -380,7 +380,7 @@ type RedirectSubwindowsCookie struct {
 // RedirectSubwindows sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func RedirectSubwindows(c *xgb.Conn, Window xproto.Window, Update byte) RedirectSubwindowsCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'RedirectSubwindows' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -391,7 +391,7 @@ func RedirectSubwindows(c *xgb.Conn, Window xproto.Window, Update byte) Redirect
 // RedirectSubwindowsChecked sends a checked request.
 // If an error occurs, it can be retrieved using RedirectSubwindowsCookie.Check()
 func RedirectSubwindowsChecked(c *xgb.Conn, Window xproto.Window, Update byte) RedirectSubwindowsCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'RedirectSubwindows' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -412,7 +412,7 @@ func redirectSubwindowsRequest(c *xgb.Conn, Window xproto.Window, Update byte) [
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["COMPOSITE"]
+	buf[b] = c.Extensions["Composite"]
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -440,7 +440,7 @@ type RedirectWindowCookie struct {
 // RedirectWindow sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func RedirectWindow(c *xgb.Conn, Window xproto.Window, Update byte) RedirectWindowCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'RedirectWindow' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -451,7 +451,7 @@ func RedirectWindow(c *xgb.Conn, Window xproto.Window, Update byte) RedirectWind
 // RedirectWindowChecked sends a checked request.
 // If an error occurs, it can be retrieved using RedirectWindowCookie.Check()
 func RedirectWindowChecked(c *xgb.Conn, Window xproto.Window, Update byte) RedirectWindowCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'RedirectWindow' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -472,7 +472,7 @@ func redirectWindowRequest(c *xgb.Conn, Window xproto.Window, Update byte) []byt
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["COMPOSITE"]
+	buf[b] = c.Extensions["Composite"]
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -500,7 +500,7 @@ type ReleaseOverlayWindowCookie struct {
 // ReleaseOverlayWindow sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ReleaseOverlayWindow(c *xgb.Conn, Window xproto.Window) ReleaseOverlayWindowCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'ReleaseOverlayWindow' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -511,7 +511,7 @@ func ReleaseOverlayWindow(c *xgb.Conn, Window xproto.Window) ReleaseOverlayWindo
 // ReleaseOverlayWindowChecked sends a checked request.
 // If an error occurs, it can be retrieved using ReleaseOverlayWindowCookie.Check()
 func ReleaseOverlayWindowChecked(c *xgb.Conn, Window xproto.Window) ReleaseOverlayWindowCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'ReleaseOverlayWindow' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -532,7 +532,7 @@ func releaseOverlayWindowRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["COMPOSITE"]
+	buf[b] = c.Extensions["Composite"]
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -555,7 +555,7 @@ type UnredirectSubwindowsCookie struct {
 // UnredirectSubwindows sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func UnredirectSubwindows(c *xgb.Conn, Window xproto.Window, Update byte) UnredirectSubwindowsCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'UnredirectSubwindows' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -566,7 +566,7 @@ func UnredirectSubwindows(c *xgb.Conn, Window xproto.Window, Update byte) Unredi
 // UnredirectSubwindowsChecked sends a checked request.
 // If an error occurs, it can be retrieved using UnredirectSubwindowsCookie.Check()
 func UnredirectSubwindowsChecked(c *xgb.Conn, Window xproto.Window, Update byte) UnredirectSubwindowsCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'UnredirectSubwindows' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -587,7 +587,7 @@ func unredirectSubwindowsRequest(c *xgb.Conn, Window xproto.Window, Update byte)
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["COMPOSITE"]
+	buf[b] = c.Extensions["Composite"]
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -615,7 +615,7 @@ type UnredirectWindowCookie struct {
 // UnredirectWindow sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func UnredirectWindow(c *xgb.Conn, Window xproto.Window, Update byte) UnredirectWindowCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'UnredirectWindow' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, false)
@@ -626,7 +626,7 @@ func UnredirectWindow(c *xgb.Conn, Window xproto.Window, Update byte) Unredirect
 // UnredirectWindowChecked sends a checked request.
 // If an error occurs, it can be retrieved using UnredirectWindowCookie.Check()
 func UnredirectWindowChecked(c *xgb.Conn, Window xproto.Window, Update byte) UnredirectWindowCookie {
-	if _, ok := c.Extensions["COMPOSITE"]; !ok {
+	if _, ok := c.Extensions["Composite"]; !ok {
 		panic("Cannot issue request 'UnredirectWindow' using the uninitialized extension 'Composite'. composite.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, false)
@@ -647,7 +647,7 @@ func unredirectWindowRequest(c *xgb.Conn, Window xproto.Window, Update byte) []b
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["COMPOSITE"]
+	buf[b] = c.Extensions["Composite"]
 	b += 1
 
 	buf[b] = 3 // request opcode

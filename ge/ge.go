@@ -69,7 +69,7 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint16) QueryVersionCookie {
-	if _, ok := c.Extensions["GENERIC EVENT EXTENSION"]; !ok {
+	if _, ok := c.Extensions["Generic Event Extension"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'Generic Event Extension'. ge.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -80,7 +80,7 @@ func QueryVersion(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uin
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint16) QueryVersionCookie {
-	if _, ok := c.Extensions["GENERIC EVENT EXTENSION"]; !ok {
+	if _, ok := c.Extensions["Generic Event Extension"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'Generic Event Extension'. ge.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -141,7 +141,7 @@ func queryVersionRequest(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVers
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["GENERIC EVENT EXTENSION"]
+	buf[b] = c.Extensions["Generic Event Extension"]
 	b += 1
 
 	buf[b] = 0 // request opcode

@@ -504,15 +504,6 @@ func ModeInfoListBytes(buf []byte, list []ModeInfo) int {
 	return xgb.Pad(b)
 }
 
-const (
-	NotifyCrtcChange       = 0
-	NotifyOutputChange     = 1
-	NotifyOutputProperty   = 2
-	NotifyProviderChange   = 3
-	NotifyProviderProperty = 4
-	NotifyResourceChange   = 5
-)
-
 // Notify is the event number for a NotifyEvent.
 const Notify = 1
 
@@ -580,6 +571,15 @@ func (v NotifyEvent) String() string {
 func init() {
 	xgb.NewExtEventFuncs["RANDR"][1] = NotifyEventNew
 }
+
+const (
+	NotifyCrtcChange       = 0
+	NotifyOutputChange     = 1
+	NotifyOutputProperty   = 2
+	NotifyProviderChange   = 3
+	NotifyProviderProperty = 4
+	NotifyResourceChange   = 5
+)
 
 // NotifyDataUnion is a represention of the NotifyDataUnion union type.
 // Note that to *create* a Union, you should *never* create

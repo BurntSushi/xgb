@@ -513,7 +513,7 @@ type QueryClientIdsCookie struct {
 // QueryClientIds sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryClientIdsCookie.Reply()
 func QueryClientIds(c *xgb.Conn, NumSpecs uint32, Specs []ClientIdSpec) QueryClientIdsCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryClientIds' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -524,7 +524,7 @@ func QueryClientIds(c *xgb.Conn, NumSpecs uint32, Specs []ClientIdSpec) QueryCli
 // QueryClientIdsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryClientIdsUnchecked(c *xgb.Conn, NumSpecs uint32, Specs []ClientIdSpec) QueryClientIdsCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryClientIds' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -585,7 +585,7 @@ func queryClientIdsRequest(c *xgb.Conn, NumSpecs uint32, Specs []ClientIdSpec) [
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["X-RESOURCE"]
+	buf[b] = c.Extensions["X-Resource"]
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -610,7 +610,7 @@ type QueryClientPixmapBytesCookie struct {
 // QueryClientPixmapBytes sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryClientPixmapBytesCookie.Reply()
 func QueryClientPixmapBytes(c *xgb.Conn, Xid uint32) QueryClientPixmapBytesCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryClientPixmapBytes' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -621,7 +621,7 @@ func QueryClientPixmapBytes(c *xgb.Conn, Xid uint32) QueryClientPixmapBytesCooki
 // QueryClientPixmapBytesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryClientPixmapBytesUnchecked(c *xgb.Conn, Xid uint32) QueryClientPixmapBytesCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryClientPixmapBytes' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -679,7 +679,7 @@ func queryClientPixmapBytesRequest(c *xgb.Conn, Xid uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["X-RESOURCE"]
+	buf[b] = c.Extensions["X-Resource"]
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -702,7 +702,7 @@ type QueryClientResourcesCookie struct {
 // QueryClientResources sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryClientResourcesCookie.Reply()
 func QueryClientResources(c *xgb.Conn, Xid uint32) QueryClientResourcesCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryClientResources' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -713,7 +713,7 @@ func QueryClientResources(c *xgb.Conn, Xid uint32) QueryClientResourcesCookie {
 // QueryClientResourcesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryClientResourcesUnchecked(c *xgb.Conn, Xid uint32) QueryClientResourcesCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryClientResources' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -774,7 +774,7 @@ func queryClientResourcesRequest(c *xgb.Conn, Xid uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["X-RESOURCE"]
+	buf[b] = c.Extensions["X-Resource"]
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -797,7 +797,7 @@ type QueryClientsCookie struct {
 // QueryClients sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryClientsCookie.Reply()
 func QueryClients(c *xgb.Conn) QueryClientsCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryClients' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -808,7 +808,7 @@ func QueryClients(c *xgb.Conn) QueryClientsCookie {
 // QueryClientsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryClientsUnchecked(c *xgb.Conn) QueryClientsCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryClients' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -869,7 +869,7 @@ func queryClientsRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["X-RESOURCE"]
+	buf[b] = c.Extensions["X-Resource"]
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -889,7 +889,7 @@ type QueryResourceBytesCookie struct {
 // QueryResourceBytes sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryResourceBytesCookie.Reply()
 func QueryResourceBytes(c *xgb.Conn, Client uint32, NumSpecs uint32, Specs []ResourceIdSpec) QueryResourceBytesCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryResourceBytes' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -900,7 +900,7 @@ func QueryResourceBytes(c *xgb.Conn, Client uint32, NumSpecs uint32, Specs []Res
 // QueryResourceBytesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryResourceBytesUnchecked(c *xgb.Conn, Client uint32, NumSpecs uint32, Specs []ResourceIdSpec) QueryResourceBytesCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryResourceBytes' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -961,7 +961,7 @@ func queryResourceBytesRequest(c *xgb.Conn, Client uint32, NumSpecs uint32, Spec
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["X-RESOURCE"]
+	buf[b] = c.Extensions["X-Resource"]
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -989,7 +989,7 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, ClientMajor byte, ClientMinor byte) QueryVersionCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(true, true)
@@ -1000,7 +1000,7 @@ func QueryVersion(c *xgb.Conn, ClientMajor byte, ClientMinor byte) QueryVersionC
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, ClientMajor byte, ClientMinor byte) QueryVersionCookie {
-	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+	if _, ok := c.Extensions["X-Resource"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
 	}
 	cookie := c.NewCookie(false, true)
@@ -1058,7 +1058,7 @@ func queryVersionRequest(c *xgb.Conn, ClientMajor byte, ClientMinor byte) []byte
 	b := 0
 	buf := make([]byte, size)
 
-	buf[b] = c.Extensions["X-RESOURCE"]
+	buf[b] = c.Extensions["X-Resource"]
 	b += 1
 
 	buf[b] = 0 // request opcode
