@@ -495,6 +495,122 @@ func init() {
 
 type Bool32 uint32
 
+// BufferSwapComplete is the event number for a BufferSwapCompleteEvent.
+const BufferSwapComplete = 1
+
+type BufferSwapCompleteEvent struct {
+	Sequence uint16
+	// padding: 1 bytes
+	EventType uint16
+	// padding: 2 bytes
+	Drawable Drawable
+	UstHi    uint32
+	UstLo    uint32
+	MscHi    uint32
+	MscLo    uint32
+	Sbc      uint32
+}
+
+// BufferSwapCompleteEventNew constructs a BufferSwapCompleteEvent value that implements xgb.Event from a byte slice.
+func BufferSwapCompleteEventNew(buf []byte) xgb.Event {
+	v := BufferSwapCompleteEvent{}
+	b := 1 // don't read event number
+
+	b += 1 // padding
+
+	v.Sequence = xgb.Get16(buf[b:])
+	b += 2
+
+	v.EventType = xgb.Get16(buf[b:])
+	b += 2
+
+	b += 2 // padding
+
+	v.Drawable = Drawable(xgb.Get32(buf[b:]))
+	b += 4
+
+	v.UstHi = xgb.Get32(buf[b:])
+	b += 4
+
+	v.UstLo = xgb.Get32(buf[b:])
+	b += 4
+
+	v.MscHi = xgb.Get32(buf[b:])
+	b += 4
+
+	v.MscLo = xgb.Get32(buf[b:])
+	b += 4
+
+	v.Sbc = xgb.Get32(buf[b:])
+	b += 4
+
+	return v
+}
+
+// Bytes writes a BufferSwapCompleteEvent value to a byte slice.
+func (v BufferSwapCompleteEvent) Bytes() []byte {
+	buf := make([]byte, 32)
+	b := 0
+
+	// write event number
+	buf[b] = 1
+	b += 1
+
+	b += 1 // padding
+
+	b += 2 // skip sequence number
+
+	xgb.Put16(buf[b:], v.EventType)
+	b += 2
+
+	b += 2 // padding
+
+	xgb.Put32(buf[b:], uint32(v.Drawable))
+	b += 4
+
+	xgb.Put32(buf[b:], v.UstHi)
+	b += 4
+
+	xgb.Put32(buf[b:], v.UstLo)
+	b += 4
+
+	xgb.Put32(buf[b:], v.MscHi)
+	b += 4
+
+	xgb.Put32(buf[b:], v.MscLo)
+	b += 4
+
+	xgb.Put32(buf[b:], v.Sbc)
+	b += 4
+
+	return buf
+}
+
+// SequenceId returns the sequence id attached to the BufferSwapComplete event.
+// Events without a sequence number (KeymapNotify) return 0.
+// This is mostly used internally.
+func (v BufferSwapCompleteEvent) SequenceId() uint16 {
+	return v.Sequence
+}
+
+// String is a rudimentary string representation of BufferSwapCompleteEvent.
+func (v BufferSwapCompleteEvent) String() string {
+	fieldVals := make([]string, 0, 9)
+	fieldVals = append(fieldVals, xgb.Sprintf("Sequence: %d", v.Sequence))
+	fieldVals = append(fieldVals, xgb.Sprintf("EventType: %d", v.EventType))
+	fieldVals = append(fieldVals, xgb.Sprintf("Drawable: %d", v.Drawable))
+	fieldVals = append(fieldVals, xgb.Sprintf("UstHi: %d", v.UstHi))
+	fieldVals = append(fieldVals, xgb.Sprintf("UstLo: %d", v.UstLo))
+	fieldVals = append(fieldVals, xgb.Sprintf("MscHi: %d", v.MscHi))
+	fieldVals = append(fieldVals, xgb.Sprintf("MscLo: %d", v.MscLo))
+	fieldVals = append(fieldVals, xgb.Sprintf("Sbc: %d", v.Sbc))
+	return "BufferSwapComplete {" + xgb.StringsJoin(fieldVals, ", ") + "}"
+}
+
+func init() {
+	xgb.NewExtEventFuncs["GLX"][1] = BufferSwapCompleteEventNew
+}
+
 type Context uint32
 
 func NewContextId(c *xgb.Conn) (Context, error) {

@@ -53,15 +53,12 @@ const Notify = 0
 
 type NotifyEvent struct {
 	Sequence uint16
-	Code     byte
 	State    byte
-	// padding: 1 bytes
-	SequenceNumber uint16
-	Time           xproto.Timestamp
-	Root           xproto.Window
-	Window         xproto.Window
-	Kind           byte
-	Forced         bool
+	Time     xproto.Timestamp
+	Root     xproto.Window
+	Window   xproto.Window
+	Kind     byte
+	Forced   bool
 	// padding: 14 bytes
 }
 
@@ -70,18 +67,10 @@ func NotifyEventNew(buf []byte) xgb.Event {
 	v := NotifyEvent{}
 	b := 1 // don't read event number
 
-	v.Code = buf[b]
-	b += 1
-
-	v.Sequence = xgb.Get16(buf[b:])
-	b += 2
-
 	v.State = buf[b]
 	b += 1
 
-	b += 1 // padding
-
-	v.SequenceNumber = xgb.Get16(buf[b:])
+	v.Sequence = xgb.Get16(buf[b:])
 	b += 2
 
 	v.Time = xproto.Timestamp(xgb.Get32(buf[b:]))
@@ -117,18 +106,10 @@ func (v NotifyEvent) Bytes() []byte {
 	buf[b] = 0
 	b += 1
 
-	buf[b] = v.Code
-	b += 1
-
-	b += 2 // skip sequence number
-
 	buf[b] = v.State
 	b += 1
 
-	b += 1 // padding
-
-	xgb.Put16(buf[b:], v.SequenceNumber)
-	b += 2
+	b += 2 // skip sequence number
 
 	xgb.Put32(buf[b:], uint32(v.Time))
 	b += 4
@@ -163,11 +144,9 @@ func (v NotifyEvent) SequenceId() uint16 {
 
 // String is a rudimentary string representation of NotifyEvent.
 func (v NotifyEvent) String() string {
-	fieldVals := make([]string, 0, 10)
+	fieldVals := make([]string, 0, 7)
 	fieldVals = append(fieldVals, xgb.Sprintf("Sequence: %d", v.Sequence))
-	fieldVals = append(fieldVals, xgb.Sprintf("Code: %d", v.Code))
 	fieldVals = append(fieldVals, xgb.Sprintf("State: %d", v.State))
-	fieldVals = append(fieldVals, xgb.Sprintf("SequenceNumber: %d", v.SequenceNumber))
 	fieldVals = append(fieldVals, xgb.Sprintf("Time: %d", v.Time))
 	fieldVals = append(fieldVals, xgb.Sprintf("Root: %d", v.Root))
 	fieldVals = append(fieldVals, xgb.Sprintf("Window: %d", v.Window))

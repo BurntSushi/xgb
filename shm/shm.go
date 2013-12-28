@@ -276,6 +276,70 @@ func attachRequest(c *xgb.Conn, Shmseg Seg, Shmid uint32, ReadOnly bool) []byte 
 	return buf
 }
 
+// AttachFdCookie is a cookie used only for AttachFd requests.
+type AttachFdCookie struct {
+	*xgb.Cookie
+}
+
+// AttachFd sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func AttachFd(c *xgb.Conn, Shmseg Seg, ReadOnly bool) AttachFdCookie {
+	if _, ok := c.Extensions["MIT-SHM"]; !ok {
+		panic("Cannot issue request 'AttachFd' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, false)
+	c.NewRequest(attachFdRequest(c, Shmseg, ReadOnly), cookie)
+	return AttachFdCookie{cookie}
+}
+
+// AttachFdChecked sends a checked request.
+// If an error occurs, it can be retrieved using AttachFdCookie.Check()
+func AttachFdChecked(c *xgb.Conn, Shmseg Seg, ReadOnly bool) AttachFdCookie {
+	if _, ok := c.Extensions["MIT-SHM"]; !ok {
+		panic("Cannot issue request 'AttachFd' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, false)
+	c.NewRequest(attachFdRequest(c, Shmseg, ReadOnly), cookie)
+	return AttachFdCookie{cookie}
+}
+
+// Check returns an error if one occurred for checked requests that are not expecting a reply.
+// This cannot be called for requests expecting a reply, nor for unchecked requests.
+func (cook AttachFdCookie) Check() error {
+	return cook.Cookie.Check()
+}
+
+// Write request to wire for AttachFd
+// attachFdRequest writes a AttachFd request to a byte slice.
+func attachFdRequest(c *xgb.Conn, Shmseg Seg, ReadOnly bool) []byte {
+	size := 12
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["MIT-SHM"]
+	b += 1
+
+	buf[b] = 6 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Shmseg))
+	b += 4
+
+	if ReadOnly {
+		buf[b] = 1
+	} else {
+		buf[b] = 0
+	}
+	b += 1
+
+	b += 3 // padding
+
+	return buf
+}
+
 // CreatePixmapCookie is a cookie used only for CreatePixmap requests.
 type CreatePixmapCookie struct {
 	*xgb.Cookie
@@ -347,6 +411,106 @@ func createPixmapRequest(c *xgb.Conn, Pid xproto.Pixmap, Drawable xproto.Drawabl
 
 	xgb.Put32(buf[b:], Offset)
 	b += 4
+
+	return buf
+}
+
+// CreateSegmentCookie is a cookie used only for CreateSegment requests.
+type CreateSegmentCookie struct {
+	*xgb.Cookie
+}
+
+// CreateSegment sends a checked request.
+// If an error occurs, it will be returned with the reply by calling CreateSegmentCookie.Reply()
+func CreateSegment(c *xgb.Conn, Shmseg Seg, Size uint32, ReadOnly bool) CreateSegmentCookie {
+	if _, ok := c.Extensions["MIT-SHM"]; !ok {
+		panic("Cannot issue request 'CreateSegment' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, true)
+	c.NewRequest(createSegmentRequest(c, Shmseg, Size, ReadOnly), cookie)
+	return CreateSegmentCookie{cookie}
+}
+
+// CreateSegmentUnchecked sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func CreateSegmentUnchecked(c *xgb.Conn, Shmseg Seg, Size uint32, ReadOnly bool) CreateSegmentCookie {
+	if _, ok := c.Extensions["MIT-SHM"]; !ok {
+		panic("Cannot issue request 'CreateSegment' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, true)
+	c.NewRequest(createSegmentRequest(c, Shmseg, Size, ReadOnly), cookie)
+	return CreateSegmentCookie{cookie}
+}
+
+// CreateSegmentReply represents the data returned from a CreateSegment request.
+type CreateSegmentReply struct {
+	Sequence uint16 // sequence number of the request for this reply
+	Length   uint32 // number of bytes in this reply
+	Nfd      byte
+	// padding: 24 bytes
+}
+
+// Reply blocks and returns the reply data for a CreateSegment request.
+func (cook CreateSegmentCookie) Reply() (*CreateSegmentReply, error) {
+	buf, err := cook.Cookie.Reply()
+	if err != nil {
+		return nil, err
+	}
+	if buf == nil {
+		return nil, nil
+	}
+	return createSegmentReply(buf), nil
+}
+
+// createSegmentReply reads a byte slice into a CreateSegmentReply value.
+func createSegmentReply(buf []byte) *CreateSegmentReply {
+	v := new(CreateSegmentReply)
+	b := 1 // skip reply determinant
+
+	v.Nfd = buf[b]
+	b += 1
+
+	v.Sequence = xgb.Get16(buf[b:])
+	b += 2
+
+	v.Length = xgb.Get32(buf[b:]) // 4-byte units
+	b += 4
+
+	b += 24 // padding
+
+	return v
+}
+
+// Write request to wire for CreateSegment
+// createSegmentRequest writes a CreateSegment request to a byte slice.
+func createSegmentRequest(c *xgb.Conn, Shmseg Seg, Size uint32, ReadOnly bool) []byte {
+	size := 16
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["MIT-SHM"]
+	b += 1
+
+	buf[b] = 7 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Shmseg))
+	b += 4
+
+	xgb.Put32(buf[b:], Size)
+	b += 4
+
+	if ReadOnly {
+		buf[b] = 1
+	} else {
+		buf[b] = 0
+	}
+	b += 1
+
+	b += 3 // padding
 
 	return buf
 }

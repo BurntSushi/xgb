@@ -85,6 +85,27 @@ func init() {
 	xgb.NewExtErrorFuncs["XFIXES"][0] = BadRegionErrorNew
 }
 
+type Barrier uint32
+
+func NewBarrierId(c *xgb.Conn) (Barrier, error) {
+	id, err := c.NewId()
+	if err != nil {
+		return 0, err
+	}
+	return Barrier(id), nil
+}
+
+const (
+	BarrierDirectionsPositiveX = 1
+	BarrierDirectionsPositiveY = 2
+	BarrierDirectionsNegativeX = 4
+	BarrierDirectionsNegativeY = 8
+)
+
+const (
+	CursorNotifyDisplayCursor = 0
+)
+
 // CursorNotify is the event number for a CursorNotifyEvent.
 const CursorNotify = 1
 
@@ -179,10 +200,6 @@ func (v CursorNotifyEvent) String() string {
 func init() {
 	xgb.NewExtEventFuncs["XFIXES"][1] = CursorNotifyEventNew
 }
-
-const (
-	CursorNotifyDisplayCursor = 0
-)
 
 const (
 	CursorNotifyMaskDisplayCursor = 1
@@ -601,6 +618,90 @@ func copyRegionRequest(c *xgb.Conn, Source Region, Destination Region) []byte {
 	return buf
 }
 
+// CreatePointerBarrierCookie is a cookie used only for CreatePointerBarrier requests.
+type CreatePointerBarrierCookie struct {
+	*xgb.Cookie
+}
+
+// CreatePointerBarrier sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func CreatePointerBarrier(c *xgb.Conn, Barrier Barrier, Window xproto.Window, X1 uint16, Y1 uint16, X2 uint16, Y2 uint16, Directions uint32, NumDevices uint16, Devices []uint16) CreatePointerBarrierCookie {
+	if _, ok := c.Extensions["XFIXES"]; !ok {
+		panic("Cannot issue request 'CreatePointerBarrier' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, false)
+	c.NewRequest(createPointerBarrierRequest(c, Barrier, Window, X1, Y1, X2, Y2, Directions, NumDevices, Devices), cookie)
+	return CreatePointerBarrierCookie{cookie}
+}
+
+// CreatePointerBarrierChecked sends a checked request.
+// If an error occurs, it can be retrieved using CreatePointerBarrierCookie.Check()
+func CreatePointerBarrierChecked(c *xgb.Conn, Barrier Barrier, Window xproto.Window, X1 uint16, Y1 uint16, X2 uint16, Y2 uint16, Directions uint32, NumDevices uint16, Devices []uint16) CreatePointerBarrierCookie {
+	if _, ok := c.Extensions["XFIXES"]; !ok {
+		panic("Cannot issue request 'CreatePointerBarrier' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, false)
+	c.NewRequest(createPointerBarrierRequest(c, Barrier, Window, X1, Y1, X2, Y2, Directions, NumDevices, Devices), cookie)
+	return CreatePointerBarrierCookie{cookie}
+}
+
+// Check returns an error if one occurred for checked requests that are not expecting a reply.
+// This cannot be called for requests expecting a reply, nor for unchecked requests.
+func (cook CreatePointerBarrierCookie) Check() error {
+	return cook.Cookie.Check()
+}
+
+// Write request to wire for CreatePointerBarrier
+// createPointerBarrierRequest writes a CreatePointerBarrier request to a byte slice.
+func createPointerBarrierRequest(c *xgb.Conn, Barrier Barrier, Window xproto.Window, X1 uint16, Y1 uint16, X2 uint16, Y2 uint16, Directions uint32, NumDevices uint16, Devices []uint16) []byte {
+	size := xgb.Pad((28 + xgb.Pad((int(NumDevices) * 2))))
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["XFIXES"]
+	b += 1
+
+	buf[b] = 31 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Barrier))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(Window))
+	b += 4
+
+	xgb.Put16(buf[b:], X1)
+	b += 2
+
+	xgb.Put16(buf[b:], Y1)
+	b += 2
+
+	xgb.Put16(buf[b:], X2)
+	b += 2
+
+	xgb.Put16(buf[b:], Y2)
+	b += 2
+
+	xgb.Put32(buf[b:], Directions)
+	b += 4
+
+	b += 2 // padding
+
+	xgb.Put16(buf[b:], NumDevices)
+	b += 2
+
+	for i := 0; i < int(NumDevices); i++ {
+		xgb.Put16(buf[b:], Devices[i])
+		b += 2
+	}
+	b = xgb.Pad(b)
+
+	return buf
+}
+
 // CreateRegionCookie is a cookie used only for CreateRegion requests.
 type CreateRegionCookie struct {
 	*xgb.Cookie
@@ -891,6 +992,61 @@ func createRegionFromWindowRequest(c *xgb.Conn, Region Region, Window xproto.Win
 	b += 1
 
 	b += 3 // padding
+
+	return buf
+}
+
+// DeletePointerBarrierCookie is a cookie used only for DeletePointerBarrier requests.
+type DeletePointerBarrierCookie struct {
+	*xgb.Cookie
+}
+
+// DeletePointerBarrier sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func DeletePointerBarrier(c *xgb.Conn, Barrier Barrier) DeletePointerBarrierCookie {
+	if _, ok := c.Extensions["XFIXES"]; !ok {
+		panic("Cannot issue request 'DeletePointerBarrier' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, false)
+	c.NewRequest(deletePointerBarrierRequest(c, Barrier), cookie)
+	return DeletePointerBarrierCookie{cookie}
+}
+
+// DeletePointerBarrierChecked sends a checked request.
+// If an error occurs, it can be retrieved using DeletePointerBarrierCookie.Check()
+func DeletePointerBarrierChecked(c *xgb.Conn, Barrier Barrier) DeletePointerBarrierCookie {
+	if _, ok := c.Extensions["XFIXES"]; !ok {
+		panic("Cannot issue request 'DeletePointerBarrier' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, false)
+	c.NewRequest(deletePointerBarrierRequest(c, Barrier), cookie)
+	return DeletePointerBarrierCookie{cookie}
+}
+
+// Check returns an error if one occurred for checked requests that are not expecting a reply.
+// This cannot be called for requests expecting a reply, nor for unchecked requests.
+func (cook DeletePointerBarrierCookie) Check() error {
+	return cook.Cookie.Check()
+}
+
+// Write request to wire for DeletePointerBarrier
+// deletePointerBarrierRequest writes a DeletePointerBarrier request to a byte slice.
+func deletePointerBarrierRequest(c *xgb.Conn, Barrier Barrier) []byte {
+	size := 8
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["XFIXES"]
+	b += 1
+
+	buf[b] = 32 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Barrier))
+	b += 4
 
 	return buf
 }

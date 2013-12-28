@@ -91,6 +91,342 @@ func ClientListBytes(buf []byte, list []Client) int {
 	return xgb.Pad(b)
 }
 
+const (
+	ClientIdMaskClientXID      = 1
+	ClientIdMaskLocalClientPID = 2
+)
+
+type ClientIdSpec struct {
+	Client uint32
+	Mask   uint32
+}
+
+// ClientIdSpecRead reads a byte slice into a ClientIdSpec value.
+func ClientIdSpecRead(buf []byte, v *ClientIdSpec) int {
+	b := 0
+
+	v.Client = xgb.Get32(buf[b:])
+	b += 4
+
+	v.Mask = xgb.Get32(buf[b:])
+	b += 4
+
+	return b
+}
+
+// ClientIdSpecReadList reads a byte slice into a list of ClientIdSpec values.
+func ClientIdSpecReadList(buf []byte, dest []ClientIdSpec) int {
+	b := 0
+	for i := 0; i < len(dest); i++ {
+		dest[i] = ClientIdSpec{}
+		b += ClientIdSpecRead(buf[b:], &dest[i])
+	}
+	return xgb.Pad(b)
+}
+
+// Bytes writes a ClientIdSpec value to a byte slice.
+func (v ClientIdSpec) Bytes() []byte {
+	buf := make([]byte, 8)
+	b := 0
+
+	xgb.Put32(buf[b:], v.Client)
+	b += 4
+
+	xgb.Put32(buf[b:], v.Mask)
+	b += 4
+
+	return buf
+}
+
+// ClientIdSpecListBytes writes a list of ClientIdSpec values to a byte slice.
+func ClientIdSpecListBytes(buf []byte, list []ClientIdSpec) int {
+	b := 0
+	var structBytes []byte
+	for _, item := range list {
+		structBytes = item.Bytes()
+		copy(buf[b:], structBytes)
+		b += len(structBytes)
+	}
+	return xgb.Pad(b)
+}
+
+type ClientIdValue struct {
+	Spec   ClientIdSpec
+	Length uint32
+	Value  []uint32 // size: xgb.Pad((int(Length) * 4))
+}
+
+// ClientIdValueRead reads a byte slice into a ClientIdValue value.
+func ClientIdValueRead(buf []byte, v *ClientIdValue) int {
+	b := 0
+
+	v.Spec = ClientIdSpec{}
+	b += ClientIdSpecRead(buf[b:], &v.Spec)
+
+	v.Length = xgb.Get32(buf[b:])
+	b += 4
+
+	v.Value = make([]uint32, v.Length)
+	for i := 0; i < int(v.Length); i++ {
+		v.Value[i] = xgb.Get32(buf[b:])
+		b += 4
+	}
+	b = xgb.Pad(b)
+
+	return b
+}
+
+// ClientIdValueReadList reads a byte slice into a list of ClientIdValue values.
+func ClientIdValueReadList(buf []byte, dest []ClientIdValue) int {
+	b := 0
+	for i := 0; i < len(dest); i++ {
+		dest[i] = ClientIdValue{}
+		b += ClientIdValueRead(buf[b:], &dest[i])
+	}
+	return xgb.Pad(b)
+}
+
+// Bytes writes a ClientIdValue value to a byte slice.
+func (v ClientIdValue) Bytes() []byte {
+	buf := make([]byte, (12 + xgb.Pad((int(v.Length) * 4))))
+	b := 0
+
+	{
+		structBytes := v.Spec.Bytes()
+		copy(buf[b:], structBytes)
+		b += xgb.Pad(len(structBytes))
+	}
+
+	xgb.Put32(buf[b:], v.Length)
+	b += 4
+
+	for i := 0; i < int(v.Length); i++ {
+		xgb.Put32(buf[b:], v.Value[i])
+		b += 4
+	}
+	b = xgb.Pad(b)
+
+	return buf
+}
+
+// ClientIdValueListBytes writes a list of ClientIdValue values to a byte slice.
+func ClientIdValueListBytes(buf []byte, list []ClientIdValue) int {
+	b := 0
+	var structBytes []byte
+	for _, item := range list {
+		structBytes = item.Bytes()
+		copy(buf[b:], structBytes)
+		b += len(structBytes)
+	}
+	return xgb.Pad(b)
+}
+
+// ClientIdValueListSize computes the size (bytes) of a list of ClientIdValue values.
+func ClientIdValueListSize(list []ClientIdValue) int {
+	size := 0
+	for _, item := range list {
+		size += (12 + xgb.Pad((int(item.Length) * 4)))
+	}
+	return size
+}
+
+type ResourceIdSpec struct {
+	Resource uint32
+	Type     uint32
+}
+
+// ResourceIdSpecRead reads a byte slice into a ResourceIdSpec value.
+func ResourceIdSpecRead(buf []byte, v *ResourceIdSpec) int {
+	b := 0
+
+	v.Resource = xgb.Get32(buf[b:])
+	b += 4
+
+	v.Type = xgb.Get32(buf[b:])
+	b += 4
+
+	return b
+}
+
+// ResourceIdSpecReadList reads a byte slice into a list of ResourceIdSpec values.
+func ResourceIdSpecReadList(buf []byte, dest []ResourceIdSpec) int {
+	b := 0
+	for i := 0; i < len(dest); i++ {
+		dest[i] = ResourceIdSpec{}
+		b += ResourceIdSpecRead(buf[b:], &dest[i])
+	}
+	return xgb.Pad(b)
+}
+
+// Bytes writes a ResourceIdSpec value to a byte slice.
+func (v ResourceIdSpec) Bytes() []byte {
+	buf := make([]byte, 8)
+	b := 0
+
+	xgb.Put32(buf[b:], v.Resource)
+	b += 4
+
+	xgb.Put32(buf[b:], v.Type)
+	b += 4
+
+	return buf
+}
+
+// ResourceIdSpecListBytes writes a list of ResourceIdSpec values to a byte slice.
+func ResourceIdSpecListBytes(buf []byte, list []ResourceIdSpec) int {
+	b := 0
+	var structBytes []byte
+	for _, item := range list {
+		structBytes = item.Bytes()
+		copy(buf[b:], structBytes)
+		b += len(structBytes)
+	}
+	return xgb.Pad(b)
+}
+
+type ResourceSizeSpec struct {
+	Spec     ResourceIdSpec
+	Bytes    uint32
+	RefCount uint32
+	UseCount uint32
+}
+
+// ResourceSizeSpecRead reads a byte slice into a ResourceSizeSpec value.
+func ResourceSizeSpecRead(buf []byte, v *ResourceSizeSpec) int {
+	b := 0
+
+	v.Spec = ResourceIdSpec{}
+	b += ResourceIdSpecRead(buf[b:], &v.Spec)
+
+	v.Bytes = xgb.Get32(buf[b:])
+	b += 4
+
+	v.RefCount = xgb.Get32(buf[b:])
+	b += 4
+
+	v.UseCount = xgb.Get32(buf[b:])
+	b += 4
+
+	return b
+}
+
+// ResourceSizeSpecReadList reads a byte slice into a list of ResourceSizeSpec values.
+func ResourceSizeSpecReadList(buf []byte, dest []ResourceSizeSpec) int {
+	b := 0
+	for i := 0; i < len(dest); i++ {
+		dest[i] = ResourceSizeSpec{}
+		b += ResourceSizeSpecRead(buf[b:], &dest[i])
+	}
+	return xgb.Pad(b)
+}
+
+// Bytes writes a ResourceSizeSpec value to a byte slice.
+func (v ResourceSizeSpec) Bytes() []byte {
+	buf := make([]byte, 20)
+	b := 0
+
+	{
+		structBytes := v.Spec.Bytes()
+		copy(buf[b:], structBytes)
+		b += xgb.Pad(len(structBytes))
+	}
+
+	xgb.Put32(buf[b:], v.Bytes)
+	b += 4
+
+	xgb.Put32(buf[b:], v.RefCount)
+	b += 4
+
+	xgb.Put32(buf[b:], v.UseCount)
+	b += 4
+
+	return buf
+}
+
+// ResourceSizeSpecListBytes writes a list of ResourceSizeSpec values to a byte slice.
+func ResourceSizeSpecListBytes(buf []byte, list []ResourceSizeSpec) int {
+	b := 0
+	var structBytes []byte
+	for _, item := range list {
+		structBytes = item.Bytes()
+		copy(buf[b:], structBytes)
+		b += len(structBytes)
+	}
+	return xgb.Pad(b)
+}
+
+type ResourceSizeValue struct {
+	Size               ResourceSizeSpec
+	NumCrossReferences uint32
+	CrossReferences    []ResourceSizeSpec // size: xgb.Pad((int(NumCrossReferences) * 20))
+}
+
+// ResourceSizeValueRead reads a byte slice into a ResourceSizeValue value.
+func ResourceSizeValueRead(buf []byte, v *ResourceSizeValue) int {
+	b := 0
+
+	v.Size = ResourceSizeSpec{}
+	b += ResourceSizeSpecRead(buf[b:], &v.Size)
+
+	v.NumCrossReferences = xgb.Get32(buf[b:])
+	b += 4
+
+	v.CrossReferences = make([]ResourceSizeSpec, v.NumCrossReferences)
+	b += ResourceSizeSpecReadList(buf[b:], v.CrossReferences)
+
+	return b
+}
+
+// ResourceSizeValueReadList reads a byte slice into a list of ResourceSizeValue values.
+func ResourceSizeValueReadList(buf []byte, dest []ResourceSizeValue) int {
+	b := 0
+	for i := 0; i < len(dest); i++ {
+		dest[i] = ResourceSizeValue{}
+		b += ResourceSizeValueRead(buf[b:], &dest[i])
+	}
+	return xgb.Pad(b)
+}
+
+// Bytes writes a ResourceSizeValue value to a byte slice.
+func (v ResourceSizeValue) Bytes() []byte {
+	buf := make([]byte, (24 + xgb.Pad((int(v.NumCrossReferences) * 20))))
+	b := 0
+
+	{
+		structBytes := v.Size.Bytes()
+		copy(buf[b:], structBytes)
+		b += xgb.Pad(len(structBytes))
+	}
+
+	xgb.Put32(buf[b:], v.NumCrossReferences)
+	b += 4
+
+	b += ResourceSizeSpecListBytes(buf[b:], v.CrossReferences)
+
+	return buf
+}
+
+// ResourceSizeValueListBytes writes a list of ResourceSizeValue values to a byte slice.
+func ResourceSizeValueListBytes(buf []byte, list []ResourceSizeValue) int {
+	b := 0
+	var structBytes []byte
+	for _, item := range list {
+		structBytes = item.Bytes()
+		copy(buf[b:], structBytes)
+		b += len(structBytes)
+	}
+	return xgb.Pad(b)
+}
+
+// ResourceSizeValueListSize computes the size (bytes) of a list of ResourceSizeValue values.
+func ResourceSizeValueListSize(list []ResourceSizeValue) int {
+	size := 0
+	for _, item := range list {
+		size += (24 + xgb.Pad((int(item.NumCrossReferences) * 20)))
+	}
+	return size
+}
+
 type Type struct {
 	ResourceType xproto.Atom
 	Count        uint32
@@ -168,6 +504,103 @@ func TypeListBytes(buf []byte, list []Type) int {
 // Skipping definition for base type 'Card16'
 
 // Skipping definition for base type 'Card32'
+
+// QueryClientIdsCookie is a cookie used only for QueryClientIds requests.
+type QueryClientIdsCookie struct {
+	*xgb.Cookie
+}
+
+// QueryClientIds sends a checked request.
+// If an error occurs, it will be returned with the reply by calling QueryClientIdsCookie.Reply()
+func QueryClientIds(c *xgb.Conn, NumSpecs uint32, Specs []ClientIdSpec) QueryClientIdsCookie {
+	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+		panic("Cannot issue request 'QueryClientIds' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, true)
+	c.NewRequest(queryClientIdsRequest(c, NumSpecs, Specs), cookie)
+	return QueryClientIdsCookie{cookie}
+}
+
+// QueryClientIdsUnchecked sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func QueryClientIdsUnchecked(c *xgb.Conn, NumSpecs uint32, Specs []ClientIdSpec) QueryClientIdsCookie {
+	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+		panic("Cannot issue request 'QueryClientIds' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, true)
+	c.NewRequest(queryClientIdsRequest(c, NumSpecs, Specs), cookie)
+	return QueryClientIdsCookie{cookie}
+}
+
+// QueryClientIdsReply represents the data returned from a QueryClientIds request.
+type QueryClientIdsReply struct {
+	Sequence uint16 // sequence number of the request for this reply
+	Length   uint32 // number of bytes in this reply
+	// padding: 1 bytes
+	NumIds uint32
+	// padding: 20 bytes
+	Ids []ClientIdValue // size: ClientIdValueListSize(Ids)
+}
+
+// Reply blocks and returns the reply data for a QueryClientIds request.
+func (cook QueryClientIdsCookie) Reply() (*QueryClientIdsReply, error) {
+	buf, err := cook.Cookie.Reply()
+	if err != nil {
+		return nil, err
+	}
+	if buf == nil {
+		return nil, nil
+	}
+	return queryClientIdsReply(buf), nil
+}
+
+// queryClientIdsReply reads a byte slice into a QueryClientIdsReply value.
+func queryClientIdsReply(buf []byte) *QueryClientIdsReply {
+	v := new(QueryClientIdsReply)
+	b := 1 // skip reply determinant
+
+	b += 1 // padding
+
+	v.Sequence = xgb.Get16(buf[b:])
+	b += 2
+
+	v.Length = xgb.Get32(buf[b:]) // 4-byte units
+	b += 4
+
+	v.NumIds = xgb.Get32(buf[b:])
+	b += 4
+
+	b += 20 // padding
+
+	v.Ids = make([]ClientIdValue, v.NumIds)
+	b += ClientIdValueReadList(buf[b:], v.Ids)
+
+	return v
+}
+
+// Write request to wire for QueryClientIds
+// queryClientIdsRequest writes a QueryClientIds request to a byte slice.
+func queryClientIdsRequest(c *xgb.Conn, NumSpecs uint32, Specs []ClientIdSpec) []byte {
+	size := xgb.Pad((8 + xgb.Pad((int(NumSpecs) * 8))))
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["X-RESOURCE"]
+	b += 1
+
+	buf[b] = 4 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], NumSpecs)
+	b += 4
+
+	b += ClientIdSpecListBytes(buf[b:], Specs)
+
+	return buf
+}
 
 // QueryClientPixmapBytesCookie is a cookie used only for QueryClientPixmapBytes requests.
 type QueryClientPixmapBytesCookie struct {
@@ -444,6 +877,106 @@ func queryClientsRequest(c *xgb.Conn) []byte {
 
 	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
 	b += 2
+
+	return buf
+}
+
+// QueryResourceBytesCookie is a cookie used only for QueryResourceBytes requests.
+type QueryResourceBytesCookie struct {
+	*xgb.Cookie
+}
+
+// QueryResourceBytes sends a checked request.
+// If an error occurs, it will be returned with the reply by calling QueryResourceBytesCookie.Reply()
+func QueryResourceBytes(c *xgb.Conn, Client uint32, NumSpecs uint32, Specs []ResourceIdSpec) QueryResourceBytesCookie {
+	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+		panic("Cannot issue request 'QueryResourceBytes' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, true)
+	c.NewRequest(queryResourceBytesRequest(c, Client, NumSpecs, Specs), cookie)
+	return QueryResourceBytesCookie{cookie}
+}
+
+// QueryResourceBytesUnchecked sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func QueryResourceBytesUnchecked(c *xgb.Conn, Client uint32, NumSpecs uint32, Specs []ResourceIdSpec) QueryResourceBytesCookie {
+	if _, ok := c.Extensions["X-RESOURCE"]; !ok {
+		panic("Cannot issue request 'QueryResourceBytes' using the uninitialized extension 'X-Resource'. res.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, true)
+	c.NewRequest(queryResourceBytesRequest(c, Client, NumSpecs, Specs), cookie)
+	return QueryResourceBytesCookie{cookie}
+}
+
+// QueryResourceBytesReply represents the data returned from a QueryResourceBytes request.
+type QueryResourceBytesReply struct {
+	Sequence uint16 // sequence number of the request for this reply
+	Length   uint32 // number of bytes in this reply
+	// padding: 1 bytes
+	NumSizes uint32
+	// padding: 20 bytes
+	Sizes []ResourceSizeValue // size: ResourceSizeValueListSize(Sizes)
+}
+
+// Reply blocks and returns the reply data for a QueryResourceBytes request.
+func (cook QueryResourceBytesCookie) Reply() (*QueryResourceBytesReply, error) {
+	buf, err := cook.Cookie.Reply()
+	if err != nil {
+		return nil, err
+	}
+	if buf == nil {
+		return nil, nil
+	}
+	return queryResourceBytesReply(buf), nil
+}
+
+// queryResourceBytesReply reads a byte slice into a QueryResourceBytesReply value.
+func queryResourceBytesReply(buf []byte) *QueryResourceBytesReply {
+	v := new(QueryResourceBytesReply)
+	b := 1 // skip reply determinant
+
+	b += 1 // padding
+
+	v.Sequence = xgb.Get16(buf[b:])
+	b += 2
+
+	v.Length = xgb.Get32(buf[b:]) // 4-byte units
+	b += 4
+
+	v.NumSizes = xgb.Get32(buf[b:])
+	b += 4
+
+	b += 20 // padding
+
+	v.Sizes = make([]ResourceSizeValue, v.NumSizes)
+	b += ResourceSizeValueReadList(buf[b:], v.Sizes)
+
+	return v
+}
+
+// Write request to wire for QueryResourceBytes
+// queryResourceBytesRequest writes a QueryResourceBytes request to a byte slice.
+func queryResourceBytesRequest(c *xgb.Conn, Client uint32, NumSpecs uint32, Specs []ResourceIdSpec) []byte {
+	size := xgb.Pad((12 + xgb.Pad((int(NumSpecs) * 8))))
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["X-RESOURCE"]
+	b += 1
+
+	buf[b] = 5 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], Client)
+	b += 4
+
+	xgb.Put32(buf[b:], NumSpecs)
+	b += 4
+
+	b += ResourceIdSpecListBytes(buf[b:], Specs)
 
 	return buf
 }

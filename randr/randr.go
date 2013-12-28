@@ -176,6 +176,52 @@ func init() {
 	xgb.NewExtErrorFuncs["RANDR"][0] = BadOutputErrorNew
 }
 
+// BadBadProvider is the error number for a BadBadProvider.
+const BadBadProvider = 3
+
+type BadProviderError struct {
+	Sequence uint16
+	NiceName string
+}
+
+// BadProviderErrorNew constructs a BadProviderError value that implements xgb.Error from a byte slice.
+func BadProviderErrorNew(buf []byte) xgb.Error {
+	v := BadProviderError{}
+	v.NiceName = "BadProvider"
+
+	b := 1 // skip error determinant
+	b += 1 // don't read error number
+
+	v.Sequence = xgb.Get16(buf[b:])
+	b += 2
+
+	return v
+}
+
+// SequenceId returns the sequence id attached to the BadBadProvider error.
+// This is mostly used internally.
+func (err BadProviderError) SequenceId() uint16 {
+	return err.Sequence
+}
+
+// BadId returns the 'BadValue' number if one exists for the BadBadProvider error. If no bad value exists, 0 is returned.
+func (err BadProviderError) BadId() uint32 {
+	return 0
+}
+
+// Error returns a rudimentary string representation of the BadBadProvider error.
+
+func (err BadProviderError) Error() string {
+	fieldVals := make([]string, 0, 0)
+	fieldVals = append(fieldVals, "NiceName: "+err.NiceName)
+	fieldVals = append(fieldVals, xgb.Sprintf("Sequence: %d", err.Sequence))
+	return "BadBadProvider {" + xgb.StringsJoin(fieldVals, ", ") + "}"
+}
+
+func init() {
+	xgb.NewExtErrorFuncs["RANDR"][3] = BadProviderErrorNew
+}
+
 const (
 	ConnectionConnected    = 0
 	ConnectionDisconnected = 1
@@ -459,9 +505,12 @@ func ModeInfoListBytes(buf []byte, list []ModeInfo) int {
 }
 
 const (
-	NotifyCrtcChange     = 0
-	NotifyOutputChange   = 1
-	NotifyOutputProperty = 2
+	NotifyCrtcChange       = 0
+	NotifyOutputChange     = 1
+	NotifyOutputProperty   = 2
+	NotifyProviderChange   = 3
+	NotifyProviderProperty = 4
+	NotifyResourceChange   = 5
 )
 
 // Notify is the event number for a NotifyEvent.
@@ -539,10 +588,16 @@ func init() {
 //     NotifyDataUnionCcNew(Cc CrtcChange) NotifyDataUnion
 //     NotifyDataUnionOcNew(Oc OutputChange) NotifyDataUnion
 //     NotifyDataUnionOpNew(Op OutputProperty) NotifyDataUnion
+//     NotifyDataUnionPcNew(Pc ProviderChange) NotifyDataUnion
+//     NotifyDataUnionPpNew(Pp ProviderProperty) NotifyDataUnion
+//     NotifyDataUnionRcNew(Rc ResourceChange) NotifyDataUnion
 type NotifyDataUnion struct {
 	Cc CrtcChange
 	Oc OutputChange
 	Op OutputProperty
+	Pc ProviderChange
+	Pp ProviderProperty
+	Rc ResourceChange
 }
 
 // NotifyDataUnionCcNew constructs a new NotifyDataUnion union type with the Cc field.
@@ -572,6 +627,18 @@ func NotifyDataUnionCcNew(Cc CrtcChange) NotifyDataUnion {
 	b = 0 // always read the same bytes
 	v.Op = OutputProperty{}
 	b += OutputPropertyRead(buf[b:], &v.Op)
+
+	b = 0 // always read the same bytes
+	v.Pc = ProviderChange{}
+	b += ProviderChangeRead(buf[b:], &v.Pc)
+
+	b = 0 // always read the same bytes
+	v.Pp = ProviderProperty{}
+	b += ProviderPropertyRead(buf[b:], &v.Pp)
+
+	b = 0 // always read the same bytes
+	v.Rc = ResourceChange{}
+	b += ResourceChangeRead(buf[b:], &v.Rc)
 
 	return v
 }
@@ -604,6 +671,18 @@ func NotifyDataUnionOcNew(Oc OutputChange) NotifyDataUnion {
 	v.Op = OutputProperty{}
 	b += OutputPropertyRead(buf[b:], &v.Op)
 
+	b = 0 // always read the same bytes
+	v.Pc = ProviderChange{}
+	b += ProviderChangeRead(buf[b:], &v.Pc)
+
+	b = 0 // always read the same bytes
+	v.Pp = ProviderProperty{}
+	b += ProviderPropertyRead(buf[b:], &v.Pp)
+
+	b = 0 // always read the same bytes
+	v.Rc = ResourceChange{}
+	b += ResourceChangeRead(buf[b:], &v.Rc)
+
 	return v
 }
 
@@ -635,6 +714,147 @@ func NotifyDataUnionOpNew(Op OutputProperty) NotifyDataUnion {
 	v.Op = OutputProperty{}
 	b += OutputPropertyRead(buf[b:], &v.Op)
 
+	b = 0 // always read the same bytes
+	v.Pc = ProviderChange{}
+	b += ProviderChangeRead(buf[b:], &v.Pc)
+
+	b = 0 // always read the same bytes
+	v.Pp = ProviderProperty{}
+	b += ProviderPropertyRead(buf[b:], &v.Pp)
+
+	b = 0 // always read the same bytes
+	v.Rc = ResourceChange{}
+	b += ResourceChangeRead(buf[b:], &v.Rc)
+
+	return v
+}
+
+// NotifyDataUnionPcNew constructs a new NotifyDataUnion union type with the Pc field.
+func NotifyDataUnionPcNew(Pc ProviderChange) NotifyDataUnion {
+	var b int
+	buf := make([]byte, 28)
+
+	{
+		structBytes := Pc.Bytes()
+		copy(buf[b:], structBytes)
+		b += xgb.Pad(len(structBytes))
+	}
+
+	// Create the Union type
+	v := NotifyDataUnion{}
+
+	// Now copy buf into all fields
+
+	b = 0 // always read the same bytes
+	v.Cc = CrtcChange{}
+	b += CrtcChangeRead(buf[b:], &v.Cc)
+
+	b = 0 // always read the same bytes
+	v.Oc = OutputChange{}
+	b += OutputChangeRead(buf[b:], &v.Oc)
+
+	b = 0 // always read the same bytes
+	v.Op = OutputProperty{}
+	b += OutputPropertyRead(buf[b:], &v.Op)
+
+	b = 0 // always read the same bytes
+	v.Pc = ProviderChange{}
+	b += ProviderChangeRead(buf[b:], &v.Pc)
+
+	b = 0 // always read the same bytes
+	v.Pp = ProviderProperty{}
+	b += ProviderPropertyRead(buf[b:], &v.Pp)
+
+	b = 0 // always read the same bytes
+	v.Rc = ResourceChange{}
+	b += ResourceChangeRead(buf[b:], &v.Rc)
+
+	return v
+}
+
+// NotifyDataUnionPpNew constructs a new NotifyDataUnion union type with the Pp field.
+func NotifyDataUnionPpNew(Pp ProviderProperty) NotifyDataUnion {
+	var b int
+	buf := make([]byte, 28)
+
+	{
+		structBytes := Pp.Bytes()
+		copy(buf[b:], structBytes)
+		b += xgb.Pad(len(structBytes))
+	}
+
+	// Create the Union type
+	v := NotifyDataUnion{}
+
+	// Now copy buf into all fields
+
+	b = 0 // always read the same bytes
+	v.Cc = CrtcChange{}
+	b += CrtcChangeRead(buf[b:], &v.Cc)
+
+	b = 0 // always read the same bytes
+	v.Oc = OutputChange{}
+	b += OutputChangeRead(buf[b:], &v.Oc)
+
+	b = 0 // always read the same bytes
+	v.Op = OutputProperty{}
+	b += OutputPropertyRead(buf[b:], &v.Op)
+
+	b = 0 // always read the same bytes
+	v.Pc = ProviderChange{}
+	b += ProviderChangeRead(buf[b:], &v.Pc)
+
+	b = 0 // always read the same bytes
+	v.Pp = ProviderProperty{}
+	b += ProviderPropertyRead(buf[b:], &v.Pp)
+
+	b = 0 // always read the same bytes
+	v.Rc = ResourceChange{}
+	b += ResourceChangeRead(buf[b:], &v.Rc)
+
+	return v
+}
+
+// NotifyDataUnionRcNew constructs a new NotifyDataUnion union type with the Rc field.
+func NotifyDataUnionRcNew(Rc ResourceChange) NotifyDataUnion {
+	var b int
+	buf := make([]byte, 28)
+
+	{
+		structBytes := Rc.Bytes()
+		copy(buf[b:], structBytes)
+		b += xgb.Pad(len(structBytes))
+	}
+
+	// Create the Union type
+	v := NotifyDataUnion{}
+
+	// Now copy buf into all fields
+
+	b = 0 // always read the same bytes
+	v.Cc = CrtcChange{}
+	b += CrtcChangeRead(buf[b:], &v.Cc)
+
+	b = 0 // always read the same bytes
+	v.Oc = OutputChange{}
+	b += OutputChangeRead(buf[b:], &v.Oc)
+
+	b = 0 // always read the same bytes
+	v.Op = OutputProperty{}
+	b += OutputPropertyRead(buf[b:], &v.Op)
+
+	b = 0 // always read the same bytes
+	v.Pc = ProviderChange{}
+	b += ProviderChangeRead(buf[b:], &v.Pc)
+
+	b = 0 // always read the same bytes
+	v.Pp = ProviderProperty{}
+	b += ProviderPropertyRead(buf[b:], &v.Pp)
+
+	b = 0 // always read the same bytes
+	v.Rc = ResourceChange{}
+	b += ResourceChangeRead(buf[b:], &v.Rc)
+
 	return v
 }
 
@@ -653,6 +873,18 @@ func NotifyDataUnionRead(buf []byte, v *NotifyDataUnion) int {
 	b = 0 // re-read the same bytes
 	v.Op = OutputProperty{}
 	b += OutputPropertyRead(buf[b:], &v.Op)
+
+	b = 0 // re-read the same bytes
+	v.Pc = ProviderChange{}
+	b += ProviderChangeRead(buf[b:], &v.Pc)
+
+	b = 0 // re-read the same bytes
+	v.Pp = ProviderProperty{}
+	b += ProviderPropertyRead(buf[b:], &v.Pp)
+
+	b = 0 // re-read the same bytes
+	v.Rc = ResourceChange{}
+	b += ResourceChangeRead(buf[b:], &v.Rc)
 
 	return 28
 }
@@ -682,7 +914,7 @@ func (v NotifyDataUnion) Bytes() []byte {
 	return buf
 }
 
-// NotifyDataUnionListBytes writes a list of %s(MISSING) values to a byte slice.
+// NotifyDataUnionListBytes writes a list of NotifyDataUnion values to a byte slice.
 func NotifyDataUnionListBytes(buf []byte, list []NotifyDataUnion) int {
 	b := 0
 	var unionBytes []byte
@@ -695,10 +927,13 @@ func NotifyDataUnionListBytes(buf []byte, list []NotifyDataUnion) int {
 }
 
 const (
-	NotifyMaskScreenChange   = 1
-	NotifyMaskCrtcChange     = 2
-	NotifyMaskOutputChange   = 4
-	NotifyMaskOutputProperty = 8
+	NotifyMaskScreenChange     = 1
+	NotifyMaskCrtcChange       = 2
+	NotifyMaskOutputChange     = 4
+	NotifyMaskOutputProperty   = 8
+	NotifyMaskProviderChange   = 16
+	NotifyMaskProviderProperty = 32
+	NotifyMaskResourceChange   = 64
 )
 
 type Output uint32
@@ -894,6 +1129,169 @@ func OutputPropertyListBytes(buf []byte, list []OutputProperty) int {
 	return xgb.Pad(b)
 }
 
+type Provider uint32
+
+func NewProviderId(c *xgb.Conn) (Provider, error) {
+	id, err := c.NewId()
+	if err != nil {
+		return 0, err
+	}
+	return Provider(id), nil
+}
+
+const (
+	ProviderCapabilitySourceOutput  = 1
+	ProviderCapabilitySinkOutput    = 2
+	ProviderCapabilitySourceOffload = 4
+	ProviderCapabilitySinkOffload   = 8
+)
+
+type ProviderChange struct {
+	Timestamp xproto.Timestamp
+	Window    xproto.Window
+	Provider  Provider
+	// padding: 16 bytes
+}
+
+// ProviderChangeRead reads a byte slice into a ProviderChange value.
+func ProviderChangeRead(buf []byte, v *ProviderChange) int {
+	b := 0
+
+	v.Timestamp = xproto.Timestamp(xgb.Get32(buf[b:]))
+	b += 4
+
+	v.Window = xproto.Window(xgb.Get32(buf[b:]))
+	b += 4
+
+	v.Provider = Provider(xgb.Get32(buf[b:]))
+	b += 4
+
+	b += 16 // padding
+
+	return b
+}
+
+// ProviderChangeReadList reads a byte slice into a list of ProviderChange values.
+func ProviderChangeReadList(buf []byte, dest []ProviderChange) int {
+	b := 0
+	for i := 0; i < len(dest); i++ {
+		dest[i] = ProviderChange{}
+		b += ProviderChangeRead(buf[b:], &dest[i])
+	}
+	return xgb.Pad(b)
+}
+
+// Bytes writes a ProviderChange value to a byte slice.
+func (v ProviderChange) Bytes() []byte {
+	buf := make([]byte, 28)
+	b := 0
+
+	xgb.Put32(buf[b:], uint32(v.Timestamp))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(v.Window))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(v.Provider))
+	b += 4
+
+	b += 16 // padding
+
+	return buf
+}
+
+// ProviderChangeListBytes writes a list of ProviderChange values to a byte slice.
+func ProviderChangeListBytes(buf []byte, list []ProviderChange) int {
+	b := 0
+	var structBytes []byte
+	for _, item := range list {
+		structBytes = item.Bytes()
+		copy(buf[b:], structBytes)
+		b += len(structBytes)
+	}
+	return xgb.Pad(b)
+}
+
+type ProviderProperty struct {
+	Window    xproto.Window
+	Provider  Provider
+	Atom      xproto.Atom
+	Timestamp xproto.Timestamp
+	State     byte
+	// padding: 11 bytes
+}
+
+// ProviderPropertyRead reads a byte slice into a ProviderProperty value.
+func ProviderPropertyRead(buf []byte, v *ProviderProperty) int {
+	b := 0
+
+	v.Window = xproto.Window(xgb.Get32(buf[b:]))
+	b += 4
+
+	v.Provider = Provider(xgb.Get32(buf[b:]))
+	b += 4
+
+	v.Atom = xproto.Atom(xgb.Get32(buf[b:]))
+	b += 4
+
+	v.Timestamp = xproto.Timestamp(xgb.Get32(buf[b:]))
+	b += 4
+
+	v.State = buf[b]
+	b += 1
+
+	b += 11 // padding
+
+	return b
+}
+
+// ProviderPropertyReadList reads a byte slice into a list of ProviderProperty values.
+func ProviderPropertyReadList(buf []byte, dest []ProviderProperty) int {
+	b := 0
+	for i := 0; i < len(dest); i++ {
+		dest[i] = ProviderProperty{}
+		b += ProviderPropertyRead(buf[b:], &dest[i])
+	}
+	return xgb.Pad(b)
+}
+
+// Bytes writes a ProviderProperty value to a byte slice.
+func (v ProviderProperty) Bytes() []byte {
+	buf := make([]byte, 28)
+	b := 0
+
+	xgb.Put32(buf[b:], uint32(v.Window))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(v.Provider))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(v.Atom))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(v.Timestamp))
+	b += 4
+
+	buf[b] = v.State
+	b += 1
+
+	b += 11 // padding
+
+	return buf
+}
+
+// ProviderPropertyListBytes writes a list of ProviderProperty values to a byte slice.
+func ProviderPropertyListBytes(buf []byte, list []ProviderProperty) int {
+	b := 0
+	var structBytes []byte
+	for _, item := range list {
+		structBytes = item.Bytes()
+		copy(buf[b:], structBytes)
+		b += len(structBytes)
+	}
+	return xgb.Pad(b)
+}
+
 type RefreshRates struct {
 	NRates uint16
 	Rates  []uint16 // size: xgb.Pad((int(NRates) * 2))
@@ -962,6 +1360,65 @@ func RefreshRatesListSize(list []RefreshRates) int {
 		size += (2 + xgb.Pad((int(item.NRates) * 2)))
 	}
 	return size
+}
+
+type ResourceChange struct {
+	Timestamp xproto.Timestamp
+	Window    xproto.Window
+	// padding: 20 bytes
+}
+
+// ResourceChangeRead reads a byte slice into a ResourceChange value.
+func ResourceChangeRead(buf []byte, v *ResourceChange) int {
+	b := 0
+
+	v.Timestamp = xproto.Timestamp(xgb.Get32(buf[b:]))
+	b += 4
+
+	v.Window = xproto.Window(xgb.Get32(buf[b:]))
+	b += 4
+
+	b += 20 // padding
+
+	return b
+}
+
+// ResourceChangeReadList reads a byte slice into a list of ResourceChange values.
+func ResourceChangeReadList(buf []byte, dest []ResourceChange) int {
+	b := 0
+	for i := 0; i < len(dest); i++ {
+		dest[i] = ResourceChange{}
+		b += ResourceChangeRead(buf[b:], &dest[i])
+	}
+	return xgb.Pad(b)
+}
+
+// Bytes writes a ResourceChange value to a byte slice.
+func (v ResourceChange) Bytes() []byte {
+	buf := make([]byte, 28)
+	b := 0
+
+	xgb.Put32(buf[b:], uint32(v.Timestamp))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(v.Window))
+	b += 4
+
+	b += 20 // padding
+
+	return buf
+}
+
+// ResourceChangeListBytes writes a list of ResourceChange values to a byte slice.
+func ResourceChangeListBytes(buf []byte, list []ResourceChange) int {
+	b := 0
+	var structBytes []byte
+	for _, item := range list {
+		structBytes = item.Bytes()
+		copy(buf[b:], structBytes)
+		b += len(structBytes)
+	}
+	return xgb.Pad(b)
 }
 
 const (
@@ -1186,6 +1643,13 @@ const (
 	SetConfigFailed            = 3
 )
 
+const (
+	TransformUnit       = 1
+	TransformScaleUp    = 2
+	TransformScaleDown  = 4
+	TransformProjective = 8
+)
+
 // Skipping definition for base type 'Bool'
 
 // Skipping definition for base type 'Byte'
@@ -1343,6 +1807,81 @@ func changeOutputPropertyRequest(c *xgb.Conn, Output Output, Property xproto.Ato
 	return buf
 }
 
+// ChangeProviderPropertyCookie is a cookie used only for ChangeProviderProperty requests.
+type ChangeProviderPropertyCookie struct {
+	*xgb.Cookie
+}
+
+// ChangeProviderProperty sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func ChangeProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom, Type xproto.Atom, Format byte, Mode byte, NumItems uint32, Data []byte) ChangeProviderPropertyCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'ChangeProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, false)
+	c.NewRequest(changeProviderPropertyRequest(c, Provider, Property, Type, Format, Mode, NumItems, Data), cookie)
+	return ChangeProviderPropertyCookie{cookie}
+}
+
+// ChangeProviderPropertyChecked sends a checked request.
+// If an error occurs, it can be retrieved using ChangeProviderPropertyCookie.Check()
+func ChangeProviderPropertyChecked(c *xgb.Conn, Provider Provider, Property xproto.Atom, Type xproto.Atom, Format byte, Mode byte, NumItems uint32, Data []byte) ChangeProviderPropertyCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'ChangeProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, false)
+	c.NewRequest(changeProviderPropertyRequest(c, Provider, Property, Type, Format, Mode, NumItems, Data), cookie)
+	return ChangeProviderPropertyCookie{cookie}
+}
+
+// Check returns an error if one occurred for checked requests that are not expecting a reply.
+// This cannot be called for requests expecting a reply, nor for unchecked requests.
+func (cook ChangeProviderPropertyCookie) Check() error {
+	return cook.Cookie.Check()
+}
+
+// Write request to wire for ChangeProviderProperty
+// changeProviderPropertyRequest writes a ChangeProviderProperty request to a byte slice.
+func changeProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property xproto.Atom, Type xproto.Atom, Format byte, Mode byte, NumItems uint32, Data []byte) []byte {
+	size := xgb.Pad((24 + xgb.Pad(((int(NumItems) * (int(Format) / 8)) * 1))))
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["RANDR"]
+	b += 1
+
+	buf[b] = 39 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Provider))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(Property))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(Type))
+	b += 4
+
+	buf[b] = Format
+	b += 1
+
+	buf[b] = Mode
+	b += 1
+
+	b += 2 // padding
+
+	xgb.Put32(buf[b:], NumItems)
+	b += 4
+
+	copy(buf[b:], Data[:(int(NumItems)*(int(Format)/8))])
+	b += xgb.Pad(int((int(NumItems) * (int(Format) / 8))))
+
+	return buf
+}
+
 // ConfigureOutputPropertyCookie is a cookie used only for ConfigureOutputProperty requests.
 type ConfigureOutputPropertyCookie struct {
 	*xgb.Cookie
@@ -1393,6 +1932,86 @@ func configureOutputPropertyRequest(c *xgb.Conn, Output Output, Property xproto.
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Output))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(Property))
+	b += 4
+
+	if Pending {
+		buf[b] = 1
+	} else {
+		buf[b] = 0
+	}
+	b += 1
+
+	if Range {
+		buf[b] = 1
+	} else {
+		buf[b] = 0
+	}
+	b += 1
+
+	b += 2 // padding
+
+	for i := 0; i < int(len(Values)); i++ {
+		xgb.Put32(buf[b:], uint32(Values[i]))
+		b += 4
+	}
+	b = xgb.Pad(b)
+
+	return buf
+}
+
+// ConfigureProviderPropertyCookie is a cookie used only for ConfigureProviderProperty requests.
+type ConfigureProviderPropertyCookie struct {
+	*xgb.Cookie
+}
+
+// ConfigureProviderProperty sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func ConfigureProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom, Pending bool, Range bool, Values []int32) ConfigureProviderPropertyCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'ConfigureProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, false)
+	c.NewRequest(configureProviderPropertyRequest(c, Provider, Property, Pending, Range, Values), cookie)
+	return ConfigureProviderPropertyCookie{cookie}
+}
+
+// ConfigureProviderPropertyChecked sends a checked request.
+// If an error occurs, it can be retrieved using ConfigureProviderPropertyCookie.Check()
+func ConfigureProviderPropertyChecked(c *xgb.Conn, Provider Provider, Property xproto.Atom, Pending bool, Range bool, Values []int32) ConfigureProviderPropertyCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'ConfigureProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, false)
+	c.NewRequest(configureProviderPropertyRequest(c, Provider, Property, Pending, Range, Values), cookie)
+	return ConfigureProviderPropertyCookie{cookie}
+}
+
+// Check returns an error if one occurred for checked requests that are not expecting a reply.
+// This cannot be called for requests expecting a reply, nor for unchecked requests.
+func (cook ConfigureProviderPropertyCookie) Check() error {
+	return cook.Cookie.Check()
+}
+
+// Write request to wire for ConfigureProviderProperty
+// configureProviderPropertyRequest writes a ConfigureProviderProperty request to a byte slice.
+func configureProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property xproto.Atom, Pending bool, Range bool, Values []int32) []byte {
+	size := xgb.Pad((16 + xgb.Pad((len(Values) * 4))))
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["RANDR"]
+	b += 1
+
+	buf[b] = 38 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Provider))
 	b += 4
 
 	xgb.Put32(buf[b:], uint32(Property))
@@ -1631,6 +2250,64 @@ func deleteOutputPropertyRequest(c *xgb.Conn, Output Output, Property xproto.Ato
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Output))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(Property))
+	b += 4
+
+	return buf
+}
+
+// DeleteProviderPropertyCookie is a cookie used only for DeleteProviderProperty requests.
+type DeleteProviderPropertyCookie struct {
+	*xgb.Cookie
+}
+
+// DeleteProviderProperty sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func DeleteProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom) DeleteProviderPropertyCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'DeleteProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, false)
+	c.NewRequest(deleteProviderPropertyRequest(c, Provider, Property), cookie)
+	return DeleteProviderPropertyCookie{cookie}
+}
+
+// DeleteProviderPropertyChecked sends a checked request.
+// If an error occurs, it can be retrieved using DeleteProviderPropertyCookie.Check()
+func DeleteProviderPropertyChecked(c *xgb.Conn, Provider Provider, Property xproto.Atom) DeleteProviderPropertyCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'DeleteProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, false)
+	c.NewRequest(deleteProviderPropertyRequest(c, Provider, Property), cookie)
+	return DeleteProviderPropertyCookie{cookie}
+}
+
+// Check returns an error if one occurred for checked requests that are not expecting a reply.
+// This cannot be called for requests expecting a reply, nor for unchecked requests.
+func (cook DeleteProviderPropertyCookie) Check() error {
+	return cook.Cookie.Check()
+}
+
+// Write request to wire for DeleteProviderProperty
+// deleteProviderPropertyRequest writes a DeleteProviderProperty request to a byte slice.
+func deleteProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property xproto.Atom) []byte {
+	size := 12
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["RANDR"]
+	b += 1
+
+	buf[b] = 40 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Provider))
 	b += 4
 
 	xgb.Put32(buf[b:], uint32(Property))
@@ -2717,6 +3394,397 @@ func getPanningRequest(c *xgb.Conn, Crtc Crtc) []byte {
 	return buf
 }
 
+// GetProviderInfoCookie is a cookie used only for GetProviderInfo requests.
+type GetProviderInfoCookie struct {
+	*xgb.Cookie
+}
+
+// GetProviderInfo sends a checked request.
+// If an error occurs, it will be returned with the reply by calling GetProviderInfoCookie.Reply()
+func GetProviderInfo(c *xgb.Conn, Provider Provider, ConfigTimestamp xproto.Timestamp) GetProviderInfoCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'GetProviderInfo' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, true)
+	c.NewRequest(getProviderInfoRequest(c, Provider, ConfigTimestamp), cookie)
+	return GetProviderInfoCookie{cookie}
+}
+
+// GetProviderInfoUnchecked sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func GetProviderInfoUnchecked(c *xgb.Conn, Provider Provider, ConfigTimestamp xproto.Timestamp) GetProviderInfoCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'GetProviderInfo' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, true)
+	c.NewRequest(getProviderInfoRequest(c, Provider, ConfigTimestamp), cookie)
+	return GetProviderInfoCookie{cookie}
+}
+
+// GetProviderInfoReply represents the data returned from a GetProviderInfo request.
+type GetProviderInfoReply struct {
+	Sequence               uint16 // sequence number of the request for this reply
+	Length                 uint32 // number of bytes in this reply
+	Status                 byte
+	Timestamp              xproto.Timestamp
+	Capabilities           uint32
+	NumCrtcs               uint16
+	NumOutputs             uint16
+	NumAssociatedProviders uint16
+	NameLen                uint16
+	// padding: 8 bytes
+	Crtcs                []Crtc     // size: xgb.Pad((int(NumCrtcs) * 4))
+	Outputs              []Output   // size: xgb.Pad((int(NumOutputs) * 4))
+	AssociatedProviders  []Provider // size: xgb.Pad((int(NumAssociatedProviders) * 4))
+	AssociatedCapability []uint32   // size: xgb.Pad((int(NumAssociatedProviders) * 4))
+	Name                 string     // size: xgb.Pad((int(NameLen) * 1))
+}
+
+// Reply blocks and returns the reply data for a GetProviderInfo request.
+func (cook GetProviderInfoCookie) Reply() (*GetProviderInfoReply, error) {
+	buf, err := cook.Cookie.Reply()
+	if err != nil {
+		return nil, err
+	}
+	if buf == nil {
+		return nil, nil
+	}
+	return getProviderInfoReply(buf), nil
+}
+
+// getProviderInfoReply reads a byte slice into a GetProviderInfoReply value.
+func getProviderInfoReply(buf []byte) *GetProviderInfoReply {
+	v := new(GetProviderInfoReply)
+	b := 1 // skip reply determinant
+
+	v.Status = buf[b]
+	b += 1
+
+	v.Sequence = xgb.Get16(buf[b:])
+	b += 2
+
+	v.Length = xgb.Get32(buf[b:]) // 4-byte units
+	b += 4
+
+	v.Timestamp = xproto.Timestamp(xgb.Get32(buf[b:]))
+	b += 4
+
+	v.Capabilities = xgb.Get32(buf[b:])
+	b += 4
+
+	v.NumCrtcs = xgb.Get16(buf[b:])
+	b += 2
+
+	v.NumOutputs = xgb.Get16(buf[b:])
+	b += 2
+
+	v.NumAssociatedProviders = xgb.Get16(buf[b:])
+	b += 2
+
+	v.NameLen = xgb.Get16(buf[b:])
+	b += 2
+
+	b += 8 // padding
+
+	v.Crtcs = make([]Crtc, v.NumCrtcs)
+	for i := 0; i < int(v.NumCrtcs); i++ {
+		v.Crtcs[i] = Crtc(xgb.Get32(buf[b:]))
+		b += 4
+	}
+	b = xgb.Pad(b)
+
+	v.Outputs = make([]Output, v.NumOutputs)
+	for i := 0; i < int(v.NumOutputs); i++ {
+		v.Outputs[i] = Output(xgb.Get32(buf[b:]))
+		b += 4
+	}
+	b = xgb.Pad(b)
+
+	v.AssociatedProviders = make([]Provider, v.NumAssociatedProviders)
+	for i := 0; i < int(v.NumAssociatedProviders); i++ {
+		v.AssociatedProviders[i] = Provider(xgb.Get32(buf[b:]))
+		b += 4
+	}
+	b = xgb.Pad(b)
+
+	v.AssociatedCapability = make([]uint32, v.NumAssociatedProviders)
+	for i := 0; i < int(v.NumAssociatedProviders); i++ {
+		v.AssociatedCapability[i] = xgb.Get32(buf[b:])
+		b += 4
+	}
+	b = xgb.Pad(b)
+
+	{
+		byteString := make([]byte, v.NameLen)
+		copy(byteString[:v.NameLen], buf[b:])
+		v.Name = string(byteString)
+		b += xgb.Pad(int(v.NameLen))
+	}
+
+	return v
+}
+
+// Write request to wire for GetProviderInfo
+// getProviderInfoRequest writes a GetProviderInfo request to a byte slice.
+func getProviderInfoRequest(c *xgb.Conn, Provider Provider, ConfigTimestamp xproto.Timestamp) []byte {
+	size := 12
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["RANDR"]
+	b += 1
+
+	buf[b] = 33 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Provider))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(ConfigTimestamp))
+	b += 4
+
+	return buf
+}
+
+// GetProviderPropertyCookie is a cookie used only for GetProviderProperty requests.
+type GetProviderPropertyCookie struct {
+	*xgb.Cookie
+}
+
+// GetProviderProperty sends a checked request.
+// If an error occurs, it will be returned with the reply by calling GetProviderPropertyCookie.Reply()
+func GetProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom, Type xproto.Atom, LongOffset uint32, LongLength uint32, Delete bool, Pending bool) GetProviderPropertyCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'GetProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, true)
+	c.NewRequest(getProviderPropertyRequest(c, Provider, Property, Type, LongOffset, LongLength, Delete, Pending), cookie)
+	return GetProviderPropertyCookie{cookie}
+}
+
+// GetProviderPropertyUnchecked sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func GetProviderPropertyUnchecked(c *xgb.Conn, Provider Provider, Property xproto.Atom, Type xproto.Atom, LongOffset uint32, LongLength uint32, Delete bool, Pending bool) GetProviderPropertyCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'GetProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, true)
+	c.NewRequest(getProviderPropertyRequest(c, Provider, Property, Type, LongOffset, LongLength, Delete, Pending), cookie)
+	return GetProviderPropertyCookie{cookie}
+}
+
+// GetProviderPropertyReply represents the data returned from a GetProviderProperty request.
+type GetProviderPropertyReply struct {
+	Sequence   uint16 // sequence number of the request for this reply
+	Length     uint32 // number of bytes in this reply
+	Format     byte
+	Type       xproto.Atom
+	BytesAfter uint32
+	NumItems   uint32
+	// padding: 12 bytes
+	Data []byte // size: xgb.Pad(((int(NumItems) * (int(Format) / 8)) * 1))
+}
+
+// Reply blocks and returns the reply data for a GetProviderProperty request.
+func (cook GetProviderPropertyCookie) Reply() (*GetProviderPropertyReply, error) {
+	buf, err := cook.Cookie.Reply()
+	if err != nil {
+		return nil, err
+	}
+	if buf == nil {
+		return nil, nil
+	}
+	return getProviderPropertyReply(buf), nil
+}
+
+// getProviderPropertyReply reads a byte slice into a GetProviderPropertyReply value.
+func getProviderPropertyReply(buf []byte) *GetProviderPropertyReply {
+	v := new(GetProviderPropertyReply)
+	b := 1 // skip reply determinant
+
+	v.Format = buf[b]
+	b += 1
+
+	v.Sequence = xgb.Get16(buf[b:])
+	b += 2
+
+	v.Length = xgb.Get32(buf[b:]) // 4-byte units
+	b += 4
+
+	v.Type = xproto.Atom(xgb.Get32(buf[b:]))
+	b += 4
+
+	v.BytesAfter = xgb.Get32(buf[b:])
+	b += 4
+
+	v.NumItems = xgb.Get32(buf[b:])
+	b += 4
+
+	b += 12 // padding
+
+	v.Data = make([]byte, (int(v.NumItems) * (int(v.Format) / 8)))
+	copy(v.Data[:(int(v.NumItems)*(int(v.Format)/8))], buf[b:])
+	b += xgb.Pad(int((int(v.NumItems) * (int(v.Format) / 8))))
+
+	return v
+}
+
+// Write request to wire for GetProviderProperty
+// getProviderPropertyRequest writes a GetProviderProperty request to a byte slice.
+func getProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property xproto.Atom, Type xproto.Atom, LongOffset uint32, LongLength uint32, Delete bool, Pending bool) []byte {
+	size := 28
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["RANDR"]
+	b += 1
+
+	buf[b] = 41 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Provider))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(Property))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(Type))
+	b += 4
+
+	xgb.Put32(buf[b:], LongOffset)
+	b += 4
+
+	xgb.Put32(buf[b:], LongLength)
+	b += 4
+
+	if Delete {
+		buf[b] = 1
+	} else {
+		buf[b] = 0
+	}
+	b += 1
+
+	if Pending {
+		buf[b] = 1
+	} else {
+		buf[b] = 0
+	}
+	b += 1
+
+	b += 2 // padding
+
+	return buf
+}
+
+// GetProvidersCookie is a cookie used only for GetProviders requests.
+type GetProvidersCookie struct {
+	*xgb.Cookie
+}
+
+// GetProviders sends a checked request.
+// If an error occurs, it will be returned with the reply by calling GetProvidersCookie.Reply()
+func GetProviders(c *xgb.Conn, Window xproto.Window) GetProvidersCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'GetProviders' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, true)
+	c.NewRequest(getProvidersRequest(c, Window), cookie)
+	return GetProvidersCookie{cookie}
+}
+
+// GetProvidersUnchecked sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func GetProvidersUnchecked(c *xgb.Conn, Window xproto.Window) GetProvidersCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'GetProviders' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, true)
+	c.NewRequest(getProvidersRequest(c, Window), cookie)
+	return GetProvidersCookie{cookie}
+}
+
+// GetProvidersReply represents the data returned from a GetProviders request.
+type GetProvidersReply struct {
+	Sequence uint16 // sequence number of the request for this reply
+	Length   uint32 // number of bytes in this reply
+	// padding: 1 bytes
+	Timestamp    xproto.Timestamp
+	NumProviders uint16
+	// padding: 18 bytes
+	Providers []Provider // size: xgb.Pad((int(NumProviders) * 4))
+}
+
+// Reply blocks and returns the reply data for a GetProviders request.
+func (cook GetProvidersCookie) Reply() (*GetProvidersReply, error) {
+	buf, err := cook.Cookie.Reply()
+	if err != nil {
+		return nil, err
+	}
+	if buf == nil {
+		return nil, nil
+	}
+	return getProvidersReply(buf), nil
+}
+
+// getProvidersReply reads a byte slice into a GetProvidersReply value.
+func getProvidersReply(buf []byte) *GetProvidersReply {
+	v := new(GetProvidersReply)
+	b := 1 // skip reply determinant
+
+	b += 1 // padding
+
+	v.Sequence = xgb.Get16(buf[b:])
+	b += 2
+
+	v.Length = xgb.Get32(buf[b:]) // 4-byte units
+	b += 4
+
+	v.Timestamp = xproto.Timestamp(xgb.Get32(buf[b:]))
+	b += 4
+
+	v.NumProviders = xgb.Get16(buf[b:])
+	b += 2
+
+	b += 18 // padding
+
+	v.Providers = make([]Provider, v.NumProviders)
+	for i := 0; i < int(v.NumProviders); i++ {
+		v.Providers[i] = Provider(xgb.Get32(buf[b:]))
+		b += 4
+	}
+	b = xgb.Pad(b)
+
+	return v
+}
+
+// Write request to wire for GetProviders
+// getProvidersRequest writes a GetProviders request to a byte slice.
+func getProvidersRequest(c *xgb.Conn, Window xproto.Window) []byte {
+	size := 8
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["RANDR"]
+	b += 1
+
+	buf[b] = 32 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Window))
+	b += 4
+
+	return buf
+}
+
 // GetScreenInfoCookie is a cookie used only for GetScreenInfo requests.
 type GetScreenInfoCookie struct {
 	*xgb.Cookie
@@ -3319,6 +4387,105 @@ func listOutputPropertiesRequest(c *xgb.Conn, Output Output) []byte {
 	return buf
 }
 
+// ListProviderPropertiesCookie is a cookie used only for ListProviderProperties requests.
+type ListProviderPropertiesCookie struct {
+	*xgb.Cookie
+}
+
+// ListProviderProperties sends a checked request.
+// If an error occurs, it will be returned with the reply by calling ListProviderPropertiesCookie.Reply()
+func ListProviderProperties(c *xgb.Conn, Provider Provider) ListProviderPropertiesCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'ListProviderProperties' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, true)
+	c.NewRequest(listProviderPropertiesRequest(c, Provider), cookie)
+	return ListProviderPropertiesCookie{cookie}
+}
+
+// ListProviderPropertiesUnchecked sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func ListProviderPropertiesUnchecked(c *xgb.Conn, Provider Provider) ListProviderPropertiesCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'ListProviderProperties' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, true)
+	c.NewRequest(listProviderPropertiesRequest(c, Provider), cookie)
+	return ListProviderPropertiesCookie{cookie}
+}
+
+// ListProviderPropertiesReply represents the data returned from a ListProviderProperties request.
+type ListProviderPropertiesReply struct {
+	Sequence uint16 // sequence number of the request for this reply
+	Length   uint32 // number of bytes in this reply
+	// padding: 1 bytes
+	NumAtoms uint16
+	// padding: 22 bytes
+	Atoms []xproto.Atom // size: xgb.Pad((int(NumAtoms) * 4))
+}
+
+// Reply blocks and returns the reply data for a ListProviderProperties request.
+func (cook ListProviderPropertiesCookie) Reply() (*ListProviderPropertiesReply, error) {
+	buf, err := cook.Cookie.Reply()
+	if err != nil {
+		return nil, err
+	}
+	if buf == nil {
+		return nil, nil
+	}
+	return listProviderPropertiesReply(buf), nil
+}
+
+// listProviderPropertiesReply reads a byte slice into a ListProviderPropertiesReply value.
+func listProviderPropertiesReply(buf []byte) *ListProviderPropertiesReply {
+	v := new(ListProviderPropertiesReply)
+	b := 1 // skip reply determinant
+
+	b += 1 // padding
+
+	v.Sequence = xgb.Get16(buf[b:])
+	b += 2
+
+	v.Length = xgb.Get32(buf[b:]) // 4-byte units
+	b += 4
+
+	v.NumAtoms = xgb.Get16(buf[b:])
+	b += 2
+
+	b += 22 // padding
+
+	v.Atoms = make([]xproto.Atom, v.NumAtoms)
+	for i := 0; i < int(v.NumAtoms); i++ {
+		v.Atoms[i] = xproto.Atom(xgb.Get32(buf[b:]))
+		b += 4
+	}
+	b = xgb.Pad(b)
+
+	return v
+}
+
+// Write request to wire for ListProviderProperties
+// listProviderPropertiesRequest writes a ListProviderProperties request to a byte slice.
+func listProviderPropertiesRequest(c *xgb.Conn, Provider Provider) []byte {
+	size := 8
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["RANDR"]
+	b += 1
+
+	buf[b] = 36 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Provider))
+	b += 4
+
+	return buf
+}
+
 // QueryOutputPropertyCookie is a cookie used only for QueryOutputProperty requests.
 type QueryOutputPropertyCookie struct {
 	*xgb.Cookie
@@ -3433,6 +4600,128 @@ func queryOutputPropertyRequest(c *xgb.Conn, Output Output, Property xproto.Atom
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Output))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(Property))
+	b += 4
+
+	return buf
+}
+
+// QueryProviderPropertyCookie is a cookie used only for QueryProviderProperty requests.
+type QueryProviderPropertyCookie struct {
+	*xgb.Cookie
+}
+
+// QueryProviderProperty sends a checked request.
+// If an error occurs, it will be returned with the reply by calling QueryProviderPropertyCookie.Reply()
+func QueryProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom) QueryProviderPropertyCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'QueryProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, true)
+	c.NewRequest(queryProviderPropertyRequest(c, Provider, Property), cookie)
+	return QueryProviderPropertyCookie{cookie}
+}
+
+// QueryProviderPropertyUnchecked sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func QueryProviderPropertyUnchecked(c *xgb.Conn, Provider Provider, Property xproto.Atom) QueryProviderPropertyCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'QueryProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, true)
+	c.NewRequest(queryProviderPropertyRequest(c, Provider, Property), cookie)
+	return QueryProviderPropertyCookie{cookie}
+}
+
+// QueryProviderPropertyReply represents the data returned from a QueryProviderProperty request.
+type QueryProviderPropertyReply struct {
+	Sequence uint16 // sequence number of the request for this reply
+	Length   uint32 // number of bytes in this reply
+	// padding: 1 bytes
+	Pending   bool
+	Range     bool
+	Immutable bool
+	// padding: 21 bytes
+	ValidValues []int32 // size: xgb.Pad((int(Length) * 4))
+}
+
+// Reply blocks and returns the reply data for a QueryProviderProperty request.
+func (cook QueryProviderPropertyCookie) Reply() (*QueryProviderPropertyReply, error) {
+	buf, err := cook.Cookie.Reply()
+	if err != nil {
+		return nil, err
+	}
+	if buf == nil {
+		return nil, nil
+	}
+	return queryProviderPropertyReply(buf), nil
+}
+
+// queryProviderPropertyReply reads a byte slice into a QueryProviderPropertyReply value.
+func queryProviderPropertyReply(buf []byte) *QueryProviderPropertyReply {
+	v := new(QueryProviderPropertyReply)
+	b := 1 // skip reply determinant
+
+	b += 1 // padding
+
+	v.Sequence = xgb.Get16(buf[b:])
+	b += 2
+
+	v.Length = xgb.Get32(buf[b:]) // 4-byte units
+	b += 4
+
+	if buf[b] == 1 {
+		v.Pending = true
+	} else {
+		v.Pending = false
+	}
+	b += 1
+
+	if buf[b] == 1 {
+		v.Range = true
+	} else {
+		v.Range = false
+	}
+	b += 1
+
+	if buf[b] == 1 {
+		v.Immutable = true
+	} else {
+		v.Immutable = false
+	}
+	b += 1
+
+	b += 21 // padding
+
+	v.ValidValues = make([]int32, v.Length)
+	for i := 0; i < int(v.Length); i++ {
+		v.ValidValues[i] = int32(xgb.Get32(buf[b:]))
+		b += 4
+	}
+	b = xgb.Pad(b)
+
+	return v
+}
+
+// Write request to wire for QueryProviderProperty
+// queryProviderPropertyRequest writes a QueryProviderProperty request to a byte slice.
+func queryProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property xproto.Atom) []byte {
+	size := 12
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["RANDR"]
+	b += 1
+
+	buf[b] = 37 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Provider))
 	b += 4
 
 	xgb.Put32(buf[b:], uint32(Property))
@@ -4052,6 +5341,128 @@ func setPanningRequest(c *xgb.Conn, Crtc Crtc, Timestamp xproto.Timestamp, Left 
 
 	xgb.Put16(buf[b:], uint16(BorderBottom))
 	b += 2
+
+	return buf
+}
+
+// SetProviderOffloadSinkCookie is a cookie used only for SetProviderOffloadSink requests.
+type SetProviderOffloadSinkCookie struct {
+	*xgb.Cookie
+}
+
+// SetProviderOffloadSink sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func SetProviderOffloadSink(c *xgb.Conn, Provider Provider, SinkProvider Provider, ConfigTimestamp xproto.Timestamp) SetProviderOffloadSinkCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'SetProviderOffloadSink' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, false)
+	c.NewRequest(setProviderOffloadSinkRequest(c, Provider, SinkProvider, ConfigTimestamp), cookie)
+	return SetProviderOffloadSinkCookie{cookie}
+}
+
+// SetProviderOffloadSinkChecked sends a checked request.
+// If an error occurs, it can be retrieved using SetProviderOffloadSinkCookie.Check()
+func SetProviderOffloadSinkChecked(c *xgb.Conn, Provider Provider, SinkProvider Provider, ConfigTimestamp xproto.Timestamp) SetProviderOffloadSinkCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'SetProviderOffloadSink' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, false)
+	c.NewRequest(setProviderOffloadSinkRequest(c, Provider, SinkProvider, ConfigTimestamp), cookie)
+	return SetProviderOffloadSinkCookie{cookie}
+}
+
+// Check returns an error if one occurred for checked requests that are not expecting a reply.
+// This cannot be called for requests expecting a reply, nor for unchecked requests.
+func (cook SetProviderOffloadSinkCookie) Check() error {
+	return cook.Cookie.Check()
+}
+
+// Write request to wire for SetProviderOffloadSink
+// setProviderOffloadSinkRequest writes a SetProviderOffloadSink request to a byte slice.
+func setProviderOffloadSinkRequest(c *xgb.Conn, Provider Provider, SinkProvider Provider, ConfigTimestamp xproto.Timestamp) []byte {
+	size := 16
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["RANDR"]
+	b += 1
+
+	buf[b] = 34 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Provider))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(SinkProvider))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(ConfigTimestamp))
+	b += 4
+
+	return buf
+}
+
+// SetProviderOutputSourceCookie is a cookie used only for SetProviderOutputSource requests.
+type SetProviderOutputSourceCookie struct {
+	*xgb.Cookie
+}
+
+// SetProviderOutputSource sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func SetProviderOutputSource(c *xgb.Conn, Provider Provider, SourceProvider Provider, ConfigTimestamp xproto.Timestamp) SetProviderOutputSourceCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'SetProviderOutputSource' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, false)
+	c.NewRequest(setProviderOutputSourceRequest(c, Provider, SourceProvider, ConfigTimestamp), cookie)
+	return SetProviderOutputSourceCookie{cookie}
+}
+
+// SetProviderOutputSourceChecked sends a checked request.
+// If an error occurs, it can be retrieved using SetProviderOutputSourceCookie.Check()
+func SetProviderOutputSourceChecked(c *xgb.Conn, Provider Provider, SourceProvider Provider, ConfigTimestamp xproto.Timestamp) SetProviderOutputSourceCookie {
+	if _, ok := c.Extensions["RANDR"]; !ok {
+		panic("Cannot issue request 'SetProviderOutputSource' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, false)
+	c.NewRequest(setProviderOutputSourceRequest(c, Provider, SourceProvider, ConfigTimestamp), cookie)
+	return SetProviderOutputSourceCookie{cookie}
+}
+
+// Check returns an error if one occurred for checked requests that are not expecting a reply.
+// This cannot be called for requests expecting a reply, nor for unchecked requests.
+func (cook SetProviderOutputSourceCookie) Check() error {
+	return cook.Cookie.Check()
+}
+
+// Write request to wire for SetProviderOutputSource
+// setProviderOutputSourceRequest writes a SetProviderOutputSource request to a byte slice.
+func setProviderOutputSourceRequest(c *xgb.Conn, Provider Provider, SourceProvider Provider, ConfigTimestamp xproto.Timestamp) []byte {
+	size := 16
+	b := 0
+	buf := make([]byte, size)
+
+	buf[b] = c.Extensions["RANDR"]
+	b += 1
+
+	buf[b] = 35 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(Provider))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(SourceProvider))
+	b += 4
+
+	xgb.Put32(buf[b:], uint32(ConfigTimestamp))
+	b += 4
 
 	return buf
 }

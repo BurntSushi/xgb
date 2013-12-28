@@ -2484,10 +2484,6 @@ func NewFontId(c *xgb.Conn) (Font, error) {
 	return Font(id), nil
 }
 
-const (
-	FontNone = 0
-)
-
 // BadFont is the error number for a BadFont.
 const BadFont = 7
 
@@ -2525,6 +2521,10 @@ func (err FontError) Error() string {
 func init() {
 	xgb.NewErrorFuncs[7] = FontErrorNew
 }
+
+const (
+	FontNone = 0
+)
 
 const (
 	FontDrawLeftToRight = 0
@@ -2733,6 +2733,56 @@ func NewGcontextId(c *xgb.Conn) (Gcontext, error) {
 		return 0, err
 	}
 	return Gcontext(id), nil
+}
+
+// GeGeneric is the event number for a GeGenericEvent.
+const GeGeneric = 35
+
+type GeGenericEvent struct {
+	Sequence uint16
+	// padding: 22 bytes
+}
+
+// GeGenericEventNew constructs a GeGenericEvent value that implements xgb.Event from a byte slice.
+func GeGenericEventNew(buf []byte) xgb.Event {
+	v := GeGenericEvent{}
+	b := 1 // don't read event number
+
+	b += 22 // padding
+
+	return v
+}
+
+// Bytes writes a GeGenericEvent value to a byte slice.
+func (v GeGenericEvent) Bytes() []byte {
+	buf := make([]byte, 32)
+	b := 0
+
+	// write event number
+	buf[b] = 35
+	b += 1
+
+	b += 22 // padding
+
+	return buf
+}
+
+// SequenceId returns the sequence id attached to the GeGeneric event.
+// Events without a sequence number (KeymapNotify) return 0.
+// This is mostly used internally.
+func (v GeGenericEvent) SequenceId() uint16 {
+	return v.Sequence
+}
+
+// String is a rudimentary string representation of GeGenericEvent.
+func (v GeGenericEvent) String() string {
+	fieldVals := make([]string, 0, 1)
+	fieldVals = append(fieldVals, xgb.Sprintf("Sequence: %d", v.Sequence))
+	return "GeGeneric {" + xgb.StringsJoin(fieldVals, ", ") + "}"
+}
+
+func init() {
+	xgb.NewEventFuncs[35] = GeGenericEventNew
 }
 
 const (
