@@ -213,13 +213,13 @@ func (v ExtRange) Bytes() []byte {
 	{
 		structBytes := v.Major.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.Minor.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	return buf
@@ -315,43 +315,43 @@ func (v Range) Bytes() []byte {
 	{
 		structBytes := v.CoreRequests.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.CoreReplies.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.ExtRequests.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.ExtReplies.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.DeliveredEvents.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.DeviceEvents.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.Errors.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	if v.ClientStarted {

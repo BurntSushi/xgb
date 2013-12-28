@@ -570,13 +570,13 @@ func (v Linefix) Bytes() []byte {
 	{
 		structBytes := v.P1.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.P2.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	return buf
@@ -898,7 +898,7 @@ func (v Pictforminfo) Bytes() []byte {
 	{
 		structBytes := v.Direct.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	xgb.Put32(buf[b:], uint32(v.Colormap))
@@ -1382,13 +1382,13 @@ func (v Trap) Bytes() []byte {
 	{
 		structBytes := v.Top.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.Bot.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	return buf
@@ -1456,13 +1456,13 @@ func (v Trapezoid) Bytes() []byte {
 	{
 		structBytes := v.Left.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.Right.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	return buf
@@ -1520,19 +1520,19 @@ func (v Triangle) Bytes() []byte {
 	{
 		structBytes := v.P1.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.P2.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.P3.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	return buf
@@ -2205,7 +2205,7 @@ func createConicalGradientRequest(c *xgb.Conn, Picture Picture, Center Pointfix,
 	{
 		structBytes := Center.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	xgb.Put32(buf[b:], uint32(Angle))
@@ -2402,13 +2402,13 @@ func createLinearGradientRequest(c *xgb.Conn, Picture Picture, P1 Pointfix, P2 P
 	{
 		structBytes := P1.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := P2.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	xgb.Put32(buf[b:], NumStops)
@@ -2549,13 +2549,13 @@ func createRadialGradientRequest(c *xgb.Conn, Picture Picture, Inner Pointfix, O
 	{
 		structBytes := Inner.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := Outer.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	xgb.Put32(buf[b:], uint32(InnerRadius))
@@ -2633,7 +2633,7 @@ func createSolidFillRequest(c *xgb.Conn, Picture Picture, Color Color) []byte {
 	{
 		structBytes := Color.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	return buf
@@ -2699,7 +2699,7 @@ func fillRectanglesRequest(c *xgb.Conn, Op byte, Dst Picture, Color Color, Rects
 	{
 		structBytes := Color.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	b += xproto.RectangleListBytes(buf[b:], Rects)
@@ -3543,7 +3543,7 @@ func setPictureTransformRequest(c *xgb.Conn, Picture Picture, Transform Transfor
 	{
 		structBytes := Transform.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	return buf

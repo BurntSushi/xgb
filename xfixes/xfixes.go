@@ -1801,7 +1801,7 @@ func invertRegionRequest(c *xgb.Conn, Source Region, Bounds xproto.Rectangle, De
 	{
 		structBytes := Bounds.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	xgb.Put32(buf[b:], uint32(Destination))

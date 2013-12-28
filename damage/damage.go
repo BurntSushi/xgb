@@ -162,13 +162,13 @@ func (v NotifyEvent) Bytes() []byte {
 	{
 		structBytes := v.Area.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	{
 		structBytes := v.Geometry.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	return buf

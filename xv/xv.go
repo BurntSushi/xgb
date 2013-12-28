@@ -458,7 +458,7 @@ func (v EncodingInfo) Bytes() []byte {
 	{
 		structBytes := v.Rate.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	copy(buf[b:], v.Name[:v.NameSize])

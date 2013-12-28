@@ -194,7 +194,7 @@ func (v ClientIdValue) Bytes() []byte {
 	{
 		structBytes := v.Spec.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	xgb.Put32(buf[b:], v.Length)
@@ -328,7 +328,7 @@ func (v ResourceSizeSpec) Bytes() []byte {
 	{
 		structBytes := v.Spec.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	xgb.Put32(buf[b:], v.Bytes)
@@ -395,7 +395,7 @@ func (v ResourceSizeValue) Bytes() []byte {
 	{
 		structBytes := v.Size.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	xgb.Put32(buf[b:], v.NumCrossReferences)

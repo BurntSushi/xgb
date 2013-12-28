@@ -467,7 +467,7 @@ func sendRequest(c *xgb.Conn, Event Event, DataType uint32) []byte {
 	{
 		structBytes := Event.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	xgb.Put32(buf[b:], DataType)

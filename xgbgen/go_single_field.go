@@ -152,13 +152,13 @@ func (f *SingleField) Write(c *Context, prefix string) {
 		c.Putln("{")
 		c.Putln("unionBytes := %s%s.Bytes()", prefix, f.SrcName())
 		c.Putln("copy(buf[b:], unionBytes)")
-		c.Putln("b += xgb.Pad(len(unionBytes))")
+		c.Putln("b += len(unionBytes)")
 		c.Putln("}")
 	case *Struct:
 		c.Putln("{")
 		c.Putln("structBytes := %s%s.Bytes()", prefix, f.SrcName())
 		c.Putln("copy(buf[b:], structBytes)")
-		c.Putln("b += xgb.Pad(len(structBytes))")
+		c.Putln("b += len(structBytes)")
 		c.Putln("}")
 	default:
 		log.Fatalf("Cannot read field '%s' with %T type.", f.XmlName(), f.Type)

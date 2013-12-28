@@ -504,15 +504,6 @@ func ModeInfoListBytes(buf []byte, list []ModeInfo) int {
 	return xgb.Pad(b)
 }
 
-const (
-	NotifyCrtcChange       = 0
-	NotifyOutputChange     = 1
-	NotifyOutputProperty   = 2
-	NotifyProviderChange   = 3
-	NotifyProviderProperty = 4
-	NotifyResourceChange   = 5
-)
-
 // Notify is the event number for a NotifyEvent.
 const Notify = 1
 
@@ -556,7 +547,7 @@ func (v NotifyEvent) Bytes() []byte {
 	{
 		unionBytes := v.U.Bytes()
 		copy(buf[b:], unionBytes)
-		b += xgb.Pad(len(unionBytes))
+		b += len(unionBytes)
 	}
 
 	return buf
@@ -580,6 +571,15 @@ func (v NotifyEvent) String() string {
 func init() {
 	xgb.NewExtEventFuncs["RANDR"][1] = NotifyEventNew
 }
+
+const (
+	NotifyCrtcChange       = 0
+	NotifyOutputChange     = 1
+	NotifyOutputProperty   = 2
+	NotifyProviderChange   = 3
+	NotifyProviderProperty = 4
+	NotifyResourceChange   = 5
+)
 
 // NotifyDataUnion is a represention of the NotifyDataUnion union type.
 // Note that to *create* a Union, you should *never* create
@@ -608,7 +608,7 @@ func NotifyDataUnionCcNew(Cc CrtcChange) NotifyDataUnion {
 	{
 		structBytes := Cc.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	// Create the Union type
@@ -651,7 +651,7 @@ func NotifyDataUnionOcNew(Oc OutputChange) NotifyDataUnion {
 	{
 		structBytes := Oc.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	// Create the Union type
@@ -694,7 +694,7 @@ func NotifyDataUnionOpNew(Op OutputProperty) NotifyDataUnion {
 	{
 		structBytes := Op.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	// Create the Union type
@@ -737,7 +737,7 @@ func NotifyDataUnionPcNew(Pc ProviderChange) NotifyDataUnion {
 	{
 		structBytes := Pc.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	// Create the Union type
@@ -780,7 +780,7 @@ func NotifyDataUnionPpNew(Pp ProviderProperty) NotifyDataUnion {
 	{
 		structBytes := Pp.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	// Create the Union type
@@ -823,7 +823,7 @@ func NotifyDataUnionRcNew(Rc ResourceChange) NotifyDataUnion {
 	{
 		structBytes := Rc.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	// Create the Union type
@@ -909,7 +909,7 @@ func (v NotifyDataUnion) Bytes() []byte {
 	{
 		structBytes := v.Cc.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 	return buf
 }
@@ -2133,7 +2133,7 @@ func createModeRequest(c *xgb.Conn, Window xproto.Window, ModeInfo ModeInfo, Nam
 	{
 		structBytes := ModeInfo.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	copy(buf[b:], Name[:len(Name)])
@@ -5139,7 +5139,7 @@ func setCrtcTransformRequest(c *xgb.Conn, Crtc Crtc, Transform render.Transform,
 	{
 		structBytes := Transform.Bytes()
 		copy(buf[b:], structBytes)
-		b += xgb.Pad(len(structBytes))
+		b += len(structBytes)
 	}
 
 	xgb.Put16(buf[b:], FilterLen)

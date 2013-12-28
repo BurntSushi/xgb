@@ -886,7 +886,7 @@ func (v ClientMessageEvent) Bytes() []byte {
 	{
 		unionBytes := v.Data.Bytes()
 		copy(buf[b:], unionBytes)
-		b += xgb.Pad(len(unionBytes))
+		b += len(unionBytes)
 	}
 
 	return buf
