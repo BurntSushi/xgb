@@ -117,7 +117,7 @@ func (u *Union) Write(c *Context) {
 
 func (u *Union) WriteList(c *Context) {
 	c.Putln("// %sListBytes writes a list of %s values to a byte slice.",
-		u.SrcName())
+		u.SrcName(), u.SrcName())
 	c.Putln("func %sListBytes(buf []byte, list []%s) int {",
 		u.SrcName(), u.SrcName())
 	c.Putln("b := 0")

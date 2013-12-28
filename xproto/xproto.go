@@ -1093,7 +1093,7 @@ func (v ClientMessageDataUnion) Bytes() []byte {
 	return buf
 }
 
-// ClientMessageDataUnionListBytes writes a list of %s(MISSING) values to a byte slice.
+// ClientMessageDataUnionListBytes writes a list of ClientMessageDataUnion values to a byte slice.
 func ClientMessageDataUnionListBytes(buf []byte, list []ClientMessageDataUnion) int {
 	b := 0
 	var unionBytes []byte
