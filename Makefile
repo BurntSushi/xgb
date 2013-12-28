@@ -18,9 +18,9 @@ XPROTO=/usr/share/xcb
 all: build-xgbgen \
 		 bigreq.xml composite.xml damage.xml dpms.xml dri2.xml \
 		 ge.xml glx.xml randr.xml record.xml render.xml res.xml \
-		 screensaver.xml shape.xml shm.xml sync.xml xc_misc.xml \
+		 screensaver.xml shape.xml shm.xml xc_misc.xml \
 		 xevie.xml xf86dri.xml xf86vidmode.xml xfixes.xml xinerama.xml \
-		 xinput.xml xprint.xml xproto.xml xselinux.xml xtest.xml \
+		 xprint.xml xproto.xml xselinux.xml xtest.xml \
 		 xvmc.xml xv.xml
 
 build-xgbgen:
@@ -28,8 +28,8 @@ build-xgbgen:
 
 # Builds each individual sub-package to make sure its valid Go code.
 build-all: bigreq.b composite.b damage.b dpms.b dri2.b ge.b glx.b randr.b \
-					 record.b render.b res.b screensaver.b shape.b shm.b sync.b xcmisc.b \
-					 xevie.b xf86dri.b xf86vidmode.b xfixes.b xinerama.b xinput.b \
+					 record.b render.b res.b screensaver.b shape.b shm.b xcmisc.b \
+					 xevie.b xf86dri.b xf86vidmode.b xfixes.b xinerama.b \
 					 xprint.b xproto.b xselinux.b xtest.b xv.b xvmc.b
 
 %.b:
@@ -37,8 +37,8 @@ build-all: bigreq.b composite.b damage.b dpms.b dri2.b ge.b glx.b randr.b \
 
 # Installs each individual sub-package.
 install: bigreq.i composite.i damage.i dpms.i dri2.i ge.i glx.i randr.i \
-					 record.i render.i res.i screensaver.i shape.i shm.i sync.i xcmisc.i \
-					 xevie.i xf86dri.i xf86vidmode.i xfixes.i xinerama.i xinput.i \
+					 record.i render.i res.i screensaver.i shape.i shm.i xcmisc.i \
+					 xevie.i xf86dri.i xf86vidmode.i xfixes.i xinerama.i \
 					 xprint.i xproto.i xselinux.i xtest.i xv.i xvmc.i
 	go install
 
