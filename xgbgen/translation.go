@@ -207,7 +207,7 @@ func (x *XMLRequest) Translate() *Request {
 		Reply:   x.Reply.Translate(),
 	}
 	for _, field := range x.Fields {
-		if field.XMLName.Local == "doc" {
+		if field.XMLName.Local == "doc" || field.XMLName.Local == "fd" {
 			continue
 		}
 		r.Fields = append(r.Fields, field.Translate(r))
@@ -238,7 +238,7 @@ func (x *XMLReply) Translate() *Reply {
 		Fields: make([]Field, 0, len(x.Fields)),
 	}
 	for _, field := range x.Fields {
-		if field.XMLName.Local == "doc" {
+		if field.XMLName.Local == "doc" || field.XMLName.Local == "fd" {
 			continue
 		}
 		r.Fields = append(r.Fields, field.Translate(r))
