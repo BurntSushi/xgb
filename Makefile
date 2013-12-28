@@ -72,3 +72,7 @@ gofmt:
 	gofmt -w *.go xgbgen/*.go examples/*.go examples/*/*.go xproto/xproto_test.go
 	colcheck *.go xgbgen/*.go examples/*.go examples/*/*.go xproto/xproto_test.go
 
+push:
+	git push origin master
+	git push github master
+
