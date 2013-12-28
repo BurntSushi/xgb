@@ -504,6 +504,15 @@ func ModeInfoListBytes(buf []byte, list []ModeInfo) int {
 	return xgb.Pad(b)
 }
 
+const (
+	NotifyCrtcChange       = 0
+	NotifyOutputChange     = 1
+	NotifyOutputProperty   = 2
+	NotifyProviderChange   = 3
+	NotifyProviderProperty = 4
+	NotifyResourceChange   = 5
+)
+
 // Notify is the event number for a NotifyEvent.
 const Notify = 1
 
@@ -571,15 +580,6 @@ func (v NotifyEvent) String() string {
 func init() {
 	xgb.NewExtEventFuncs["RANDR"][1] = NotifyEventNew
 }
-
-const (
-	NotifyCrtcChange       = 0
-	NotifyOutputChange     = 1
-	NotifyOutputProperty   = 2
-	NotifyProviderChange   = 3
-	NotifyProviderProperty = 4
-	NotifyResourceChange   = 5
-)
 
 // NotifyDataUnion is a represention of the NotifyDataUnion union type.
 // Note that to *create* a Union, you should *never* create
@@ -2826,7 +2826,7 @@ func getCrtcTransformReply(buf []byte) *GetCrtcTransformReply {
 		byteString := make([]byte, v.PendingLen)
 		copy(byteString[:v.PendingLen], buf[b:])
 		v.PendingFilterName = string(byteString)
-		b += xgb.Pad(int(v.PendingLen))
+		b += int(v.PendingLen)
 	}
 
 	v.PendingParams = make([]render.Fixed, v.PendingNparams)
@@ -2840,7 +2840,7 @@ func getCrtcTransformReply(buf []byte) *GetCrtcTransformReply {
 		byteString := make([]byte, v.CurrentLen)
 		copy(byteString[:v.CurrentLen], buf[b:])
 		v.CurrentFilterName = string(byteString)
-		b += xgb.Pad(int(v.CurrentLen))
+		b += int(v.CurrentLen)
 	}
 
 	v.CurrentParams = make([]render.Fixed, v.CurrentNparams)
@@ -3518,7 +3518,7 @@ func getProviderInfoReply(buf []byte) *GetProviderInfoReply {
 		byteString := make([]byte, v.NameLen)
 		copy(byteString[:v.NameLen], buf[b:])
 		v.Name = string(byteString)
-		b += xgb.Pad(int(v.NameLen))
+		b += int(v.NameLen)
 	}
 
 	return v

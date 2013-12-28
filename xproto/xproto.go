@@ -5404,7 +5404,7 @@ func SetupAuthenticateRead(buf []byte, v *SetupAuthenticate) int {
 		byteString := make([]byte, (int(v.Length) * 4))
 		copy(byteString[:(int(v.Length)*4)], buf[b:])
 		v.Reason = string(byteString)
-		b += xgb.Pad(int((int(v.Length) * 4)))
+		b += int((int(v.Length) * 4))
 	}
 
 	return b
@@ -5492,7 +5492,7 @@ func SetupFailedRead(buf []byte, v *SetupFailed) int {
 		byteString := make([]byte, v.ReasonLen)
 		copy(byteString[:v.ReasonLen], buf[b:])
 		v.Reason = string(byteString)
-		b += xgb.Pad(int(v.ReasonLen))
+		b += int(v.ReasonLen)
 	}
 
 	return b
@@ -5647,7 +5647,7 @@ func SetupInfoRead(buf []byte, v *SetupInfo) int {
 		byteString := make([]byte, v.VendorLen)
 		copy(byteString[:v.VendorLen], buf[b:])
 		v.Vendor = string(byteString)
-		b += xgb.Pad(int(v.VendorLen))
+		b += int(v.VendorLen)
 	}
 
 	v.PixmapFormats = make([]Format, v.PixmapFormatsLen)
@@ -5802,14 +5802,14 @@ func SetupRequestRead(buf []byte, v *SetupRequest) int {
 		byteString := make([]byte, v.AuthorizationProtocolNameLen)
 		copy(byteString[:v.AuthorizationProtocolNameLen], buf[b:])
 		v.AuthorizationProtocolName = string(byteString)
-		b += xgb.Pad(int(v.AuthorizationProtocolNameLen))
+		b += int(v.AuthorizationProtocolNameLen)
 	}
 
 	{
 		byteString := make([]byte, v.AuthorizationProtocolDataLen)
 		copy(byteString[:v.AuthorizationProtocolDataLen], buf[b:])
 		v.AuthorizationProtocolData = string(byteString)
-		b += xgb.Pad(int(v.AuthorizationProtocolDataLen))
+		b += int(v.AuthorizationProtocolDataLen)
 	}
 
 	return b
@@ -5903,7 +5903,7 @@ func StrRead(buf []byte, v *Str) int {
 		byteString := make([]byte, v.NameLen)
 		copy(byteString[:v.NameLen], buf[b:])
 		v.Name = string(byteString)
-		b += xgb.Pad(int(v.NameLen))
+		b += int(v.NameLen)
 	}
 
 	return b
@@ -9036,7 +9036,7 @@ func getAtomNameReply(buf []byte) *GetAtomNameReply {
 		byteString := make([]byte, v.NameLen)
 		copy(byteString[:v.NameLen], buf[b:])
 		v.Name = string(byteString)
-		b += xgb.Pad(int(v.NameLen))
+		b += int(v.NameLen)
 	}
 
 	return v
@@ -11406,7 +11406,7 @@ func listFontsWithInfoReply(buf []byte) *ListFontsWithInfoReply {
 		byteString := make([]byte, v.NameLen)
 		copy(byteString[:v.NameLen], buf[b:])
 		v.Name = string(byteString)
-		b += xgb.Pad(int(v.NameLen))
+		b += int(v.NameLen)
 	}
 
 	return v

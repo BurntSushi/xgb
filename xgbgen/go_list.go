@@ -29,7 +29,10 @@ func (f *ListField) Read(c *Context, prefix string) {
 			c.Putln("byteString := make([]%s, %s)", t.SrcName(), length)
 			c.Putln("copy(byteString[:%s], buf[b:])", length)
 			c.Putln("%s%s = string(byteString)", prefix, f.SrcName())
-			c.Putln("b += xgb.Pad(int(%s))", length)
+			// This is apparently a special case. The "Str" type itself
+			// doesn't specify any padding. I suppose it's up to the
+			// request/reply spec that uses it to get the padding right?
+			c.Putln("b += int(%s)", length)
 			c.Putln("}")
 		} else if t.SrcName() == "byte" {
 			c.Putln("%s%s = make([]%s, %s)",

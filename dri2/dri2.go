@@ -562,7 +562,7 @@ func connectReply(buf []byte) *ConnectReply {
 		byteString := make([]byte, v.DriverNameLength)
 		copy(byteString[:v.DriverNameLength], buf[b:])
 		v.DriverName = string(byteString)
-		b += xgb.Pad(int(v.DriverNameLength))
+		b += int(v.DriverNameLength)
 	}
 
 	v.AlignmentPad = make([]byte, (((int(v.DriverNameLength) + 3) & -4) - int(v.DriverNameLength)))
@@ -573,7 +573,7 @@ func connectReply(buf []byte) *ConnectReply {
 		byteString := make([]byte, v.DeviceNameLength)
 		copy(byteString[:v.DeviceNameLength], buf[b:])
 		v.DeviceName = string(byteString)
-		b += xgb.Pad(int(v.DeviceNameLength))
+		b += int(v.DeviceNameLength)
 	}
 
 	return v

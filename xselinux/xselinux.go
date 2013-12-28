@@ -62,14 +62,14 @@ func ListItemRead(buf []byte, v *ListItem) int {
 		byteString := make([]byte, v.ObjectContextLen)
 		copy(byteString[:v.ObjectContextLen], buf[b:])
 		v.ObjectContext = string(byteString)
-		b += xgb.Pad(int(v.ObjectContextLen))
+		b += int(v.ObjectContextLen)
 	}
 
 	{
 		byteString := make([]byte, v.DataContextLen)
 		copy(byteString[:v.DataContextLen], buf[b:])
 		v.DataContext = string(byteString)
-		b += xgb.Pad(int(v.DataContextLen))
+		b += int(v.DataContextLen)
 	}
 
 	return b
@@ -224,7 +224,7 @@ func getClientContextReply(buf []byte) *GetClientContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -323,7 +323,7 @@ func getDeviceContextReply(buf []byte) *GetDeviceContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -422,7 +422,7 @@ func getDeviceCreateContextReply(buf []byte) *GetDeviceCreateContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -518,7 +518,7 @@ func getPropertyContextReply(buf []byte) *GetPropertyContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -620,7 +620,7 @@ func getPropertyCreateContextReply(buf []byte) *GetPropertyCreateContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -716,7 +716,7 @@ func getPropertyDataContextReply(buf []byte) *GetPropertyDataContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -818,7 +818,7 @@ func getPropertyUseContextReply(buf []byte) *GetPropertyUseContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -914,7 +914,7 @@ func getSelectionContextReply(buf []byte) *GetSelectionContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -1013,7 +1013,7 @@ func getSelectionCreateContextReply(buf []byte) *GetSelectionCreateContextReply 
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -1109,7 +1109,7 @@ func getSelectionDataContextReply(buf []byte) *GetSelectionDataContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -1208,7 +1208,7 @@ func getSelectionUseContextReply(buf []byte) *GetSelectionUseContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -1304,7 +1304,7 @@ func getWindowContextReply(buf []byte) *GetWindowContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v
@@ -1403,7 +1403,7 @@ func getWindowCreateContextReply(buf []byte) *GetWindowCreateContextReply {
 		byteString := make([]byte, v.ContextLen)
 		copy(byteString[:v.ContextLen], buf[b:])
 		v.Context = string(byteString)
-		b += xgb.Pad(int(v.ContextLen))
+		b += int(v.ContextLen)
 	}
 
 	return v

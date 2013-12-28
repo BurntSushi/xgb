@@ -74,7 +74,7 @@ func AdaptorInfoRead(buf []byte, v *AdaptorInfo) int {
 		byteString := make([]byte, v.NameSize)
 		copy(byteString[:v.NameSize], buf[b:])
 		v.Name = string(byteString)
-		b += xgb.Pad(int(v.NameSize))
+		b += int(v.NameSize)
 	}
 
 	v.Formats = make([]Format, v.NumFormats)
@@ -177,7 +177,7 @@ func AttributeInfoRead(buf []byte, v *AttributeInfo) int {
 		byteString := make([]byte, v.Size)
 		copy(byteString[:v.Size], buf[b:])
 		v.Name = string(byteString)
-		b += xgb.Pad(int(v.Size))
+		b += int(v.Size)
 	}
 
 	return b
@@ -420,7 +420,7 @@ func EncodingInfoRead(buf []byte, v *EncodingInfo) int {
 		byteString := make([]byte, v.NameSize)
 		copy(byteString[:v.NameSize], buf[b:])
 		v.Name = string(byteString)
-		b += xgb.Pad(int(v.NameSize))
+		b += int(v.NameSize)
 	}
 
 	return b

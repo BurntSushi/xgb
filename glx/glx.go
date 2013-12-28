@@ -6885,7 +6885,7 @@ func getStringReply(buf []byte) *GetStringReply {
 		byteString := make([]byte, v.N)
 		copy(byteString[:v.N], buf[b:])
 		v.String = string(byteString)
-		b += xgb.Pad(int(v.N))
+		b += int(v.N)
 	}
 
 	return v
@@ -9174,7 +9174,7 @@ func queryServerStringReply(buf []byte) *QueryServerStringReply {
 		byteString := make([]byte, v.StrLen)
 		copy(byteString[:v.StrLen], buf[b:])
 		v.String = string(byteString)
-		b += xgb.Pad(int(v.StrLen))
+		b += int(v.StrLen)
 	}
 
 	return v

@@ -1543,7 +1543,7 @@ func getMonitorReply(buf []byte) *GetMonitorReply {
 		byteString := make([]byte, v.VendorLength)
 		copy(byteString[:v.VendorLength], buf[b:])
 		v.Vendor = string(byteString)
-		b += xgb.Pad(int(v.VendorLength))
+		b += int(v.VendorLength)
 	}
 
 	v.AlignmentPad = make([]byte, (((int(v.VendorLength) + 3) & -4) - int(v.VendorLength)))
@@ -1554,7 +1554,7 @@ func getMonitorReply(buf []byte) *GetMonitorReply {
 		byteString := make([]byte, v.ModelLength)
 		copy(byteString[:v.ModelLength], buf[b:])
 		v.Model = string(byteString)
-		b += xgb.Pad(int(v.ModelLength))
+		b += int(v.ModelLength)
 	}
 
 	return v

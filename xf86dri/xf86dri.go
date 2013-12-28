@@ -659,7 +659,7 @@ func getClientDriverNameReply(buf []byte) *GetClientDriverNameReply {
 		byteString := make([]byte, v.ClientDriverNameLen)
 		copy(byteString[:v.ClientDriverNameLen], buf[b:])
 		v.ClientDriverName = string(byteString)
-		b += xgb.Pad(int(v.ClientDriverNameLen))
+		b += int(v.ClientDriverNameLen)
 	}
 
 	return v
@@ -1017,7 +1017,7 @@ func openConnectionReply(buf []byte) *OpenConnectionReply {
 		byteString := make([]byte, v.BusIdLen)
 		copy(byteString[:v.BusIdLen], buf[b:])
 		v.BusId = string(byteString)
-		b += xgb.Pad(int(v.BusIdLen))
+		b += int(v.BusIdLen)
 	}
 
 	return v

@@ -1495,7 +1495,7 @@ func getCursorImageAndNameReply(buf []byte) *GetCursorImageAndNameReply {
 		byteString := make([]byte, v.Nbytes)
 		copy(byteString[:v.Nbytes], buf[b:])
 		v.Name = string(byteString)
-		b += xgb.Pad(int(v.Nbytes))
+		b += int(v.Nbytes)
 	}
 
 	v.CursorImage = make([]uint32, (int(v.Width) * int(v.Height)))
@@ -1602,7 +1602,7 @@ func getCursorNameReply(buf []byte) *GetCursorNameReply {
 		byteString := make([]byte, v.Nbytes)
 		copy(byteString[:v.Nbytes], buf[b:])
 		v.Name = string(byteString)
-		b += xgb.Pad(int(v.Nbytes))
+		b += int(v.Nbytes)
 	}
 
 	return v
