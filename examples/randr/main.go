@@ -45,10 +45,12 @@ func main() {
 			log.Fatal(err)
 		}
 
-		bestMode := info.Modes[0]
-		for _, mode := range resources.Modes {
-			if mode.Id == uint32(bestMode) {
-				fmt.Printf("Width: %d, Height: %d\n", mode.Width, mode.Height)
+		if info.Connection == randr.ConnectionConnected {
+			bestMode := info.Modes[0]
+			for _, mode := range resources.Modes {
+				if mode.Id == uint32(bestMode) {
+					fmt.Printf("Width: %d, Height: %d\n", mode.Width, mode.Height)
+				}
 			}
 		}
 	}
