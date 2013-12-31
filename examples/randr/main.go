@@ -45,7 +45,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		if len(info.Modes) > 0 {
+		if info.Connection == randr.ConnectionConnected {
 			bestMode := info.Modes[0]
 			for _, mode := range resources.Modes {
 				if mode.Id == uint32(bestMode) {
