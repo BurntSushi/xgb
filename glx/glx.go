@@ -1097,7 +1097,6 @@ func areTexturesResidentReply(buf []byte) *AreTexturesResidentReply {
 		}
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -1128,7 +1127,6 @@ func areTexturesResidentRequest(c *xgb.Conn, ContextTag ContextTag, N int32, Tex
 		xgb.Put32(buf[b:], Textures[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -1192,7 +1190,6 @@ func changeDrawableAttributesRequest(c *xgb.Conn, Drawable Drawable, NumAttribs 
 		xgb.Put32(buf[b:], Attribs[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -1256,7 +1253,7 @@ func clientInfoRequest(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32, St
 	b += 4
 
 	copy(buf[b:], String[:StrLen])
-	b += xgb.Pad(int(StrLen))
+	b += int(StrLen)
 
 	return buf
 }
@@ -1475,7 +1472,6 @@ func createContextAttribsARBRequest(c *xgb.Conn, Context Context, Fbconfig Fbcon
 		xgb.Put32(buf[b:], Attribs[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -1685,7 +1681,6 @@ func createPbufferRequest(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Pbuffer
 		xgb.Put32(buf[b:], Attribs[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -1758,7 +1753,6 @@ func createPixmapRequest(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Pixmap x
 		xgb.Put32(buf[b:], Attribs[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -1831,7 +1825,6 @@ func createWindowRequest(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Window x
 		xgb.Put32(buf[b:], Attribs[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -1956,7 +1949,6 @@ func deleteQueriesARBRequest(c *xgb.Conn, ContextTag ContextTag, N int32, Ids []
 		xgb.Put32(buf[b:], Ids[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -2020,7 +2012,6 @@ func deleteTexturesRequest(c *xgb.Conn, ContextTag ContextTag, N int32, Textures
 		xgb.Put32(buf[b:], Textures[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -2714,7 +2705,6 @@ func genQueriesARBReply(buf []byte) *GenQueriesARBReply {
 		v.Data[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -2812,7 +2802,6 @@ func genTexturesReply(buf []byte) *GenTexturesReply {
 		v.Data[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -2929,7 +2918,6 @@ func getBooleanvReply(buf []byte) *GetBooleanvReply {
 		}
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -3027,7 +3015,6 @@ func getClipPlaneReply(buf []byte) *GetClipPlaneReply {
 		v.Data[i] = Float64(xgb.Get64(buf[b:]))
 		b += 8
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -3129,7 +3116,7 @@ func getColorTableReply(buf []byte) *GetColorTableReply {
 
 	v.Data = make([]byte, (int(v.Length) * 4))
 	copy(v.Data[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -3251,7 +3238,6 @@ func getColorTableParameterfvReply(buf []byte) *GetColorTableParameterfvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -3363,7 +3349,6 @@ func getColorTableParameterivReply(buf []byte) *GetColorTableParameterivReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -3468,7 +3453,7 @@ func getCompressedTexImageARBReply(buf []byte) *GetCompressedTexImageARBReply {
 
 	v.Data = make([]byte, (int(v.Length) * 4))
 	copy(v.Data[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -3577,7 +3562,7 @@ func getConvolutionFilterReply(buf []byte) *GetConvolutionFilterReply {
 
 	v.Data = make([]byte, (int(v.Length) * 4))
 	copy(v.Data[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -3699,7 +3684,6 @@ func getConvolutionParameterfvReply(buf []byte) *GetConvolutionParameterfvReply 
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -3811,7 +3795,6 @@ func getConvolutionParameterivReply(buf []byte) *GetConvolutionParameterivReply 
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -3923,7 +3906,6 @@ func getDoublevReply(buf []byte) *GetDoublevReply {
 		v.Data[i] = Float64(xgb.Get64(buf[b:]))
 		b += 8
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -4025,7 +4007,6 @@ func getDrawableAttributesReply(buf []byte) *GetDrawableAttributesReply {
 		v.Attribs[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -4216,7 +4197,6 @@ func getFBConfigsReply(buf []byte) *GetFBConfigsReply {
 		v.PropertyList[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -4322,7 +4302,6 @@ func getFloatvReply(buf []byte) *GetFloatvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -4424,7 +4403,7 @@ func getHistogramReply(buf []byte) *GetHistogramReply {
 
 	v.Data = make([]byte, (int(v.Length) * 4))
 	copy(v.Data[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -4553,7 +4532,6 @@ func getHistogramParameterfvReply(buf []byte) *GetHistogramParameterfvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -4665,7 +4643,6 @@ func getHistogramParameterivReply(buf []byte) *GetHistogramParameterivReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -4777,7 +4754,6 @@ func getIntegervReply(buf []byte) *GetIntegervReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -4886,7 +4862,6 @@ func getLightfvReply(buf []byte) *GetLightfvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -4998,7 +4973,6 @@ func getLightivReply(buf []byte) *GetLightivReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -5110,7 +5084,6 @@ func getMapdvReply(buf []byte) *GetMapdvReply {
 		v.Data[i] = Float64(xgb.Get64(buf[b:]))
 		b += 8
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -5222,7 +5195,6 @@ func getMapfvReply(buf []byte) *GetMapfvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -5334,7 +5306,6 @@ func getMapivReply(buf []byte) *GetMapivReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -5446,7 +5417,6 @@ func getMaterialfvReply(buf []byte) *GetMaterialfvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -5558,7 +5528,6 @@ func getMaterialivReply(buf []byte) *GetMaterialivReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -5656,7 +5625,7 @@ func getMinmaxReply(buf []byte) *GetMinmaxReply {
 
 	v.Data = make([]byte, (int(v.Length) * 4))
 	copy(v.Data[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -5785,7 +5754,6 @@ func getMinmaxParameterfvReply(buf []byte) *GetMinmaxParameterfvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -5897,7 +5865,6 @@ func getMinmaxParameterivReply(buf []byte) *GetMinmaxParameterivReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -6009,7 +5976,6 @@ func getPixelMapfvReply(buf []byte) *GetPixelMapfvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -6118,7 +6084,6 @@ func getPixelMapuivReply(buf []byte) *GetPixelMapuivReply {
 		v.Data[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -6227,7 +6192,6 @@ func getPixelMapusvReply(buf []byte) *GetPixelMapusvReply {
 		v.Data[i] = xgb.Get16(buf[b:])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -6322,7 +6286,7 @@ func getPolygonStippleReply(buf []byte) *GetPolygonStippleReply {
 
 	v.Data = make([]byte, (int(v.Length) * 4))
 	copy(v.Data[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -6435,7 +6399,6 @@ func getQueryObjectivARBReply(buf []byte) *GetQueryObjectivARBReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -6547,7 +6510,6 @@ func getQueryObjectuivARBReply(buf []byte) *GetQueryObjectuivARBReply {
 		v.Data[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -6659,7 +6621,6 @@ func getQueryivARBReply(buf []byte) *GetQueryivARBReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -6768,7 +6729,7 @@ func getSeparableFilterReply(buf []byte) *GetSeparableFilterReply {
 
 	v.RowsAndCols = make([]byte, (int(v.Length) * 4))
 	copy(v.RowsAndCols[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -6995,7 +6956,6 @@ func getTexEnvfvReply(buf []byte) *GetTexEnvfvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -7107,7 +7067,6 @@ func getTexEnvivReply(buf []byte) *GetTexEnvivReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -7219,7 +7178,6 @@ func getTexGendvReply(buf []byte) *GetTexGendvReply {
 		v.Data[i] = Float64(xgb.Get64(buf[b:]))
 		b += 8
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -7331,7 +7289,6 @@ func getTexGenfvReply(buf []byte) *GetTexGenfvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -7443,7 +7400,6 @@ func getTexGenivReply(buf []byte) *GetTexGenivReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -7556,7 +7512,7 @@ func getTexImageReply(buf []byte) *GetTexImageReply {
 
 	v.Data = make([]byte, (int(v.Length) * 4))
 	copy(v.Data[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -7681,7 +7637,6 @@ func getTexLevelParameterfvReply(buf []byte) *GetTexLevelParameterfvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -7796,7 +7751,6 @@ func getTexLevelParameterivReply(buf []byte) *GetTexLevelParameterivReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -7911,7 +7865,6 @@ func getTexParameterfvReply(buf []byte) *GetTexParameterfvReply {
 		v.Data[i] = Float32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -8023,7 +7976,6 @@ func getTexParameterivReply(buf []byte) *GetTexParameterivReply {
 		v.Data[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -8132,7 +8084,6 @@ func getVisualConfigsReply(buf []byte) *GetVisualConfigsReply {
 		v.PropertyList[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -8979,7 +8930,6 @@ func queryContextReply(buf []byte) *QueryContextReply {
 		v.Attribs[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -9368,7 +9318,7 @@ func readPixelsReply(buf []byte) *ReadPixelsReply {
 
 	v.Data = make([]byte, (int(v.Length) * 4))
 	copy(v.Data[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -9480,7 +9430,7 @@ func renderRequest(c *xgb.Conn, ContextTag ContextTag, Data []byte) []byte {
 	b += 4
 
 	copy(buf[b:], Data[:len(Data)])
-	b += xgb.Pad(int(len(Data)))
+	b += int(len(Data))
 
 	return buf
 }
@@ -9547,7 +9497,7 @@ func renderLargeRequest(c *xgb.Conn, ContextTag ContextTag, RequestNum uint16, R
 	b += 4
 
 	copy(buf[b:], Data[:DataLen])
-	b += xgb.Pad(int(DataLen))
+	b += int(DataLen)
 
 	return buf
 }
@@ -9632,7 +9582,6 @@ func renderModeReply(buf []byte) *RenderModeReply {
 		v.Data[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -9788,13 +9737,12 @@ func setClientInfo2ARBRequest(c *xgb.Conn, MajorVersion uint32, MinorVersion uin
 		xgb.Put32(buf[b:], GlVersions[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	copy(buf[b:], GlExtensionString[:GlStrLen])
-	b += xgb.Pad(int(GlStrLen))
+	b += int(GlStrLen)
 
 	copy(buf[b:], GlxExtensionString[:GlxStrLen])
-	b += xgb.Pad(int(GlxStrLen))
+	b += int(GlxStrLen)
 
 	return buf
 }
@@ -9867,13 +9815,12 @@ func setClientInfoARBRequest(c *xgb.Conn, MajorVersion uint32, MinorVersion uint
 		xgb.Put32(buf[b:], GlVersions[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	copy(buf[b:], GlExtensionString[:GlStrLen])
-	b += xgb.Pad(int(GlStrLen))
+	b += int(GlStrLen)
 
 	copy(buf[b:], GlxExtensionString[:GlxStrLen])
-	b += xgb.Pad(int(GlxStrLen))
+	b += int(GlxStrLen)
 
 	return buf
 }
@@ -10059,7 +10006,7 @@ func vendorPrivateRequest(c *xgb.Conn, VendorCode uint32, ContextTag ContextTag,
 	b += 4
 
 	copy(buf[b:], Data[:len(Data)])
-	b += xgb.Pad(int(len(Data)))
+	b += int(len(Data))
 
 	return buf
 }
@@ -10131,11 +10078,11 @@ func vendorPrivateWithReplyReply(buf []byte) *VendorPrivateWithReplyReply {
 
 	v.Data1 = make([]byte, 24)
 	copy(v.Data1[:24], buf[b:])
-	b += xgb.Pad(int(24))
+	b += int(24)
 
 	v.Data2 = make([]byte, (int(v.Length) * 4))
 	copy(v.Data2[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -10163,7 +10110,7 @@ func vendorPrivateWithReplyRequest(c *xgb.Conn, VendorCode uint32, ContextTag Co
 	b += 4
 
 	copy(buf[b:], Data[:len(Data)])
-	b += xgb.Pad(int(len(Data)))
+	b += int(len(Data))
 
 	return buf
 }

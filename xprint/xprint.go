@@ -336,7 +336,6 @@ func PrinterRead(buf []byte, v *Printer) int {
 		v.Name[i] = String8(buf[b])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	v.DescLen = xgb.Get32(buf[b:])
 	b += 4
@@ -346,7 +345,6 @@ func PrinterRead(buf []byte, v *Printer) int {
 		v.Description[i] = String8(buf[b])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	return b
 }
@@ -373,7 +371,6 @@ func (v Printer) Bytes() []byte {
 		buf[b] = byte(v.Name[i])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	xgb.Put32(buf[b:], v.DescLen)
 	b += 4
@@ -382,9 +379,8 @@ func (v Printer) Bytes() []byte {
 		buf[b] = byte(v.Description[i])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
-	return buf
+	return buf[:b]
 }
 
 // PrinterListBytes writes a list of Printer values to a byte slice.
@@ -496,13 +492,11 @@ func createContextRequest(c *xgb.Conn, ContextId uint32, PrinterNameLen uint32, 
 		buf[b] = byte(PrinterName[i])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	for i := 0; i < int(LocaleLen); i++ {
 		buf[b] = byte(Locale[i])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -1003,7 +997,7 @@ func printGetDocumentDataReply(buf []byte) *PrintGetDocumentDataReply {
 
 	v.Data = make([]byte, v.DataLen)
 	copy(v.Data[:v.DataLen], buf[b:])
-	b += xgb.Pad(int(v.DataLen))
+	b += int(v.DataLen)
 
 	return v
 }
@@ -1193,7 +1187,6 @@ func printGetOneAttributesReply(buf []byte) *PrintGetOneAttributesReply {
 		v.Value[i] = String8(buf[b])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -1229,7 +1222,6 @@ func printGetOneAttributesRequest(c *xgb.Conn, Context Pcontext, NameLen uint32,
 		buf[b] = byte(Name[i])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -1441,13 +1433,11 @@ func printGetPrinterListRequest(c *xgb.Conn, PrinterNameLen uint32, LocaleLen ui
 		buf[b] = byte(PrinterName[i])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	for i := 0; i < int(LocaleLen); i++ {
 		buf[b] = byte(Locale[i])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -1707,19 +1697,17 @@ func printPutDocumentDataRequest(c *xgb.Conn, Drawable xproto.Drawable, LenData 
 	b += 2
 
 	copy(buf[b:], Data[:LenData])
-	b += xgb.Pad(int(LenData))
+	b += int(LenData)
 
 	for i := 0; i < int(len(DocFormat)); i++ {
 		buf[b] = byte(DocFormat[i])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	for i := 0; i < int(len(Options)); i++ {
 		buf[b] = byte(Options[i])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -1796,7 +1784,6 @@ func printQueryScreensReply(buf []byte) *PrintQueryScreensReply {
 		v.Roots[i] = xproto.Window(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -2091,7 +2078,6 @@ func printSetAttributesRequest(c *xgb.Conn, Context Pcontext, StringLen uint32, 
 		buf[b] = byte(Attributes[i])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }

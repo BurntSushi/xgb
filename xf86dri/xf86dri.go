@@ -90,7 +90,7 @@ func (v DrmClipRect) Bytes() []byte {
 	xgb.Put16(buf[b:], uint16(v.X3))
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // DrmClipRectListBytes writes a list of DrmClipRect values to a byte slice.
@@ -776,7 +776,6 @@ func getDeviceInfoReply(buf []byte) *GetDeviceInfoReply {
 		v.DevicePrivate[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -846,7 +845,8 @@ type GetDrawableInfoReply struct {
 	BackY              int16
 	NumBackClipRects   uint32
 	ClipRects          []DrmClipRect // size: xgb.Pad((int(NumClipRects) * 8))
-	BackClipRects      []DrmClipRect // size: xgb.Pad((int(NumBackClipRects) * 8))
+	// alignment gap to multiple of 4
+	BackClipRects []DrmClipRect // size: xgb.Pad((int(NumBackClipRects) * 8))
 }
 
 // Reply blocks and returns the reply data for a GetDrawableInfo request.
@@ -906,6 +906,8 @@ func getDrawableInfoReply(buf []byte) *GetDrawableInfoReply {
 
 	v.ClipRects = make([]DrmClipRect, v.NumClipRects)
 	b += DrmClipRectReadList(buf[b:], v.ClipRects)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.BackClipRects = make([]DrmClipRect, v.NumBackClipRects)
 	b += DrmClipRectReadList(buf[b:], v.BackClipRects)

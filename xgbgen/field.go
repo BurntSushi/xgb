@@ -50,6 +50,7 @@ func (pad *PadField) Initialize(p *Protocol) {}
 // It is also used in size calculation.
 type PadField struct {
 	Bytes uint
+	Align uint16
 }
 
 func (p *PadField) SrcName() string {
@@ -65,7 +66,11 @@ func (f *PadField) SrcType() string {
 }
 
 func (p *PadField) Size() Size {
-	return newFixedSize(p.Bytes)
+	if p.Align > 0 {
+		return newFixedSize(uint(p.Align), false)
+	} else {
+		return newFixedSize(p.Bytes, true)
+	}
 }
 
 // SingleField represents most of the fields in an XML protocol description.
@@ -130,9 +135,9 @@ func (f *ListField) Length() Size {
 			Expr: &FieldRef{
 				Name: f.SrcName(),
 			},
-		})
+		}, true)
 	}
-	return newExpressionSize(f.LengthExpr)
+	return newExpressionSize(f.LengthExpr, true)
 }
 
 // Size computes the *size* of a list (in bytes).
@@ -142,8 +147,9 @@ func (f *ListField) Length() Size {
 // special function written in go_struct.go to compute the size (since the
 // size in this case can only be computed recursively).
 func (f *ListField) Size() Size {
+	elsz := f.Type.Size()
 	simpleLen := &Padding{
-		Expr: newBinaryOp("*", f.Length().Expression, f.Type.Size().Expression),
+		Expr: newBinaryOp("*", f.Length().Expression, elsz.Expression),
 	}
 
 	switch field := f.Type.(type) {
@@ -153,18 +159,18 @@ func (f *ListField) Size() Size {
 				Name: fmt.Sprintf("%sListSize", f.Type.SrcName()),
 				Expr: &FieldRef{Name: f.SrcName()},
 			}
-			return newExpressionSize(sizeFun)
+			return newExpressionSize(sizeFun, elsz.exact)
 		} else {
-			return newExpressionSize(simpleLen)
+			return newExpressionSize(simpleLen, elsz.exact)
 		}
 	case *Union:
-		return newExpressionSize(simpleLen)
+		return newExpressionSize(simpleLen, elsz.exact)
 	case *Base:
-		return newExpressionSize(simpleLen)
+		return newExpressionSize(simpleLen, elsz.exact)
 	case *Resource:
-		return newExpressionSize(simpleLen)
+		return newExpressionSize(simpleLen, elsz.exact)
 	case *TypeDef:
-		return newExpressionSize(simpleLen)
+		return newExpressionSize(simpleLen, elsz.exact)
 	default:
 		log.Panicf("Cannot compute list size with type '%T'.", f.Type)
 	}
@@ -258,7 +264,7 @@ func (f *ValueField) Size() Size {
 				},
 			},
 		},
-	})
+	}, true)
 	return maskSize.Add(listSize)
 }
 
@@ -270,7 +276,7 @@ func (f *ValueField) ListLength() Size {
 				Name: f.MaskName,
 			},
 		},
-	})
+	}, true)
 }
 
 func (f *ValueField) Initialize(p *Protocol) {
@@ -303,7 +309,7 @@ func (f *SwitchField) SrcType() string {
 // expression that finds *which* bitcase fields are included, and sums the
 // sizes of those fields.
 func (f *SwitchField) Size() Size {
-	return newFixedSize(0)
+	return newFixedSize(0, true)
 }
 
 func (f *SwitchField) Initialize(p *Protocol) {

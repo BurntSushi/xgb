@@ -76,7 +76,7 @@ func (v Animcursorelt) Bytes() []byte {
 	xgb.Put32(buf[b:], v.Delay)
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // AnimcursoreltListBytes writes a list of Animcursorelt values to a byte slice.
@@ -144,7 +144,7 @@ func (v Color) Bytes() []byte {
 	xgb.Put16(buf[b:], v.Alpha)
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // ColorListBytes writes a list of Color values to a byte slice.
@@ -256,7 +256,7 @@ func (v Directformat) Bytes() []byte {
 	xgb.Put16(buf[b:], v.AlphaMask)
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // DirectformatListBytes writes a list of Directformat values to a byte slice.
@@ -434,7 +434,7 @@ func (v Glyphinfo) Bytes() []byte {
 	xgb.Put16(buf[b:], uint16(v.YOff))
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // GlyphinfoListBytes writes a list of Glyphinfo values to a byte slice.
@@ -519,7 +519,7 @@ func (v Indexvalue) Bytes() []byte {
 	xgb.Put16(buf[b:], v.Alpha)
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // IndexvalueListBytes writes a list of Indexvalue values to a byte slice.
@@ -579,7 +579,7 @@ func (v Linefix) Bytes() []byte {
 		b += len(structBytes)
 	}
 
-	return buf
+	return buf[:b]
 }
 
 // LinefixListBytes writes a list of Linefix values to a byte slice.
@@ -802,7 +802,7 @@ func (v Pictdepth) Bytes() []byte {
 
 	b += PictvisualListBytes(buf[b:], v.Visuals)
 
-	return buf
+	return buf[:b]
 }
 
 // PictdepthListBytes writes a list of Pictdepth values to a byte slice.
@@ -904,7 +904,7 @@ func (v Pictforminfo) Bytes() []byte {
 	xgb.Put32(buf[b:], uint32(v.Colormap))
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // PictforminfoListBytes writes a list of Pictforminfo values to a byte slice.
@@ -964,7 +964,7 @@ func (v Pictscreen) Bytes() []byte {
 
 	b += PictdepthListBytes(buf[b:], v.Depths)
 
-	return buf
+	return buf[:b]
 }
 
 // PictscreenListBytes writes a list of Pictscreen values to a byte slice.
@@ -1087,7 +1087,7 @@ func (v Pictvisual) Bytes() []byte {
 	xgb.Put32(buf[b:], uint32(v.Format))
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // PictvisualListBytes writes a list of Pictvisual values to a byte slice.
@@ -1141,7 +1141,7 @@ func (v Pointfix) Bytes() []byte {
 	xgb.Put32(buf[b:], uint32(v.Y))
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // PointfixListBytes writes a list of Pointfix values to a byte slice.
@@ -1219,7 +1219,7 @@ func (v Spanfix) Bytes() []byte {
 	xgb.Put32(buf[b:], uint32(v.Y))
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // SpanfixListBytes writes a list of Spanfix values to a byte slice.
@@ -1331,7 +1331,7 @@ func (v Transform) Bytes() []byte {
 	xgb.Put32(buf[b:], uint32(v.Matrix33))
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // TransformListBytes writes a list of Transform values to a byte slice.
@@ -1391,7 +1391,7 @@ func (v Trap) Bytes() []byte {
 		b += len(structBytes)
 	}
 
-	return buf
+	return buf[:b]
 }
 
 // TrapListBytes writes a list of Trap values to a byte slice.
@@ -1465,7 +1465,7 @@ func (v Trapezoid) Bytes() []byte {
 		b += len(structBytes)
 	}
 
-	return buf
+	return buf[:b]
 }
 
 // TrapezoidListBytes writes a list of Trapezoid values to a byte slice.
@@ -1535,7 +1535,7 @@ func (v Triangle) Bytes() []byte {
 		b += len(structBytes)
 	}
 
-	return buf
+	return buf[:b]
 }
 
 // TriangleListBytes writes a list of Triangle values to a byte slice.
@@ -1610,7 +1610,7 @@ func (cook AddGlyphsCookie) Check() error {
 // Write request to wire for AddGlyphs
 // addGlyphsRequest writes a AddGlyphs request to a byte slice.
 func addGlyphsRequest(c *xgb.Conn, Glyphset Glyphset, GlyphsLen uint32, Glyphids []uint32, Glyphs []Glyphinfo, Data []byte) []byte {
-	size := xgb.Pad((((12 + xgb.Pad((int(GlyphsLen) * 4))) + xgb.Pad((int(GlyphsLen) * 12))) + xgb.Pad((len(Data) * 1))))
+	size := xgb.Pad(((((12 + xgb.Pad((int(GlyphsLen) * 4))) + 4) + xgb.Pad((int(GlyphsLen) * 12))) + xgb.Pad((len(Data) * 1))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -1620,7 +1620,7 @@ func addGlyphsRequest(c *xgb.Conn, Glyphset Glyphset, GlyphsLen uint32, Glyphids
 	buf[b] = 20 // request opcode
 	b += 1
 
-	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	blen := b
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Glyphset))
@@ -1633,14 +1633,17 @@ func addGlyphsRequest(c *xgb.Conn, Glyphset Glyphset, GlyphsLen uint32, Glyphids
 		xgb.Put32(buf[b:], Glyphids[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	b += GlyphinfoListBytes(buf[b:], Glyphs)
 
 	copy(buf[b:], Data[:len(Data)])
-	b += xgb.Pad(int(len(Data)))
+	b += int(len(Data))
 
-	return buf
+	b = xgb.Pad(b)
+	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
+	return buf[:b]
 }
 
 // AddTrapsCookie is a cookie used only for AddTraps requests.
@@ -1932,7 +1935,7 @@ func compositeGlyphs16Request(c *xgb.Conn, Op byte, Src Picture, Dst Picture, Ma
 	b += 2
 
 	copy(buf[b:], Glyphcmds[:len(Glyphcmds)])
-	b += xgb.Pad(int(len(Glyphcmds)))
+	b += int(len(Glyphcmds))
 
 	return buf
 }
@@ -2010,7 +2013,7 @@ func compositeGlyphs32Request(c *xgb.Conn, Op byte, Src Picture, Dst Picture, Ma
 	b += 2
 
 	copy(buf[b:], Glyphcmds[:len(Glyphcmds)])
-	b += xgb.Pad(int(len(Glyphcmds)))
+	b += int(len(Glyphcmds))
 
 	return buf
 }
@@ -2088,7 +2091,7 @@ func compositeGlyphs8Request(c *xgb.Conn, Op byte, Src Picture, Dst Picture, Mas
 	b += 2
 
 	copy(buf[b:], Glyphcmds[:len(Glyphcmds)])
-	b += xgb.Pad(int(len(Glyphcmds)))
+	b += int(len(Glyphcmds))
 
 	return buf
 }
@@ -2186,7 +2189,7 @@ func (cook CreateConicalGradientCookie) Check() error {
 // Write request to wire for CreateConicalGradient
 // createConicalGradientRequest writes a CreateConicalGradient request to a byte slice.
 func createConicalGradientRequest(c *xgb.Conn, Picture Picture, Center Pointfix, Angle Fixed, NumStops uint32, Stops []Fixed, Colors []Color) []byte {
-	size := xgb.Pad(((24 + xgb.Pad((int(NumStops) * 4))) + xgb.Pad((int(NumStops) * 8))))
+	size := xgb.Pad((((24 + xgb.Pad((int(NumStops) * 4))) + 4) + xgb.Pad((int(NumStops) * 8))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -2196,7 +2199,7 @@ func createConicalGradientRequest(c *xgb.Conn, Picture Picture, Center Pointfix,
 	buf[b] = 36 // request opcode
 	b += 1
 
-	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	blen := b
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Picture))
@@ -2218,11 +2221,14 @@ func createConicalGradientRequest(c *xgb.Conn, Picture Picture, Center Pointfix,
 		xgb.Put32(buf[b:], uint32(Stops[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	b += ColorListBytes(buf[b:], Colors)
 
-	return buf
+	b = xgb.Pad(b)
+	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
+	return buf[:b]
 }
 
 // CreateCursorCookie is a cookie used only for CreateCursor requests.
@@ -2383,7 +2389,7 @@ func (cook CreateLinearGradientCookie) Check() error {
 // Write request to wire for CreateLinearGradient
 // createLinearGradientRequest writes a CreateLinearGradient request to a byte slice.
 func createLinearGradientRequest(c *xgb.Conn, Picture Picture, P1 Pointfix, P2 Pointfix, NumStops uint32, Stops []Fixed, Colors []Color) []byte {
-	size := xgb.Pad(((28 + xgb.Pad((int(NumStops) * 4))) + xgb.Pad((int(NumStops) * 8))))
+	size := xgb.Pad((((28 + xgb.Pad((int(NumStops) * 4))) + 4) + xgb.Pad((int(NumStops) * 8))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -2393,7 +2399,7 @@ func createLinearGradientRequest(c *xgb.Conn, Picture Picture, P1 Pointfix, P2 P
 	buf[b] = 34 // request opcode
 	b += 1
 
-	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	blen := b
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Picture))
@@ -2418,11 +2424,14 @@ func createLinearGradientRequest(c *xgb.Conn, Picture Picture, P1 Pointfix, P2 P
 		xgb.Put32(buf[b:], uint32(Stops[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	b += ColorListBytes(buf[b:], Colors)
 
-	return buf
+	b = xgb.Pad(b)
+	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
+	return buf[:b]
 }
 
 // CreatePictureCookie is a cookie used only for CreatePicture requests.
@@ -2530,7 +2539,7 @@ func (cook CreateRadialGradientCookie) Check() error {
 // Write request to wire for CreateRadialGradient
 // createRadialGradientRequest writes a CreateRadialGradient request to a byte slice.
 func createRadialGradientRequest(c *xgb.Conn, Picture Picture, Inner Pointfix, Outer Pointfix, InnerRadius Fixed, OuterRadius Fixed, NumStops uint32, Stops []Fixed, Colors []Color) []byte {
-	size := xgb.Pad(((36 + xgb.Pad((int(NumStops) * 4))) + xgb.Pad((int(NumStops) * 8))))
+	size := xgb.Pad((((36 + xgb.Pad((int(NumStops) * 4))) + 4) + xgb.Pad((int(NumStops) * 8))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -2540,7 +2549,7 @@ func createRadialGradientRequest(c *xgb.Conn, Picture Picture, Inner Pointfix, O
 	buf[b] = 35 // request opcode
 	b += 1
 
-	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	blen := b
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Picture))
@@ -2571,11 +2580,14 @@ func createRadialGradientRequest(c *xgb.Conn, Picture Picture, Inner Pointfix, O
 		xgb.Put32(buf[b:], uint32(Stops[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	b += ColorListBytes(buf[b:], Colors)
 
-	return buf
+	b = xgb.Pad(b)
+	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
+	return buf[:b]
 }
 
 // CreateSolidFillCookie is a cookie used only for CreateSolidFill requests.
@@ -2818,7 +2830,6 @@ func freeGlyphsRequest(c *xgb.Conn, Glyphset Glyphset, Glyphs []Glyph) []byte {
 		xgb.Put32(buf[b:], uint32(Glyphs[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -2955,7 +2966,6 @@ func queryFiltersReply(buf []byte) *QueryFiltersReply {
 		v.Aliases[i] = xgb.Get16(buf[b:])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
 	v.Filters = make([]xproto.Str, v.NumFilters)
 	b += xproto.StrReadList(buf[b:], v.Filters)
@@ -3023,9 +3033,11 @@ type QueryPictFormatsReply struct {
 	NumVisuals  uint32
 	NumSubpixel uint32
 	// padding: 4 bytes
-	Formats   []Pictforminfo // size: xgb.Pad((int(NumFormats) * 28))
-	Screens   []Pictscreen   // size: PictscreenListSize(Screens)
-	Subpixels []uint32       // size: xgb.Pad((int(NumSubpixel) * 4))
+	Formats []Pictforminfo // size: xgb.Pad((int(NumFormats) * 28))
+	// alignment gap to multiple of 4
+	Screens []Pictscreen // size: PictscreenListSize(Screens)
+	// alignment gap to multiple of 4
+	Subpixels []uint32 // size: xgb.Pad((int(NumSubpixel) * 4))
 }
 
 // Reply blocks and returns the reply data for a QueryPictFormats request.
@@ -3073,15 +3085,18 @@ func queryPictFormatsReply(buf []byte) *QueryPictFormatsReply {
 	v.Formats = make([]Pictforminfo, v.NumFormats)
 	b += PictforminfoReadList(buf[b:], v.Formats)
 
+	b = (b + 3) & ^3 // alignment gap
+
 	v.Screens = make([]Pictscreen, v.NumScreens)
 	b += PictscreenReadList(buf[b:], v.Screens)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Subpixels = make([]uint32, v.NumSubpixel)
 	for i := 0; i < int(v.NumSubpixel); i++ {
 		v.Subpixels[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -3455,7 +3470,7 @@ func (cook SetPictureFilterCookie) Check() error {
 // Write request to wire for SetPictureFilter
 // setPictureFilterRequest writes a SetPictureFilter request to a byte slice.
 func setPictureFilterRequest(c *xgb.Conn, Picture Picture, FilterLen uint16, Filter string, Values []Fixed) []byte {
-	size := xgb.Pad(((12 + xgb.Pad((int(FilterLen) * 1))) + xgb.Pad((len(Values) * 4))))
+	size := xgb.Pad((((12 + xgb.Pad((int(FilterLen) * 1))) + 4) + xgb.Pad((len(Values) * 4))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -3465,7 +3480,7 @@ func setPictureFilterRequest(c *xgb.Conn, Picture Picture, FilterLen uint16, Fil
 	buf[b] = 30 // request opcode
 	b += 1
 
-	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	blen := b
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Picture))
@@ -3477,15 +3492,18 @@ func setPictureFilterRequest(c *xgb.Conn, Picture Picture, FilterLen uint16, Fil
 	b += 2 // padding
 
 	copy(buf[b:], Filter[:FilterLen])
-	b += xgb.Pad(int(FilterLen))
+	b += int(FilterLen)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	for i := 0; i < int(len(Values)); i++ {
 		xgb.Put32(buf[b:], uint32(Values[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
-	return buf
+	b = xgb.Pad(b)
+	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
+	return buf[:b]
 }
 
 // SetPictureTransformCookie is a cookie used only for SetPictureTransform requests.

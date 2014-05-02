@@ -100,12 +100,12 @@ func (v ListItem) Bytes() []byte {
 	b += 4
 
 	copy(buf[b:], v.ObjectContext[:v.ObjectContextLen])
-	b += xgb.Pad(int(v.ObjectContextLen))
+	b += int(v.ObjectContextLen)
 
 	copy(buf[b:], v.DataContext[:v.DataContextLen])
-	b += xgb.Pad(int(v.DataContextLen))
+	b += int(v.DataContextLen)
 
-	return buf
+	return buf[:b]
 }
 
 // ListItemListBytes writes a list of ListItem values to a byte slice.
@@ -1766,7 +1766,7 @@ func setDeviceContextRequest(c *xgb.Conn, Device uint32, ContextLen uint32, Cont
 	b += 4
 
 	copy(buf[b:], Context[:ContextLen])
-	b += xgb.Pad(int(ContextLen))
+	b += int(ContextLen)
 
 	return buf
 }
@@ -1824,7 +1824,7 @@ func setDeviceCreateContextRequest(c *xgb.Conn, ContextLen uint32, Context strin
 	b += 4
 
 	copy(buf[b:], Context[:ContextLen])
-	b += xgb.Pad(int(ContextLen))
+	b += int(ContextLen)
 
 	return buf
 }
@@ -1882,7 +1882,7 @@ func setPropertyCreateContextRequest(c *xgb.Conn, ContextLen uint32, Context str
 	b += 4
 
 	copy(buf[b:], Context[:ContextLen])
-	b += xgb.Pad(int(ContextLen))
+	b += int(ContextLen)
 
 	return buf
 }
@@ -1940,7 +1940,7 @@ func setPropertyUseContextRequest(c *xgb.Conn, ContextLen uint32, Context string
 	b += 4
 
 	copy(buf[b:], Context[:ContextLen])
-	b += xgb.Pad(int(ContextLen))
+	b += int(ContextLen)
 
 	return buf
 }
@@ -1998,7 +1998,7 @@ func setSelectionCreateContextRequest(c *xgb.Conn, ContextLen uint32, Context st
 	b += 4
 
 	copy(buf[b:], Context[:ContextLen])
-	b += xgb.Pad(int(ContextLen))
+	b += int(ContextLen)
 
 	return buf
 }
@@ -2056,7 +2056,7 @@ func setSelectionUseContextRequest(c *xgb.Conn, ContextLen uint32, Context strin
 	b += 4
 
 	copy(buf[b:], Context[:ContextLen])
-	b += xgb.Pad(int(ContextLen))
+	b += int(ContextLen)
 
 	return buf
 }
@@ -2114,7 +2114,7 @@ func setWindowCreateContextRequest(c *xgb.Conn, ContextLen uint32, Context strin
 	b += 4
 
 	copy(buf[b:], Context[:ContextLen])
-	b += xgb.Pad(int(ContextLen))
+	b += int(ContextLen)
 
 	return buf
 }

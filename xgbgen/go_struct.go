@@ -78,7 +78,7 @@ func (s *Struct) Write(c *Context) {
 		field.Write(c, "v.")
 		c.Putln("")
 	}
-	c.Putln("return buf")
+	c.Putln("return buf[:b]")
 	c.Putln("}")
 	c.Putln("")
 }

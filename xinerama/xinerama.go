@@ -90,7 +90,7 @@ func (v ScreenInfo) Bytes() []byte {
 	xgb.Put16(buf[b:], v.Height)
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // ScreenInfoListBytes writes a list of ScreenInfo values to a byte slice.

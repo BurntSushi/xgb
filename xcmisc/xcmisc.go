@@ -228,7 +228,6 @@ func getXIDListReply(buf []byte) *GetXIDListReply {
 		v.Ids[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }

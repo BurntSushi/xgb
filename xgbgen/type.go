@@ -154,7 +154,7 @@ func (r *Resource) XmlName() string {
 }
 
 func (r *Resource) Size() Size {
-	return newFixedSize(BaseTypeSizes["Id"])
+	return newFixedSize(BaseTypeSizes["Id"], true)
 }
 
 func (r *Resource) Initialize(p *Protocol) {
@@ -201,7 +201,7 @@ func (e *Event) XmlName() string {
 }
 
 func (e *Event) Size() Size {
-	return newExpressionSize(&Value{v: 32})
+	return newExpressionSize(&Value{v: 32}, true)
 }
 
 func (e *Event) Initialize(p *Protocol) {
@@ -231,7 +231,7 @@ func (e *EventCopy) XmlName() string {
 }
 
 func (e *EventCopy) Size() Size {
-	return newExpressionSize(&Value{v: 32})
+	return newExpressionSize(&Value{v: 32}, true)
 }
 
 func (e *EventCopy) Initialize(p *Protocol) {
@@ -262,7 +262,7 @@ func (e *Error) XmlName() string {
 }
 
 func (e *Error) Size() Size {
-	return newExpressionSize(&Value{v: 32})
+	return newExpressionSize(&Value{v: 32}, true)
 }
 
 func (e *Error) Initialize(p *Protocol) {
@@ -296,7 +296,7 @@ func (e *ErrorCopy) XmlName() string {
 }
 
 func (e *ErrorCopy) Size() Size {
-	return newExpressionSize(&Value{v: 32})
+	return newExpressionSize(&Value{v: 32}, true)
 }
 
 func (e *ErrorCopy) Initialize(p *Protocol) {
@@ -330,7 +330,7 @@ func (s *Struct) XmlName() string {
 }
 
 func (s *Struct) Size() Size {
-	size := newFixedSize(0)
+	size := newFixedSize(0, true)
 	for _, field := range s.Fields {
 		size = size.Add(field.Size())
 	}

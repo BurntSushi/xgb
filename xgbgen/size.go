@@ -7,24 +7,25 @@ package main
 // for adding and multiplying sizes.
 type Size struct {
 	Expression
+	exact bool
 }
 
 // newFixedSize creates a new Size with some fixed and known value.
-func newFixedSize(fixed uint) Size {
-	return Size{&Value{v: int(fixed)}}
+func newFixedSize(fixed uint, exact bool) Size {
+	return Size{&Value{v: int(fixed)}, exact}
 }
 
 // newExpressionSize creates a new Size with some expression.
-func newExpressionSize(variable Expression) Size {
-	return Size{variable}
+func newExpressionSize(variable Expression, exact bool) Size {
+	return Size{variable, exact}
 }
 
 // Add adds s1 and s2 and returns a new Size.
 func (s1 Size) Add(s2 Size) Size {
-	return Size{newBinaryOp("+", s1, s2)}
+	return Size{newBinaryOp("+", s1, s2), s1.exact && s2.exact}
 }
 
 // Multiply mupltiplies s1 and s2 and returns a new Size.
 func (s1 Size) Multiply(s2 Size) Size {
-	return Size{newBinaryOp("*", s1, s2)}
+	return Size{newBinaryOp("*", s1, s2), s1.exact && s2.exact}
 }

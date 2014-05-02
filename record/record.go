@@ -133,7 +133,7 @@ func (v ClientInfo) Bytes() []byte {
 
 	b += RangeListBytes(buf[b:], v.Ranges)
 
-	return buf
+	return buf[:b]
 }
 
 // ClientInfoListBytes writes a list of ClientInfo values to a byte slice.
@@ -222,7 +222,7 @@ func (v ExtRange) Bytes() []byte {
 		b += len(structBytes)
 	}
 
-	return buf
+	return buf[:b]
 }
 
 // ExtRangeListBytes writes a list of ExtRange values to a byte slice.
@@ -368,7 +368,7 @@ func (v Range) Bytes() []byte {
 	}
 	b += 1
 
-	return buf
+	return buf[:b]
 }
 
 // RangeListBytes writes a list of Range values to a byte slice.
@@ -422,7 +422,7 @@ func (v Range16) Bytes() []byte {
 	xgb.Put16(buf[b:], v.Last)
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // Range16ListBytes writes a list of Range16 values to a byte slice.
@@ -476,7 +476,7 @@ func (v Range8) Bytes() []byte {
 	buf[b] = v.Last
 	b += 1
 
-	return buf
+	return buf[:b]
 }
 
 // Range8ListBytes writes a list of Range8 values to a byte slice.
@@ -551,7 +551,7 @@ func (cook CreateContextCookie) Check() error {
 // Write request to wire for CreateContext
 // createContextRequest writes a CreateContext request to a byte slice.
 func createContextRequest(c *xgb.Conn, Context Context, ElementHeader ElementHeader, NumClientSpecs uint32, NumRanges uint32, ClientSpecs []ClientSpec, Ranges []Range) []byte {
-	size := xgb.Pad(((20 + xgb.Pad((int(NumClientSpecs) * 4))) + xgb.Pad((int(NumRanges) * 24))))
+	size := xgb.Pad((((20 + xgb.Pad((int(NumClientSpecs) * 4))) + 4) + xgb.Pad((int(NumRanges) * 24))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -561,7 +561,7 @@ func createContextRequest(c *xgb.Conn, Context Context, ElementHeader ElementHea
 	buf[b] = 1 // request opcode
 	b += 1
 
-	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	blen := b
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Context))
@@ -582,11 +582,14 @@ func createContextRequest(c *xgb.Conn, Context Context, ElementHeader ElementHea
 		xgb.Put32(buf[b:], uint32(ClientSpecs[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	b += RangeListBytes(buf[b:], Ranges)
 
-	return buf
+	b = xgb.Pad(b)
+	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
+	return buf[:b]
 }
 
 // DisableContextCookie is a cookie used only for DisableContext requests.
@@ -737,7 +740,7 @@ func enableContextReply(buf []byte) *EnableContextReply {
 
 	v.Data = make([]byte, (int(v.Length) * 4))
 	copy(v.Data[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -1057,7 +1060,7 @@ func (cook RegisterClientsCookie) Check() error {
 // Write request to wire for RegisterClients
 // registerClientsRequest writes a RegisterClients request to a byte slice.
 func registerClientsRequest(c *xgb.Conn, Context Context, ElementHeader ElementHeader, NumClientSpecs uint32, NumRanges uint32, ClientSpecs []ClientSpec, Ranges []Range) []byte {
-	size := xgb.Pad(((20 + xgb.Pad((int(NumClientSpecs) * 4))) + xgb.Pad((int(NumRanges) * 24))))
+	size := xgb.Pad((((20 + xgb.Pad((int(NumClientSpecs) * 4))) + 4) + xgb.Pad((int(NumRanges) * 24))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -1067,7 +1070,7 @@ func registerClientsRequest(c *xgb.Conn, Context Context, ElementHeader ElementH
 	buf[b] = 2 // request opcode
 	b += 1
 
-	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	blen := b
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Context))
@@ -1088,11 +1091,14 @@ func registerClientsRequest(c *xgb.Conn, Context Context, ElementHeader ElementH
 		xgb.Put32(buf[b:], uint32(ClientSpecs[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	b += RangeListBytes(buf[b:], Ranges)
 
-	return buf
+	b = xgb.Pad(b)
+	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
+	return buf[:b]
 }
 
 // UnregisterClientsCookie is a cookie used only for UnregisterClients requests.
@@ -1154,7 +1160,6 @@ func unregisterClientsRequest(c *xgb.Conn, Context Context, NumClientSpecs uint3
 		xgb.Put32(buf[b:], uint32(ClientSpecs[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }

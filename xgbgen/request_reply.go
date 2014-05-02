@@ -91,7 +91,7 @@ func (r *Request) CookieName() string {
 // If it's a core protocol request, then we only account for *three*
 // bytes of the header (remove the extension opcode).
 func (r *Request) Size(c *Context) Size {
-	size := newFixedSize(0)
+	size := newFixedSize(0, true)
 
 	// If this is a core protocol request, we squeeze in an extra byte of
 	// data (from the fields below) between the opcode and the size of the
@@ -99,9 +99,9 @@ func (r *Request) Size(c *Context) Size {
 	// by the opcode of the request (while the first byte is always occupied
 	// by the opcode of the extension).
 	if !c.protocol.isExt() {
-		size = size.Add(newFixedSize(3))
+		size = size.Add(newFixedSize(3, true))
 	} else {
-		size = size.Add(newFixedSize(4))
+		size = size.Add(newFixedSize(4, true))
 	}
 
 	for _, field := range r.Fields {
@@ -122,7 +122,7 @@ func (r *Request) Size(c *Context) Size {
 	}
 	return newExpressionSize(&Padding{
 		Expr: size.Expression,
-	})
+	}, size.exact)
 }
 
 // Reply encapsulates the fields associated with a 'reply' element.
@@ -136,10 +136,10 @@ type Reply struct {
 // 2 bytes: A sequence number
 // 4 bytes: Number of additional bytes in 4-byte units past initial 32 bytes.
 func (r *Reply) Size() Size {
-	size := newFixedSize(0)
+	size := newFixedSize(0, true)
 
 	// Account for reply discriminant, sequence number and reply length
-	size = size.Add(newFixedSize(7))
+	size = size.Add(newFixedSize(7, true))
 
 	for _, field := range r.Fields {
 		size = size.Add(field.Size())

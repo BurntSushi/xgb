@@ -179,7 +179,7 @@ func (v Arc) Bytes() []byte {
 	xgb.Put16(buf[b:], uint16(v.Angle2))
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // ArcListBytes writes a list of Arc values to a byte slice.
@@ -603,7 +603,7 @@ func (v Char2b) Bytes() []byte {
 	buf[b] = v.Byte2
 	b += 1
 
-	return buf
+	return buf[:b]
 }
 
 // Char2bListBytes writes a list of Char2b values to a byte slice.
@@ -685,7 +685,7 @@ func (v Charinfo) Bytes() []byte {
 	xgb.Put16(buf[b:], v.Attributes)
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // CharinfoListBytes writes a list of Charinfo values to a byte slice.
@@ -932,7 +932,7 @@ func ClientMessageDataUnionData8New(Data8 []byte) ClientMessageDataUnion {
 	buf := make([]byte, 20)
 
 	copy(buf[b:], Data8[:20])
-	b += xgb.Pad(int(20))
+	b += int(20)
 
 	// Create the Union type
 	v := ClientMessageDataUnion{}
@@ -942,7 +942,7 @@ func ClientMessageDataUnionData8New(Data8 []byte) ClientMessageDataUnion {
 	b = 0 // always read the same bytes
 	v.Data8 = make([]byte, 20)
 	copy(v.Data8[:20], buf[b:])
-	b += xgb.Pad(int(20))
+	b += int(20)
 
 	b = 0 // always read the same bytes
 	v.Data16 = make([]uint16, 10)
@@ -950,7 +950,6 @@ func ClientMessageDataUnionData8New(Data8 []byte) ClientMessageDataUnion {
 		v.Data16[i] = xgb.Get16(buf[b:])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
 	b = 0 // always read the same bytes
 	v.Data32 = make([]uint32, 5)
@@ -958,7 +957,6 @@ func ClientMessageDataUnionData8New(Data8 []byte) ClientMessageDataUnion {
 		v.Data32[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -972,7 +970,6 @@ func ClientMessageDataUnionData16New(Data16 []uint16) ClientMessageDataUnion {
 		xgb.Put16(buf[b:], Data16[i])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
 	// Create the Union type
 	v := ClientMessageDataUnion{}
@@ -982,7 +979,7 @@ func ClientMessageDataUnionData16New(Data16 []uint16) ClientMessageDataUnion {
 	b = 0 // always read the same bytes
 	v.Data8 = make([]byte, 20)
 	copy(v.Data8[:20], buf[b:])
-	b += xgb.Pad(int(20))
+	b += int(20)
 
 	b = 0 // always read the same bytes
 	v.Data16 = make([]uint16, 10)
@@ -990,7 +987,6 @@ func ClientMessageDataUnionData16New(Data16 []uint16) ClientMessageDataUnion {
 		v.Data16[i] = xgb.Get16(buf[b:])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
 	b = 0 // always read the same bytes
 	v.Data32 = make([]uint32, 5)
@@ -998,7 +994,6 @@ func ClientMessageDataUnionData16New(Data16 []uint16) ClientMessageDataUnion {
 		v.Data32[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -1012,7 +1007,6 @@ func ClientMessageDataUnionData32New(Data32 []uint32) ClientMessageDataUnion {
 		xgb.Put32(buf[b:], Data32[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	// Create the Union type
 	v := ClientMessageDataUnion{}
@@ -1022,7 +1016,7 @@ func ClientMessageDataUnionData32New(Data32 []uint32) ClientMessageDataUnion {
 	b = 0 // always read the same bytes
 	v.Data8 = make([]byte, 20)
 	copy(v.Data8[:20], buf[b:])
-	b += xgb.Pad(int(20))
+	b += int(20)
 
 	b = 0 // always read the same bytes
 	v.Data16 = make([]uint16, 10)
@@ -1030,7 +1024,6 @@ func ClientMessageDataUnionData32New(Data32 []uint32) ClientMessageDataUnion {
 		v.Data16[i] = xgb.Get16(buf[b:])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
 	b = 0 // always read the same bytes
 	v.Data32 = make([]uint32, 5)
@@ -1038,7 +1031,6 @@ func ClientMessageDataUnionData32New(Data32 []uint32) ClientMessageDataUnion {
 		v.Data32[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -1050,7 +1042,7 @@ func ClientMessageDataUnionRead(buf []byte, v *ClientMessageDataUnion) int {
 	b = 0 // re-read the same bytes
 	v.Data8 = make([]byte, 20)
 	copy(v.Data8[:20], buf[b:])
-	b += xgb.Pad(int(20))
+	b += int(20)
 
 	b = 0 // re-read the same bytes
 	v.Data16 = make([]uint16, 10)
@@ -1058,7 +1050,6 @@ func ClientMessageDataUnionRead(buf []byte, v *ClientMessageDataUnion) int {
 		v.Data16[i] = xgb.Get16(buf[b:])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
 	b = 0 // re-read the same bytes
 	v.Data32 = make([]uint32, 5)
@@ -1066,7 +1057,6 @@ func ClientMessageDataUnionRead(buf []byte, v *ClientMessageDataUnion) int {
 		v.Data32[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return 20
 }
@@ -1089,7 +1079,7 @@ func (v ClientMessageDataUnion) Bytes() []byte {
 	b := 0
 
 	copy(buf[b:], v.Data8[:20])
-	b += xgb.Pad(int(20))
+	b += int(20)
 	return buf
 }
 
@@ -1189,7 +1179,7 @@ func (v Coloritem) Bytes() []byte {
 
 	b += 1 // padding
 
-	return buf
+	return buf[:b]
 }
 
 // ColoritemListBytes writes a list of Coloritem values to a byte slice.
@@ -1908,7 +1898,7 @@ func (v DepthInfo) Bytes() []byte {
 
 	b += VisualInfoListBytes(buf[b:], v.Visuals)
 
-	return buf
+	return buf[:b]
 }
 
 // DepthInfoListBytes writes a list of DepthInfo values to a byte slice.
@@ -2580,7 +2570,7 @@ func (v Fontprop) Bytes() []byte {
 	xgb.Put32(buf[b:], v.Value)
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // FontpropListBytes writes a list of Fontprop values to a byte slice.
@@ -2646,7 +2636,7 @@ func (v Format) Bytes() []byte {
 
 	b += 5 // padding
 
-	return buf
+	return buf[:b]
 }
 
 // FormatListBytes writes a list of Format values to a byte slice.
@@ -3072,7 +3062,7 @@ func HostRead(buf []byte, v *Host) int {
 
 	v.Address = make([]byte, v.AddressLen)
 	copy(v.Address[:v.AddressLen], buf[b:])
-	b += xgb.Pad(int(v.AddressLen))
+	b += int(v.AddressLen)
 
 	return b
 }
@@ -3101,9 +3091,9 @@ func (v Host) Bytes() []byte {
 	b += 2
 
 	copy(buf[b:], v.Address[:v.AddressLen])
-	b += xgb.Pad(int(v.AddressLen))
+	b += int(v.AddressLen)
 
-	return buf
+	return buf[:b]
 }
 
 // HostListBytes writes a list of Host values to a byte slice.
@@ -3469,7 +3459,7 @@ func KeymapNotifyEventNew(buf []byte) xgb.Event {
 
 	v.Keys = make([]byte, 31)
 	copy(v.Keys[:31], buf[b:])
-	b += xgb.Pad(int(31))
+	b += int(31)
 
 	return v
 }
@@ -3484,7 +3474,7 @@ func (v KeymapNotifyEvent) Bytes() []byte {
 	b += 1
 
 	copy(buf[b:], v.Keys[:31])
-	b += xgb.Pad(int(31))
+	b += int(31)
 
 	return buf
 }
@@ -4323,7 +4313,7 @@ func (v Point) Bytes() []byte {
 	xgb.Put16(buf[b:], uint16(v.Y))
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // PointListBytes writes a list of Point values to a byte slice.
@@ -4506,7 +4496,7 @@ func (v Rectangle) Bytes() []byte {
 	xgb.Put16(buf[b:], v.Height)
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // RectangleListBytes writes a list of Rectangle values to a byte slice.
@@ -4831,7 +4821,7 @@ func (v Rgb) Bytes() []byte {
 
 	b += 2 // padding
 
-	return buf
+	return buf[:b]
 }
 
 // RgbListBytes writes a list of Rgb values to a byte slice.
@@ -4997,7 +4987,7 @@ func (v ScreenInfo) Bytes() []byte {
 
 	b += DepthInfoListBytes(buf[b:], v.AllowedDepths)
 
-	return buf
+	return buf[:b]
 }
 
 // ScreenInfoListBytes writes a list of ScreenInfo values to a byte slice.
@@ -5079,7 +5069,7 @@ func (v Segment) Bytes() []byte {
 	xgb.Put16(buf[b:], uint16(v.Y2))
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // SegmentListBytes writes a list of Segment values to a byte slice.
@@ -5434,9 +5424,9 @@ func (v SetupAuthenticate) Bytes() []byte {
 	b += 2
 
 	copy(buf[b:], v.Reason[:(int(v.Length)*4)])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
-	return buf
+	return buf[:b]
 }
 
 // SetupAuthenticateListBytes writes a list of SetupAuthenticate values to a byte slice.
@@ -5529,9 +5519,9 @@ func (v SetupFailed) Bytes() []byte {
 	b += 2
 
 	copy(buf[b:], v.Reason[:v.ReasonLen])
-	b += xgb.Pad(int(v.ReasonLen))
+	b += int(v.ReasonLen)
 
-	return buf
+	return buf[:b]
 }
 
 // SetupFailedListBytes writes a list of SetupFailed values to a byte slice.
@@ -5576,9 +5566,11 @@ type SetupInfo struct {
 	MinKeycode               Keycode
 	MaxKeycode               Keycode
 	// padding: 4 bytes
-	Vendor        string       // size: xgb.Pad((int(VendorLen) * 1))
-	PixmapFormats []Format     // size: xgb.Pad((int(PixmapFormatsLen) * 8))
-	Roots         []ScreenInfo // size: ScreenInfoListSize(Roots)
+	Vendor string // size: xgb.Pad((int(VendorLen) * 1))
+	// alignment gap to multiple of 4
+	PixmapFormats []Format // size: xgb.Pad((int(PixmapFormatsLen) * 8))
+	// alignment gap to multiple of 4
+	Roots []ScreenInfo // size: ScreenInfoListSize(Roots)
 }
 
 // SetupInfoRead reads a byte slice into a SetupInfo value.
@@ -5650,8 +5642,12 @@ func SetupInfoRead(buf []byte, v *SetupInfo) int {
 		b += int(v.VendorLen)
 	}
 
+	b = (b + 3) & ^3 // alignment gap
+
 	v.PixmapFormats = make([]Format, v.PixmapFormatsLen)
 	b += FormatReadList(buf[b:], v.PixmapFormats)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Roots = make([]ScreenInfo, v.RootsLen)
 	b += ScreenInfoReadList(buf[b:], v.Roots)
@@ -5671,7 +5667,7 @@ func SetupInfoReadList(buf []byte, dest []SetupInfo) int {
 
 // Bytes writes a SetupInfo value to a byte slice.
 func (v SetupInfo) Bytes() []byte {
-	buf := make([]byte, (((40 + xgb.Pad((int(v.VendorLen) * 1))) + xgb.Pad((int(v.PixmapFormatsLen) * 8))) + ScreenInfoListSize(v.Roots)))
+	buf := make([]byte, (((((40 + xgb.Pad((int(v.VendorLen) * 1))) + 4) + xgb.Pad((int(v.PixmapFormatsLen) * 8))) + 4) + ScreenInfoListSize(v.Roots)))
 	b := 0
 
 	buf[b] = v.Status
@@ -5733,13 +5729,17 @@ func (v SetupInfo) Bytes() []byte {
 	b += 4 // padding
 
 	copy(buf[b:], v.Vendor[:v.VendorLen])
-	b += xgb.Pad(int(v.VendorLen))
+	b += int(v.VendorLen)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	b += FormatListBytes(buf[b:], v.PixmapFormats)
 
+	b = (b + 3) & ^3 // alignment gap
+
 	b += ScreenInfoListBytes(buf[b:], v.Roots)
 
-	return buf
+	return buf[:b]
 }
 
 // SetupInfoListBytes writes a list of SetupInfo values to a byte slice.
@@ -5758,7 +5758,7 @@ func SetupInfoListBytes(buf []byte, list []SetupInfo) int {
 func SetupInfoListSize(list []SetupInfo) int {
 	size := 0
 	for _, item := range list {
-		size += (((40 + xgb.Pad((int(item.VendorLen) * 1))) + xgb.Pad((int(item.PixmapFormatsLen) * 8))) + ScreenInfoListSize(item.Roots))
+		size += (((((40 + xgb.Pad((int(item.VendorLen) * 1))) + 4) + xgb.Pad((int(item.PixmapFormatsLen) * 8))) + 4) + ScreenInfoListSize(item.Roots))
 	}
 	return size
 }
@@ -5850,12 +5850,12 @@ func (v SetupRequest) Bytes() []byte {
 	b += 2 // padding
 
 	copy(buf[b:], v.AuthorizationProtocolName[:v.AuthorizationProtocolNameLen])
-	b += xgb.Pad(int(v.AuthorizationProtocolNameLen))
+	b += int(v.AuthorizationProtocolNameLen)
 
 	copy(buf[b:], v.AuthorizationProtocolData[:v.AuthorizationProtocolDataLen])
-	b += xgb.Pad(int(v.AuthorizationProtocolDataLen))
+	b += int(v.AuthorizationProtocolDataLen)
 
-	return buf
+	return buf[:b]
 }
 
 // SetupRequestListBytes writes a list of SetupRequest values to a byte slice.
@@ -5928,9 +5928,9 @@ func (v Str) Bytes() []byte {
 	b += 1
 
 	copy(buf[b:], v.Name[:v.NameLen])
-	b += xgb.Pad(int(v.NameLen))
+	b += int(v.NameLen)
 
-	return buf
+	return buf[:b]
 }
 
 // StrListBytes writes a list of Str values to a byte slice.
@@ -6009,7 +6009,7 @@ func (v Timecoord) Bytes() []byte {
 	xgb.Put16(buf[b:], uint16(v.Y))
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // TimecoordListBytes writes a list of Timecoord values to a byte slice.
@@ -6352,7 +6352,7 @@ func (v VisualInfo) Bytes() []byte {
 
 	b += 4 // padding
 
-	return buf
+	return buf[:b]
 }
 
 // VisualInfoListBytes writes a list of VisualInfo values to a byte slice.
@@ -6588,7 +6588,8 @@ type AllocColorCellsReply struct {
 	MasksLen  uint16
 	// padding: 20 bytes
 	Pixels []uint32 // size: xgb.Pad((int(PixelsLen) * 4))
-	Masks  []uint32 // size: xgb.Pad((int(MasksLen) * 4))
+	// alignment gap to multiple of 4
+	Masks []uint32 // size: xgb.Pad((int(MasksLen) * 4))
 }
 
 // Reply blocks and returns the reply data for a AllocColorCells request.
@@ -6629,14 +6630,14 @@ func allocColorCellsReply(buf []byte) *AllocColorCellsReply {
 		v.Pixels[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Masks = make([]uint32, v.MasksLen)
 	for i := 0; i < int(v.MasksLen); i++ {
 		v.Masks[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -6754,7 +6755,6 @@ func allocColorPlanesReply(buf []byte) *AllocColorPlanesReply {
 		v.Pixels[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -6905,7 +6905,7 @@ func allocNamedColorRequest(c *xgb.Conn, Cmap Colormap, NameLen uint16, Name str
 	b += 2 // padding
 
 	copy(buf[b:], Name[:NameLen])
-	b += xgb.Pad(int(NameLen))
+	b += int(NameLen)
 
 	return buf
 }
@@ -7169,7 +7169,7 @@ func changeHostsRequest(c *xgb.Conn, Mode byte, Family byte, AddressLen uint16, 
 	b += 2
 
 	copy(buf[b:], Address[:AddressLen])
-	b += xgb.Pad(int(AddressLen))
+	b += int(AddressLen)
 
 	return buf
 }
@@ -7282,7 +7282,6 @@ func changeKeyboardMappingRequest(c *xgb.Conn, KeycodeCount byte, FirstKeycode K
 		xgb.Put32(buf[b:], uint32(Keysyms[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -7416,7 +7415,7 @@ func changePropertyRequest(c *xgb.Conn, Mode byte, Window Window, Property Atom,
 	b += 4
 
 	copy(buf[b:], Data[:((int(DataLen)*int(Format))/8)])
-	b += xgb.Pad(int(((int(DataLen) * int(Format)) / 8)))
+	b += int(((int(DataLen) * int(Format)) / 8))
 
 	return buf
 }
@@ -8822,7 +8821,6 @@ func freeColorsRequest(c *xgb.Conn, Cmap Colormap, PlaneMask uint32, Pixels []ui
 		xgb.Put32(buf[b:], Pixels[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -9316,7 +9314,7 @@ func getImageReply(buf []byte) *GetImageReply {
 
 	v.Data = make([]byte, (int(v.Length) * 4))
 	copy(v.Data[:(int(v.Length)*4)], buf[b:])
-	b += xgb.Pad(int((int(v.Length) * 4)))
+	b += int((int(v.Length) * 4))
 
 	return v
 }
@@ -9516,7 +9514,7 @@ func getKeyboardControlReply(buf []byte) *GetKeyboardControlReply {
 
 	v.AutoRepeats = make([]byte, 32)
 	copy(v.AutoRepeats[:32], buf[b:])
-	b += xgb.Pad(int(32))
+	b += int(32)
 
 	return v
 }
@@ -9601,7 +9599,6 @@ func getKeyboardMappingReply(buf []byte) *GetKeyboardMappingReply {
 		v.Keysyms[i] = Keysym(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -9693,7 +9690,6 @@ func getModifierMappingReply(buf []byte) *GetModifierMappingReply {
 		v.Keycodes[i] = Keycode(buf[b])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -9957,7 +9953,7 @@ func getPointerMappingReply(buf []byte) *GetPointerMappingReply {
 
 	v.Map = make([]byte, v.MapLen)
 	copy(v.Map[:v.MapLen], buf[b:])
-	b += xgb.Pad(int(v.MapLen))
+	b += int(v.MapLen)
 
 	return v
 }
@@ -10051,7 +10047,7 @@ func getPropertyReply(buf []byte) *GetPropertyReply {
 
 	v.Value = make([]byte, (int(v.ValueLen) * (int(v.Format) / 8)))
 	copy(v.Value[:(int(v.ValueLen)*(int(v.Format)/8))], buf[b:])
-	b += xgb.Pad(int((int(v.ValueLen) * (int(v.Format) / 8))))
+	b += int((int(v.ValueLen) * (int(v.Format) / 8)))
 
 	return v
 }
@@ -10914,7 +10910,7 @@ func imageText8Request(c *xgb.Conn, StringLen byte, Drawable Drawable, Gc Gconte
 	b += 2
 
 	copy(buf[b:], String[:StringLen])
-	b += xgb.Pad(int(StringLen))
+	b += int(StringLen)
 
 	return buf
 }
@@ -11053,7 +11049,7 @@ func internAtomRequest(c *xgb.Conn, OnlyIfExists bool, NameLen uint16, Name stri
 	b += 2 // padding
 
 	copy(buf[b:], Name[:NameLen])
-	b += xgb.Pad(int(NameLen))
+	b += int(NameLen)
 
 	return buf
 }
@@ -11276,7 +11272,7 @@ func listFontsRequest(c *xgb.Conn, MaxNames uint16, PatternLen uint16, Pattern s
 	b += 2
 
 	copy(buf[b:], Pattern[:PatternLen])
-	b += xgb.Pad(int(PatternLen))
+	b += int(PatternLen)
 
 	return buf
 }
@@ -11434,7 +11430,7 @@ func listFontsWithInfoRequest(c *xgb.Conn, MaxNames uint16, PatternLen uint16, P
 	b += 2
 
 	copy(buf[b:], Pattern[:PatternLen])
-	b += xgb.Pad(int(PatternLen))
+	b += int(PatternLen)
 
 	return buf
 }
@@ -11590,7 +11586,6 @@ func listInstalledColormapsReply(buf []byte) *ListInstalledColormapsReply {
 		v.Cmaps[i] = Colormap(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -11682,7 +11677,6 @@ func listPropertiesReply(buf []byte) *ListPropertiesReply {
 		v.Atoms[i] = Atom(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -11812,7 +11806,7 @@ func lookupColorRequest(c *xgb.Conn, Cmap Colormap, NameLen uint16, Name string)
 	b += 2 // padding
 
 	copy(buf[b:], Name[:NameLen])
-	b += xgb.Pad(int(NameLen))
+	b += int(NameLen)
 
 	return buf
 }
@@ -12008,7 +12002,7 @@ func openFontRequest(c *xgb.Conn, Fid Font, NameLen uint16, Name string) []byte 
 	b += 2 // padding
 
 	copy(buf[b:], Name[:NameLen])
-	b += xgb.Pad(int(NameLen))
+	b += int(NameLen)
 
 	return buf
 }
@@ -12441,7 +12435,7 @@ func polyText16Request(c *xgb.Conn, Drawable Drawable, Gc Gcontext, X int16, Y i
 	b += 2
 
 	copy(buf[b:], Items[:len(Items)])
-	b += xgb.Pad(int(len(Items)))
+	b += int(len(Items))
 
 	return buf
 }
@@ -12501,7 +12495,7 @@ func polyText8Request(c *xgb.Conn, Drawable Drawable, Gc Gcontext, X int16, Y in
 	b += 2
 
 	copy(buf[b:], Items[:len(Items)])
-	b += xgb.Pad(int(len(Items)))
+	b += int(len(Items))
 
 	return buf
 }
@@ -12576,7 +12570,7 @@ func putImageRequest(c *xgb.Conn, Format byte, Drawable Drawable, Gc Gcontext, W
 	b += 2 // padding
 
 	copy(buf[b:], Data[:len(Data)])
-	b += xgb.Pad(int(len(Data)))
+	b += int(len(Data))
 
 	return buf
 }
@@ -12762,7 +12756,6 @@ func queryColorsRequest(c *xgb.Conn, Cmap Colormap, Pixels []uint32) []byte {
 		xgb.Put32(buf[b:], Pixels[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -12864,7 +12857,7 @@ func queryExtensionRequest(c *xgb.Conn, NameLen uint16, Name string) []byte {
 	b += 2 // padding
 
 	copy(buf[b:], Name[:NameLen])
-	b += xgb.Pad(int(NameLen))
+	b += int(NameLen)
 
 	return buf
 }
@@ -12911,7 +12904,8 @@ type QueryFontReply struct {
 	FontDescent    int16
 	CharInfosLen   uint32
 	Properties     []Fontprop // size: xgb.Pad((int(PropertiesLen) * 8))
-	CharInfos      []Charinfo // size: xgb.Pad((int(CharInfosLen) * 12))
+	// alignment gap to multiple of 4
+	CharInfos []Charinfo // size: xgb.Pad((int(CharInfosLen) * 12))
 }
 
 // Reply blocks and returns the reply data for a QueryFont request.
@@ -12988,6 +12982,8 @@ func queryFontReply(buf []byte) *QueryFontReply {
 
 	v.Properties = make([]Fontprop, v.PropertiesLen)
 	b += FontpropReadList(buf[b:], v.Properties)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.CharInfos = make([]Charinfo, v.CharInfosLen)
 	b += CharinfoReadList(buf[b:], v.CharInfos)
@@ -13072,7 +13068,7 @@ func queryKeymapReply(buf []byte) *QueryKeymapReply {
 
 	v.Keys = make([]byte, 32)
 	copy(v.Keys[:32], buf[b:])
-	b += xgb.Pad(int(32))
+	b += int(32)
 
 	return v
 }
@@ -13392,7 +13388,6 @@ func queryTreeReply(buf []byte) *QueryTreeReply {
 		v.Children[i] = Window(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -13596,7 +13591,6 @@ func rotatePropertiesRequest(c *xgb.Conn, Window Window, AtomsLen uint16, Delta 
 		xgb.Put32(buf[b:], uint32(Atoms[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -13655,7 +13649,7 @@ func sendEventRequest(c *xgb.Conn, Propagate bool, Destination Window, EventMask
 	b += 4
 
 	copy(buf[b:], Event[:32])
-	b += xgb.Pad(int(32))
+	b += int(32)
 
 	return buf
 }
@@ -13861,7 +13855,7 @@ func setDashesRequest(c *xgb.Conn, Gc Gcontext, DashOffset uint16, DashesLen uin
 	b += 2
 
 	copy(buf[b:], Dashes[:DashesLen])
-	b += xgb.Pad(int(DashesLen))
+	b += int(DashesLen)
 
 	return buf
 }
@@ -14047,7 +14041,6 @@ func setModifierMappingRequest(c *xgb.Conn, KeycodesPerModifier byte, Keycodes [
 		buf[b] = byte(Keycodes[i])
 		b += 1
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -14126,7 +14119,7 @@ func setPointerMappingRequest(c *xgb.Conn, MapLen byte, Map []byte) []byte {
 	b += 2
 
 	copy(buf[b:], Map[:MapLen])
-	b += xgb.Pad(int(MapLen))
+	b += int(MapLen)
 
 	return buf
 }
@@ -14347,7 +14340,7 @@ func storeNamedColorRequest(c *xgb.Conn, Flags byte, Cmap Colormap, Pixel uint32
 	b += 2 // padding
 
 	copy(buf[b:], Name[:NameLen])
-	b += xgb.Pad(int(NameLen))
+	b += int(NameLen)
 
 	return buf
 }
