@@ -43,7 +43,7 @@ func (xml *XML) Translate(parent *Protocol) *Protocol {
 		newBaseType := &Base{
 			srcName: srcName,
 			xmlName: xmlName,
-			size:    newFixedSize(BaseTypeSizes[xmlName]),
+			size:    newFixedSize(BaseTypeSizes[xmlName], true),
 		}
 		protocol.Types = append(protocol.Types, newBaseType)
 	}

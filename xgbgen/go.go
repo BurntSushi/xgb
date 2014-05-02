@@ -103,15 +103,27 @@ func (td *TypeDef) Define(c *Context) {
 
 // Pad fields
 func (f *PadField) Define(c *Context) {
-	c.Putln("// padding: %d bytes", f.Bytes)
+	if f.Align > 0 {
+		c.Putln("// alignment gap to multiple of %d", f.Align)
+	} else {
+		c.Putln("// padding: %d bytes", f.Bytes)
+	}
 }
 
 func (f *PadField) Read(c *Context, prefix string) {
-	c.Putln("b += %s // padding", f.Size())
+	if f.Align > 0 {
+		c.Putln("b = (b + %d) & ^%d // alignment gap", f.Align-1, f.Align-1)
+	} else {
+		c.Putln("b += %s // padding", f.Size())
+	}
 }
 
 func (f *PadField) Write(c *Context, prefix string) {
-	c.Putln("b += %s // padding", f.Size())
+	if f.Align > 0 {
+		c.Putln("b = (b + %d) & ^%d // alignment gap", f.Align-1, f.Align-1)
+	} else {
+		c.Putln("b += %s // padding", f.Size())
+	}
 }
 
 // Local fields

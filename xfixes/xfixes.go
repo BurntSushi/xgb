@@ -489,7 +489,7 @@ func changeCursorByNameRequest(c *xgb.Conn, Src xproto.Cursor, Nbytes uint16, Na
 	b += 2 // padding
 
 	copy(buf[b:], Name[:Nbytes])
-	b += xgb.Pad(int(Nbytes))
+	b += int(Nbytes)
 
 	return buf
 }
@@ -697,7 +697,6 @@ func createPointerBarrierRequest(c *xgb.Conn, Barrier Barrier, Window xproto.Win
 		xgb.Put16(buf[b:], Devices[i])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -1367,7 +1366,6 @@ func getCursorImageReply(buf []byte) *GetCursorImageReply {
 		v.CursorImage[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -1433,7 +1431,8 @@ type GetCursorImageAndNameReply struct {
 	CursorAtom   xproto.Atom
 	Nbytes       uint16
 	// padding: 2 bytes
-	Name        string   // size: xgb.Pad((int(Nbytes) * 1))
+	Name string // size: xgb.Pad((int(Nbytes) * 1))
+	// alignment gap to multiple of 4
 	CursorImage []uint32 // size: xgb.Pad(((int(Width) * int(Height)) * 4))
 }
 
@@ -1498,12 +1497,13 @@ func getCursorImageAndNameReply(buf []byte) *GetCursorImageAndNameReply {
 		b += int(v.Nbytes)
 	}
 
+	b = (b + 3) & ^3 // alignment gap
+
 	v.CursorImage = make([]uint32, (int(v.Width) * int(v.Height)))
 	for i := 0; i < int((int(v.Width) * int(v.Height))); i++ {
 		v.CursorImage[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -2143,7 +2143,7 @@ func setCursorNameRequest(c *xgb.Conn, Cursor xproto.Cursor, Nbytes uint16, Name
 	b += 2 // padding
 
 	copy(buf[b:], Name[:Nbytes])
-	b += xgb.Pad(int(Nbytes))
+	b += int(Nbytes)
 
 	return buf
 }

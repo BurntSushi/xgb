@@ -156,7 +156,7 @@ func (v SurfaceInfo) Bytes() []byte {
 	xgb.Put32(buf[b:], v.Flags)
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // SurfaceInfoListBytes writes a list of SurfaceInfo values to a byte slice.
@@ -275,7 +275,6 @@ func createContextReply(buf []byte) *CreateContextReply {
 		v.PrivData[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -397,7 +396,7 @@ func createSubpictureReply(buf []byte) *CreateSubpictureReply {
 
 	v.ComponentOrder = make([]byte, 4)
 	copy(v.ComponentOrder[:4], buf[b:])
-	b += xgb.Pad(int(4))
+	b += int(4)
 
 	b += 12 // padding
 
@@ -406,7 +405,6 @@ func createSubpictureReply(buf []byte) *CreateSubpictureReply {
 		v.PrivData[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -513,7 +511,6 @@ func createSurfaceReply(buf []byte) *CreateSurfaceReply {
 		v.PrivData[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }

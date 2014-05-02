@@ -76,7 +76,7 @@ func (v Client) Bytes() []byte {
 	xgb.Put32(buf[b:], v.ResourceMask)
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // ClientListBytes writes a list of Client values to a byte slice.
@@ -135,7 +135,7 @@ func (v ClientIdSpec) Bytes() []byte {
 	xgb.Put32(buf[b:], v.Mask)
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // ClientIdSpecListBytes writes a list of ClientIdSpec values to a byte slice.
@@ -171,7 +171,6 @@ func ClientIdValueRead(buf []byte, v *ClientIdValue) int {
 		v.Value[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return b
 }
@@ -204,9 +203,8 @@ func (v ClientIdValue) Bytes() []byte {
 		xgb.Put32(buf[b:], v.Value[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
-	return buf
+	return buf[:b]
 }
 
 // ClientIdValueListBytes writes a list of ClientIdValue values to a byte slice.
@@ -269,7 +267,7 @@ func (v ResourceIdSpec) Bytes() []byte {
 	xgb.Put32(buf[b:], v.Type)
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // ResourceIdSpecListBytes writes a list of ResourceIdSpec values to a byte slice.
@@ -340,7 +338,7 @@ func (v ResourceSizeSpec) Bytes() []byte {
 	xgb.Put32(buf[b:], v.UseCount)
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // ResourceSizeSpecListBytes writes a list of ResourceSizeSpec values to a byte slice.
@@ -403,7 +401,7 @@ func (v ResourceSizeValue) Bytes() []byte {
 
 	b += ResourceSizeSpecListBytes(buf[b:], v.CrossReferences)
 
-	return buf
+	return buf[:b]
 }
 
 // ResourceSizeValueListBytes writes a list of ResourceSizeValue values to a byte slice.
@@ -466,7 +464,7 @@ func (v Type) Bytes() []byte {
 	xgb.Put32(buf[b:], v.Count)
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // TypeListBytes writes a list of Type values to a byte slice.

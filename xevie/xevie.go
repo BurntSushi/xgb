@@ -72,7 +72,7 @@ func (v Event) Bytes() []byte {
 
 	b += 32 // padding
 
-	return buf
+	return buf[:b]
 }
 
 // EventListBytes writes a list of Event values to a byte slice.

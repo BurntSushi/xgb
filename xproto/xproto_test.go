@@ -204,6 +204,23 @@ func TestWindowEvents(t *testing.T) {
 	}
 }
 
+// Calls GetFontPath function, Issue #12
+func TestGetFontPath(t *testing.T) {
+	fontPathReply, err := GetFontPath(X).Reply()
+	if err != nil {
+		t.Fatalf("GetFontPath: %v", err)
+	}
+	_ = fontPathReply
+}
+
+func TestListFonts(t *testing.T) {
+	listFontsReply, err := ListFonts(X, 10, 1, "*").Reply()
+	if err != nil {
+		t.Fatalf("ListFonts: %v", err)
+	}
+	_ = listFontsReply
+}
+
 /******************************************************************************/
 // Benchmarks
 /******************************************************************************/

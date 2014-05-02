@@ -138,18 +138,32 @@ func (r *Request) ReadReply(c *Context) {
 }
 
 func (r *Request) WriteRequest(c *Context) {
-	writeSize := func() {
-		c.Putln("xgb.Put16(buf[b:], uint16(size / 4)) " +
-			"// write request size in 4-byte units")
+	sz := r.Size(c)
+	writeSize1 := func() {
+		if sz.exact {
+			c.Putln("xgb.Put16(buf[b:], uint16(size / 4)) " +
+				"// write request size in 4-byte units")
+		} else {
+			c.Putln("blen := b")
+		}
 		c.Putln("b += 2")
 		c.Putln("")
+	}
+	writeSize2 := func() {
+		if sz.exact {
+			c.Putln("return buf")
+			return
+		}
+		c.Putln("b = xgb.Pad(b)")
+		c.Putln("xgb.Put16(buf[blen:], uint16(b / 4)) // write request size in 4-byte units")
+		c.Putln("return buf[:b]")
 	}
 	c.Putln("// Write request to wire for %s", r.SrcName())
 	c.Putln("// %s writes a %s request to a byte slice.",
 		r.ReqName(), r.SrcName())
 	c.Putln("func %s(c *xgb.Conn, %s) []byte {",
 		r.ReqName(), r.ParamNameTypes())
-	c.Putln("size := %s", r.Size(c))
+	c.Putln("size := %s", sz)
 	c.Putln("b := 0")
 	c.Putln("buf := make([]byte, size)")
 	c.Putln("")
@@ -165,18 +179,18 @@ func (r *Request) WriteRequest(c *Context) {
 		if !c.protocol.isExt() {
 			c.Putln("b += 1 // padding")
 		}
-		writeSize()
+		writeSize1()
 	} else if c.protocol.isExt() {
-		writeSize()
+		writeSize1()
 	}
 	for i, field := range r.Fields {
 		field.Write(c, "")
 		c.Putln("")
 		if i == 0 && !c.protocol.isExt() {
-			writeSize()
+			writeSize1()
 		}
 	}
-	c.Putln("return buf")
+	writeSize2()
 	c.Putln("}")
 	c.Putln("")
 }

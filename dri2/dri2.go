@@ -76,7 +76,7 @@ func (v AttachFormat) Bytes() []byte {
 	xgb.Put32(buf[b:], v.Format)
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // AttachFormatListBytes writes a list of AttachFormat values to a byte slice.
@@ -281,7 +281,7 @@ func (v DRI2Buffer) Bytes() []byte {
 	xgb.Put32(buf[b:], v.Flags)
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // DRI2BufferListBytes writes a list of DRI2Buffer values to a byte slice.
@@ -567,7 +567,7 @@ func connectReply(buf []byte) *ConnectReply {
 
 	v.AlignmentPad = make([]byte, (((int(v.DriverNameLength) + 3) & -4) - int(v.DriverNameLength)))
 	copy(v.AlignmentPad[:(((int(v.DriverNameLength)+3)&-4)-int(v.DriverNameLength))], buf[b:])
-	b += xgb.Pad(int((((int(v.DriverNameLength) + 3) & -4) - int(v.DriverNameLength))))
+	b += int((((int(v.DriverNameLength) + 3) & -4) - int(v.DriverNameLength)))
 
 	{
 		byteString := make([]byte, v.DeviceNameLength)
@@ -914,7 +914,6 @@ func getBuffersRequest(c *xgb.Conn, Drawable xproto.Drawable, Count uint32, Atta
 		xgb.Put32(buf[b:], Attachments[i])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }

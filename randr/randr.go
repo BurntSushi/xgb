@@ -331,7 +331,7 @@ func (v CrtcChange) Bytes() []byte {
 	xgb.Put16(buf[b:], v.Height)
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // CrtcChangeListBytes writes a list of CrtcChange values to a byte slice.
@@ -489,7 +489,7 @@ func (v ModeInfo) Bytes() []byte {
 	xgb.Put32(buf[b:], v.ModeFlags)
 	b += 4
 
-	return buf
+	return buf[:b]
 }
 
 // ModeInfoListBytes writes a list of ModeInfo values to a byte slice.
@@ -503,6 +503,15 @@ func ModeInfoListBytes(buf []byte, list []ModeInfo) int {
 	}
 	return xgb.Pad(b)
 }
+
+const (
+	NotifyCrtcChange       = 0
+	NotifyOutputChange     = 1
+	NotifyOutputProperty   = 2
+	NotifyProviderChange   = 3
+	NotifyProviderProperty = 4
+	NotifyResourceChange   = 5
+)
 
 // Notify is the event number for a NotifyEvent.
 const Notify = 1
@@ -571,15 +580,6 @@ func (v NotifyEvent) String() string {
 func init() {
 	xgb.NewExtEventFuncs["RANDR"][1] = NotifyEventNew
 }
-
-const (
-	NotifyCrtcChange       = 0
-	NotifyOutputChange     = 1
-	NotifyOutputProperty   = 2
-	NotifyProviderChange   = 3
-	NotifyProviderProperty = 4
-	NotifyResourceChange   = 5
-)
 
 // NotifyDataUnion is a represention of the NotifyDataUnion union type.
 // Note that to *create* a Union, you should *never* create
@@ -1034,7 +1034,7 @@ func (v OutputChange) Bytes() []byte {
 	buf[b] = v.SubpixelOrder
 	b += 1
 
-	return buf
+	return buf[:b]
 }
 
 // OutputChangeListBytes writes a list of OutputChange values to a byte slice.
@@ -1114,7 +1114,7 @@ func (v OutputProperty) Bytes() []byte {
 
 	b += 11 // padding
 
-	return buf
+	return buf[:b]
 }
 
 // OutputPropertyListBytes writes a list of OutputProperty values to a byte slice.
@@ -1197,7 +1197,7 @@ func (v ProviderChange) Bytes() []byte {
 
 	b += 16 // padding
 
-	return buf
+	return buf[:b]
 }
 
 // ProviderChangeListBytes writes a list of ProviderChange values to a byte slice.
@@ -1277,7 +1277,7 @@ func (v ProviderProperty) Bytes() []byte {
 
 	b += 11 // padding
 
-	return buf
+	return buf[:b]
 }
 
 // ProviderPropertyListBytes writes a list of ProviderProperty values to a byte slice.
@@ -1309,7 +1309,6 @@ func RefreshRatesRead(buf []byte, v *RefreshRates) int {
 		v.Rates[i] = xgb.Get16(buf[b:])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
 	return b
 }
@@ -1336,9 +1335,8 @@ func (v RefreshRates) Bytes() []byte {
 		xgb.Put16(buf[b:], v.Rates[i])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
-	return buf
+	return buf[:b]
 }
 
 // RefreshRatesListBytes writes a list of RefreshRates values to a byte slice.
@@ -1406,7 +1404,7 @@ func (v ResourceChange) Bytes() []byte {
 
 	b += 20 // padding
 
-	return buf
+	return buf[:b]
 }
 
 // ResourceChangeListBytes writes a list of ResourceChange values to a byte slice.
@@ -1621,7 +1619,7 @@ func (v ScreenSize) Bytes() []byte {
 	xgb.Put16(buf[b:], v.Mheight)
 	b += 2
 
-	return buf
+	return buf[:b]
 }
 
 // ScreenSizeListBytes writes a list of ScreenSize values to a byte slice.
@@ -1802,7 +1800,7 @@ func changeOutputPropertyRequest(c *xgb.Conn, Output Output, Property xproto.Ato
 	b += 4
 
 	copy(buf[b:], Data[:((int(NumUnits)*int(Format))/8)])
-	b += xgb.Pad(int(((int(NumUnits) * int(Format)) / 8)))
+	b += int(((int(NumUnits) * int(Format)) / 8))
 
 	return buf
 }
@@ -1877,7 +1875,7 @@ func changeProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property xpro
 	b += 4
 
 	copy(buf[b:], Data[:(int(NumItems)*(int(Format)/8))])
-	b += xgb.Pad(int((int(NumItems) * (int(Format) / 8))))
+	b += int((int(NumItems) * (int(Format) / 8)))
 
 	return buf
 }
@@ -1957,7 +1955,6 @@ func configureOutputPropertyRequest(c *xgb.Conn, Output Output, Property xproto.
 		xgb.Put32(buf[b:], uint32(Values[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -2037,7 +2034,6 @@ func configureProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property x
 		xgb.Put32(buf[b:], uint32(Values[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -2137,7 +2133,7 @@ func createModeRequest(c *xgb.Conn, Window xproto.Window, ModeInfo ModeInfo, Nam
 	}
 
 	copy(buf[b:], Name[:len(Name)])
-	b += xgb.Pad(int(len(Name)))
+	b += int(len(Name))
 
 	return buf
 }
@@ -2405,9 +2401,11 @@ type GetCrtcGammaReply struct {
 	// padding: 1 bytes
 	Size uint16
 	// padding: 22 bytes
-	Red   []uint16 // size: xgb.Pad((int(Size) * 2))
+	Red []uint16 // size: xgb.Pad((int(Size) * 2))
+	// alignment gap to multiple of 2
 	Green []uint16 // size: xgb.Pad((int(Size) * 2))
-	Blue  []uint16 // size: xgb.Pad((int(Size) * 2))
+	// alignment gap to multiple of 2
+	Blue []uint16 // size: xgb.Pad((int(Size) * 2))
 }
 
 // Reply blocks and returns the reply data for a GetCrtcGamma request.
@@ -2445,21 +2443,22 @@ func getCrtcGammaReply(buf []byte) *GetCrtcGammaReply {
 		v.Red[i] = xgb.Get16(buf[b:])
 		b += 2
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 1) & ^1 // alignment gap
 
 	v.Green = make([]uint16, v.Size)
 	for i := 0; i < int(v.Size); i++ {
 		v.Green[i] = xgb.Get16(buf[b:])
 		b += 2
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 1) & ^1 // alignment gap
 
 	v.Blue = make([]uint16, v.Size)
 	for i := 0; i < int(v.Size); i++ {
 		v.Blue[i] = xgb.Get16(buf[b:])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -2620,7 +2619,8 @@ type GetCrtcInfoReply struct {
 	NumOutputs         uint16
 	NumPossibleOutputs uint16
 	Outputs            []Output // size: xgb.Pad((int(NumOutputs) * 4))
-	Possible           []Output // size: xgb.Pad((int(NumPossibleOutputs) * 4))
+	// alignment gap to multiple of 4
+	Possible []Output // size: xgb.Pad((int(NumPossibleOutputs) * 4))
 }
 
 // Reply blocks and returns the reply data for a GetCrtcInfo request.
@@ -2684,14 +2684,14 @@ func getCrtcInfoReply(buf []byte) *GetCrtcInfoReply {
 		v.Outputs[i] = Output(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Possible = make([]Output, v.NumPossibleOutputs)
 	for i := 0; i < int(v.NumPossibleOutputs); i++ {
 		v.Possible[i] = Output(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -2762,10 +2762,12 @@ type GetCrtcTransformReply struct {
 	PendingNparams    uint16
 	CurrentLen        uint16
 	CurrentNparams    uint16
-	PendingFilterName string         // size: xgb.Pad((int(PendingLen) * 1))
+	PendingFilterName string // size: xgb.Pad((int(PendingLen) * 1))
+	// alignment gap to multiple of 4
 	PendingParams     []render.Fixed // size: xgb.Pad((int(PendingNparams) * 4))
 	CurrentFilterName string         // size: xgb.Pad((int(CurrentLen) * 1))
-	CurrentParams     []render.Fixed // size: xgb.Pad((int(CurrentNparams) * 4))
+	// alignment gap to multiple of 4
+	CurrentParams []render.Fixed // size: xgb.Pad((int(CurrentNparams) * 4))
 }
 
 // Reply blocks and returns the reply data for a GetCrtcTransform request.
@@ -2829,12 +2831,13 @@ func getCrtcTransformReply(buf []byte) *GetCrtcTransformReply {
 		b += int(v.PendingLen)
 	}
 
+	b = (b + 3) & ^3 // alignment gap
+
 	v.PendingParams = make([]render.Fixed, v.PendingNparams)
 	for i := 0; i < int(v.PendingNparams); i++ {
 		v.PendingParams[i] = render.Fixed(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	{
 		byteString := make([]byte, v.CurrentLen)
@@ -2843,12 +2846,13 @@ func getCrtcTransformReply(buf []byte) *GetCrtcTransformReply {
 		b += int(v.CurrentLen)
 	}
 
+	b = (b + 3) & ^3 // alignment gap
+
 	v.CurrentParams = make([]render.Fixed, v.CurrentNparams)
 	for i := 0; i < int(v.CurrentNparams); i++ {
 		v.CurrentParams[i] = render.Fixed(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -2918,10 +2922,12 @@ type GetOutputInfoReply struct {
 	NumPreferred  uint16
 	NumClones     uint16
 	NameLen       uint16
-	Crtcs         []Crtc   // size: xgb.Pad((int(NumCrtcs) * 4))
-	Modes         []Mode   // size: xgb.Pad((int(NumModes) * 4))
-	Clones        []Output // size: xgb.Pad((int(NumClones) * 4))
-	Name          []byte   // size: xgb.Pad((int(NameLen) * 1))
+	Crtcs         []Crtc // size: xgb.Pad((int(NumCrtcs) * 4))
+	// alignment gap to multiple of 4
+	Modes []Mode // size: xgb.Pad((int(NumModes) * 4))
+	// alignment gap to multiple of 4
+	Clones []Output // size: xgb.Pad((int(NumClones) * 4))
+	Name   []byte   // size: xgb.Pad((int(NameLen) * 1))
 }
 
 // Reply blocks and returns the reply data for a GetOutputInfo request.
@@ -2988,25 +2994,26 @@ func getOutputInfoReply(buf []byte) *GetOutputInfoReply {
 		v.Crtcs[i] = Crtc(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Modes = make([]Mode, v.NumModes)
 	for i := 0; i < int(v.NumModes); i++ {
 		v.Modes[i] = Mode(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Clones = make([]Output, v.NumClones)
 	for i := 0; i < int(v.NumClones); i++ {
 		v.Clones[i] = Output(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	v.Name = make([]byte, v.NameLen)
 	copy(v.Name[:v.NameLen], buf[b:])
-	b += xgb.Pad(int(v.NameLen))
+	b += int(v.NameLen)
 
 	return v
 }
@@ -3202,7 +3209,7 @@ func getOutputPropertyReply(buf []byte) *GetOutputPropertyReply {
 
 	v.Data = make([]byte, (int(v.NumItems) * (int(v.Format) / 8)))
 	copy(v.Data[:(int(v.NumItems)*(int(v.Format)/8))], buf[b:])
-	b += xgb.Pad(int((int(v.NumItems) * (int(v.Format) / 8))))
+	b += int((int(v.NumItems) * (int(v.Format) / 8)))
 
 	return v
 }
@@ -3433,11 +3440,14 @@ type GetProviderInfoReply struct {
 	NumAssociatedProviders uint16
 	NameLen                uint16
 	// padding: 8 bytes
-	Crtcs                []Crtc     // size: xgb.Pad((int(NumCrtcs) * 4))
-	Outputs              []Output   // size: xgb.Pad((int(NumOutputs) * 4))
-	AssociatedProviders  []Provider // size: xgb.Pad((int(NumAssociatedProviders) * 4))
-	AssociatedCapability []uint32   // size: xgb.Pad((int(NumAssociatedProviders) * 4))
-	Name                 string     // size: xgb.Pad((int(NameLen) * 1))
+	Crtcs []Crtc // size: xgb.Pad((int(NumCrtcs) * 4))
+	// alignment gap to multiple of 4
+	Outputs []Output // size: xgb.Pad((int(NumOutputs) * 4))
+	// alignment gap to multiple of 4
+	AssociatedProviders []Provider // size: xgb.Pad((int(NumAssociatedProviders) * 4))
+	// alignment gap to multiple of 4
+	AssociatedCapability []uint32 // size: xgb.Pad((int(NumAssociatedProviders) * 4))
+	Name                 string   // size: xgb.Pad((int(NameLen) * 1))
 }
 
 // Reply blocks and returns the reply data for a GetProviderInfo request.
@@ -3491,28 +3501,30 @@ func getProviderInfoReply(buf []byte) *GetProviderInfoReply {
 		v.Crtcs[i] = Crtc(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Outputs = make([]Output, v.NumOutputs)
 	for i := 0; i < int(v.NumOutputs); i++ {
 		v.Outputs[i] = Output(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.AssociatedProviders = make([]Provider, v.NumAssociatedProviders)
 	for i := 0; i < int(v.NumAssociatedProviders); i++ {
 		v.AssociatedProviders[i] = Provider(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.AssociatedCapability = make([]uint32, v.NumAssociatedProviders)
 	for i := 0; i < int(v.NumAssociatedProviders); i++ {
 		v.AssociatedCapability[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	{
 		byteString := make([]byte, v.NameLen)
@@ -3627,7 +3639,7 @@ func getProviderPropertyReply(buf []byte) *GetProviderPropertyReply {
 
 	v.Data = make([]byte, (int(v.NumItems) * (int(v.Format) / 8)))
 	copy(v.Data[:(int(v.NumItems)*(int(v.Format)/8))], buf[b:])
-	b += xgb.Pad(int((int(v.NumItems) * (int(v.Format) / 8))))
+	b += int((int(v.NumItems) * (int(v.Format) / 8)))
 
 	return v
 }
@@ -3758,7 +3770,6 @@ func getProvidersReply(buf []byte) *GetProvidersReply {
 		v.Providers[i] = Provider(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -3826,7 +3837,8 @@ type GetScreenInfoReply struct {
 	Rate            uint16
 	NInfo           uint16
 	// padding: 2 bytes
-	Sizes []ScreenSize   // size: xgb.Pad((int(NSizes) * 8))
+	Sizes []ScreenSize // size: xgb.Pad((int(NSizes) * 8))
+	// alignment gap to multiple of 2
 	Rates []RefreshRates // size: RefreshRatesListSize(Rates)
 }
 
@@ -3884,6 +3896,8 @@ func getScreenInfoReply(buf []byte) *GetScreenInfoReply {
 
 	v.Sizes = make([]ScreenSize, v.NSizes)
 	b += ScreenSizeReadList(buf[b:], v.Sizes)
+
+	b = (b + 1) & ^1 // alignment gap
 
 	v.Rates = make([]RefreshRates, (int(v.NInfo) - int(v.NSizes)))
 	b += RefreshRatesReadList(buf[b:], v.Rates)
@@ -3952,10 +3966,12 @@ type GetScreenResourcesReply struct {
 	NumModes        uint16
 	NamesLen        uint16
 	// padding: 8 bytes
-	Crtcs   []Crtc     // size: xgb.Pad((int(NumCrtcs) * 4))
-	Outputs []Output   // size: xgb.Pad((int(NumOutputs) * 4))
-	Modes   []ModeInfo // size: xgb.Pad((int(NumModes) * 32))
-	Names   []byte     // size: xgb.Pad((int(NamesLen) * 1))
+	Crtcs []Crtc // size: xgb.Pad((int(NumCrtcs) * 4))
+	// alignment gap to multiple of 4
+	Outputs []Output // size: xgb.Pad((int(NumOutputs) * 4))
+	// alignment gap to multiple of 4
+	Modes []ModeInfo // size: xgb.Pad((int(NumModes) * 32))
+	Names []byte     // size: xgb.Pad((int(NamesLen) * 1))
 }
 
 // Reply blocks and returns the reply data for a GetScreenResources request.
@@ -4008,21 +4024,23 @@ func getScreenResourcesReply(buf []byte) *GetScreenResourcesReply {
 		v.Crtcs[i] = Crtc(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Outputs = make([]Output, v.NumOutputs)
 	for i := 0; i < int(v.NumOutputs); i++ {
 		v.Outputs[i] = Output(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Modes = make([]ModeInfo, v.NumModes)
 	b += ModeInfoReadList(buf[b:], v.Modes)
 
 	v.Names = make([]byte, v.NamesLen)
 	copy(v.Names[:v.NamesLen], buf[b:])
-	b += xgb.Pad(int(v.NamesLen))
+	b += int(v.NamesLen)
 
 	return v
 }
@@ -4088,10 +4106,12 @@ type GetScreenResourcesCurrentReply struct {
 	NumModes        uint16
 	NamesLen        uint16
 	// padding: 8 bytes
-	Crtcs   []Crtc     // size: xgb.Pad((int(NumCrtcs) * 4))
-	Outputs []Output   // size: xgb.Pad((int(NumOutputs) * 4))
-	Modes   []ModeInfo // size: xgb.Pad((int(NumModes) * 32))
-	Names   []byte     // size: xgb.Pad((int(NamesLen) * 1))
+	Crtcs []Crtc // size: xgb.Pad((int(NumCrtcs) * 4))
+	// alignment gap to multiple of 4
+	Outputs []Output // size: xgb.Pad((int(NumOutputs) * 4))
+	// alignment gap to multiple of 4
+	Modes []ModeInfo // size: xgb.Pad((int(NumModes) * 32))
+	Names []byte     // size: xgb.Pad((int(NamesLen) * 1))
 }
 
 // Reply blocks and returns the reply data for a GetScreenResourcesCurrent request.
@@ -4144,21 +4164,23 @@ func getScreenResourcesCurrentReply(buf []byte) *GetScreenResourcesCurrentReply 
 		v.Crtcs[i] = Crtc(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Outputs = make([]Output, v.NumOutputs)
 	for i := 0; i < int(v.NumOutputs); i++ {
 		v.Outputs[i] = Output(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Modes = make([]ModeInfo, v.NumModes)
 	b += ModeInfoReadList(buf[b:], v.Modes)
 
 	v.Names = make([]byte, v.NamesLen)
 	copy(v.Names[:v.NamesLen], buf[b:])
-	b += xgb.Pad(int(v.NamesLen))
+	b += int(v.NamesLen)
 
 	return v
 }
@@ -4360,7 +4382,6 @@ func listOutputPropertiesReply(buf []byte) *ListOutputPropertiesReply {
 		v.Atoms[i] = xproto.Atom(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -4459,7 +4480,6 @@ func listProviderPropertiesReply(buf []byte) *ListProviderPropertiesReply {
 		v.Atoms[i] = xproto.Atom(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -4578,7 +4598,6 @@ func queryOutputPropertyReply(buf []byte) *QueryOutputPropertyReply {
 		v.ValidValues[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -4700,7 +4719,6 @@ func queryProviderPropertyReply(buf []byte) *QueryProviderPropertyReply {
 		v.ValidValues[i] = int32(xgb.Get32(buf[b:]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return v
 }
@@ -5001,7 +5019,6 @@ func setCrtcConfigRequest(c *xgb.Conn, Crtc Crtc, Timestamp xproto.Timestamp, Co
 		xgb.Put32(buf[b:], uint32(Outputs[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
 	return buf
 }
@@ -5042,7 +5059,7 @@ func (cook SetCrtcGammaCookie) Check() error {
 // Write request to wire for SetCrtcGamma
 // setCrtcGammaRequest writes a SetCrtcGamma request to a byte slice.
 func setCrtcGammaRequest(c *xgb.Conn, Crtc Crtc, Size uint16, Red []uint16, Green []uint16, Blue []uint16) []byte {
-	size := xgb.Pad((((12 + xgb.Pad((int(Size) * 2))) + xgb.Pad((int(Size) * 2))) + xgb.Pad((int(Size) * 2))))
+	size := xgb.Pad((((((12 + xgb.Pad((int(Size) * 2))) + 2) + xgb.Pad((int(Size) * 2))) + 2) + xgb.Pad((int(Size) * 2))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -5052,7 +5069,7 @@ func setCrtcGammaRequest(c *xgb.Conn, Crtc Crtc, Size uint16, Red []uint16, Gree
 	buf[b] = 24 // request opcode
 	b += 1
 
-	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	blen := b
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Crtc))
@@ -5067,21 +5084,24 @@ func setCrtcGammaRequest(c *xgb.Conn, Crtc Crtc, Size uint16, Red []uint16, Gree
 		xgb.Put16(buf[b:], Red[i])
 		b += 2
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 1) & ^1 // alignment gap
 
 	for i := 0; i < int(Size); i++ {
 		xgb.Put16(buf[b:], Green[i])
 		b += 2
 	}
-	b = xgb.Pad(b)
+
+	b = (b + 1) & ^1 // alignment gap
 
 	for i := 0; i < int(Size); i++ {
 		xgb.Put16(buf[b:], Blue[i])
 		b += 2
 	}
-	b = xgb.Pad(b)
 
-	return buf
+	b = xgb.Pad(b)
+	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
+	return buf[:b]
 }
 
 // SetCrtcTransformCookie is a cookie used only for SetCrtcTransform requests.
@@ -5120,7 +5140,7 @@ func (cook SetCrtcTransformCookie) Check() error {
 // Write request to wire for SetCrtcTransform
 // setCrtcTransformRequest writes a SetCrtcTransform request to a byte slice.
 func setCrtcTransformRequest(c *xgb.Conn, Crtc Crtc, Transform render.Transform, FilterLen uint16, FilterName string, FilterParams []render.Fixed) []byte {
-	size := xgb.Pad(((48 + xgb.Pad((int(FilterLen) * 1))) + xgb.Pad((len(FilterParams) * 4))))
+	size := xgb.Pad((((48 + xgb.Pad((int(FilterLen) * 1))) + 4) + xgb.Pad((len(FilterParams) * 4))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -5130,7 +5150,7 @@ func setCrtcTransformRequest(c *xgb.Conn, Crtc Crtc, Transform render.Transform,
 	buf[b] = 26 // request opcode
 	b += 1
 
-	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	blen := b
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Crtc))
@@ -5148,15 +5168,18 @@ func setCrtcTransformRequest(c *xgb.Conn, Crtc Crtc, Transform render.Transform,
 	b += 2 // padding
 
 	copy(buf[b:], FilterName[:FilterLen])
-	b += xgb.Pad(int(FilterLen))
+	b += int(FilterLen)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	for i := 0; i < int(len(FilterParams)); i++ {
 		xgb.Put32(buf[b:], uint32(FilterParams[i]))
 		b += 4
 	}
-	b = xgb.Pad(b)
 
-	return buf
+	b = xgb.Pad(b)
+	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
+	return buf[:b]
 }
 
 // SetOutputPrimaryCookie is a cookie used only for SetOutputPrimary requests.
