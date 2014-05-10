@@ -155,7 +155,8 @@ func (r *Request) WriteRequest(c *Context) {
 			return
 		}
 		c.Putln("b = xgb.Pad(b)")
-		c.Putln("xgb.Put16(buf[blen:], uint16(b / 4)) // write request size in 4-byte units")
+		c.Putln("xgb.Put16(buf[blen:], uint16(b / 4)) " +
+			"// write request size in 4-byte units")
 		c.Putln("return buf[:b]")
 	}
 	c.Putln("// Write request to wire for %s", r.SrcName())

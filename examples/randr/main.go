@@ -49,7 +49,8 @@ func main() {
 			bestMode := info.Modes[0]
 			for _, mode := range resources.Modes {
 				if mode.Id == uint32(bestMode) {
-					fmt.Printf("Width: %d, Height: %d\n", mode.Width, mode.Height)
+					fmt.Printf("Width: %d, Height: %d\n",
+						mode.Width, mode.Height)
 				}
 			}
 		}
