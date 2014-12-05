@@ -290,6 +290,9 @@ func (c *Conn) generateSeqIds() {
 type request struct {
 	buf    []byte
 	cookie *Cookie
+
+	// seq is closed when the request (cookie) has been sequenced by the Conn.
+	seq chan struct{}
 }
 
 // NewRequest takes the bytes and a cookie of a particular request, constructs
@@ -311,7 +314,9 @@ type request struct {
 // In all likelihood, you should be able to copy and paste with some minor
 // edits the generated code for the request you want to issue.
 func (c *Conn) NewRequest(buf []byte, cookie *Cookie) {
-	c.reqChan <- &request{buf: buf, cookie: cookie}
+	seq := make(chan struct{})
+	c.reqChan <- &request{buf: buf, cookie: cookie, seq: seq}
+	<-seq
 }
 
 // sendRequests is run as a single goroutine that takes requests and writes
@@ -329,6 +334,7 @@ func (c *Conn) sendRequests() {
 			c.noop()
 		}
 		req.cookie.Sequence = c.newSequenceId()
+		close(req.seq)
 		c.cookieChan <- req.cookie
 		c.writeBuffer(req.buf)
 	}
