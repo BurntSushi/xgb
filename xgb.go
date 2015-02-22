@@ -98,6 +98,26 @@ func NewConnDisplay(display string) (*Conn, error) {
 		return nil, err
 	}
 
+	return postNewConn(conn)
+}
+
+// NewConnDisplay is just like NewConn, but allows a specific net.Conn
+// to be used.
+func NewConnNet(netConn net.Conn) (*Conn, error) {
+	conn := &Conn{}
+
+	// First connect. This reads authority, checks DISPLAY environment
+	// variable, and loads the initial Setup info.
+	err := conn.connectNet(netConn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return postNewConn(conn)
+}
+
+func postNewConn(conn *Conn) (*Conn, error) {
 	conn.Extensions = make(map[string]byte)
 
 	conn.cookieChan = make(chan *Cookie, cookieBuffer)
