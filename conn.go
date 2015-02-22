@@ -29,6 +29,17 @@ func (c *Conn) connect(display string) error {
 		return err
 	}
 
+	return c.postConnect()
+}
+
+// connect init from to the net.Conn,
+func (c *Conn) connectNet(netConn net.Conn) error {
+	c.conn = netConn
+	return c.postConnect()
+}
+
+// do the postConnect action after Conn get it's underly net.Conn
+func (c *Conn) postConnect() error {
 	// Get authentication data
 	authName, authData, err := readAuthority(c.host, c.display)
 	noauth := false
