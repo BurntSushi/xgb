@@ -331,7 +331,10 @@ func (c *Conn) sendRequests() {
 		// Note that we circumvent the request channel, because we're *in*
 		// the request channel.
 		if len(c.cookieChan) == cookieBuffer-1 {
-			c.noop()
+			if err := c.noop(); err != nil {
+				// Shut everything down.
+				break
+			}
 		}
 		req.cookie.Sequence = c.newSequenceId()
 		close(req.seq)
@@ -340,26 +343,31 @@ func (c *Conn) sendRequests() {
 	}
 	response := make(chan struct{})
 	c.closing <- response
-	c.noop() // Flush the response reading goroutine.
+	c.noop() // Flush the response reading goroutine, ignore error.
 	<-response
 	c.conn.Close()
 }
 
 // noop circumvents the usual request sending goroutines and forces a round
 // trip request manually.
-func (c *Conn) noop() {
+func (c *Conn) noop() error {
 	cookie := c.NewCookie(true, true)
 	cookie.Sequence = c.newSequenceId()
 	c.cookieChan <- cookie
-	c.writeBuffer(c.getInputFocusRequest())
+	if err := c.writeBuffer(c.getInputFocusRequest()); err != nil {
+		return err
+	}
 	cookie.Reply() // wait for the buffer to clear
+	return nil
 }
 
 // writeBuffer is a convenience function for writing a byte slice to the wire.
-func (c *Conn) writeBuffer(buf []byte) {
+func (c *Conn) writeBuffer(buf []byte) error {
 	if _, err := c.conn.Write(buf); err != nil {
-		Logger.Printf("Write error: %s", err)
-		Logger.Fatal("A write error is unrecoverable. Exiting...")
+		Logger.Printf("A write error is unrecoverable: %s", err)
+		return err
+	} else {
+		return nil
 	}
 }
 
@@ -377,7 +385,6 @@ func (c *Conn) readResponses() {
 
 	var (
 		err        Error
-		event      Event
 		seq        uint16
 		replyBytes []byte
 	)
@@ -391,13 +398,13 @@ func (c *Conn) readResponses() {
 		}
 
 		buf := make([]byte, 32)
-		err, event, seq = nil, nil, 0
-
+		err, seq = nil, 0
 		if _, err := io.ReadFull(c.conn, buf); err != nil {
-			Logger.Println("A read error is unrecoverable.")
-			panic(err)
+			Logger.Printf("A read error is unrecoverable: %s", err)
+			c.eventChan <- err
+			c.Close()
+			continue
 		}
-
 		switch buf[0] {
 		case 0: // This is an error
 			// Use the constructor function for this error (that is auto
@@ -423,8 +430,10 @@ func (c *Conn) readResponses() {
 				biggerBuf := make([]byte, byteCount)
 				copy(biggerBuf[:32], buf)
 				if _, err := io.ReadFull(c.conn, biggerBuf[32:]); err != nil {
-					Logger.Printf("Read error: %s", err)
-					Logger.Fatal("A read error is unrecoverable. Exiting...")
+					Logger.Printf("A read error is unrecoverable: %s", err)
+					c.eventChan <- err
+					c.Close()
+					continue
 				}
 				replyBytes = biggerBuf
 			} else {
@@ -445,25 +454,7 @@ func (c *Conn) readResponses() {
 					"for event with number %d.", evNum)
 				continue
 			}
-
-			event = newEventFun(buf)
-
-			// Put the event into the queue.
-			// FIXME: I'm not sure if using a goroutine here to guarantee
-			// a non-blocking send is the right way to go. I should implement
-			// a proper dynamic queue.
-			// I am pretty sure this also loses a guarantee of events being
-			// processed in order of being received.
-			select {
-			case c.eventChan <- event:
-			default:
-				go func() {
-					println("overflowing...")
-					c.eventChan <- event
-				}()
-			}
-
-			// No more processing for events.
+			c.eventChan <- newEventFun(buf)
 			continue
 		}
 
@@ -535,15 +526,16 @@ func processEventOrError(everr eventOrError) (Event, Error) {
 		Logger.Printf("Invalid event/error type: %T", everr)
 		return nil, nil
 	}
-	panic("unreachable")
 }
 
 // WaitForEvent returns the next event from the server.
 // It will block until an event is available.
-// WaitForEvent returns either an Event or an Error. (Returning neither or both
+// WaitForEvent returns either an Event or an Error. (Returning both
 // is a bug.) Note than an Error here is an X error and not an XGB error. That
 // is, X errors are sometimes completely expected (and you may want to ignore
 // them in some cases).
+//
+// If both the event and error are nil, then the connection has been closed.
 func (c *Conn) WaitForEvent() (Event, Error) {
 	return processEventOrError(<-c.eventChan)
 }
@@ -559,5 +551,4 @@ func (c *Conn) PollForEvent() (Event, Error) {
 	default:
 		return nil, nil
 	}
-	panic("unreachable")
 }

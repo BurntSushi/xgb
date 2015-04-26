@@ -99,7 +99,6 @@ func (c Cookie) replyChecked() ([]byte, error) {
 	case err := <-c.errorChan:
 		return nil, err
 	}
-	panic("unreachable")
 }
 
 // replyUnchecked waits for a response on either the replyChan or pingChan
@@ -123,7 +122,6 @@ func (c Cookie) replyUnchecked() ([]byte, error) {
 	case <-c.pingChan:
 		return nil, nil
 	}
-	panic("unreachable")
 }
 
 // Check is used for checked requests that have no replies. It is a mechanism
@@ -164,5 +162,4 @@ func (c Cookie) Check() error {
 	case <-c.pingChan:
 		return nil
 	}
-	panic("unreachable")
 }
