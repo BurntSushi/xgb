@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named DPMS could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["DPMS"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["DPMS"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["DPMS"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -76,6 +75,8 @@ type CapableCookie struct {
 // Capable sends a checked request.
 // If an error occurs, it will be returned with the reply by calling CapableCookie.Reply()
 func Capable(c *xgb.Conn) CapableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'Capable' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -87,6 +88,8 @@ func Capable(c *xgb.Conn) CapableCookie {
 // CapableUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CapableUnchecked(c *xgb.Conn) CapableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'Capable' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -148,7 +151,9 @@ func capableRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DPMS"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -168,6 +173,8 @@ type DisableCookie struct {
 // Disable sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Disable(c *xgb.Conn) DisableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'Disable' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -179,6 +186,8 @@ func Disable(c *xgb.Conn) DisableCookie {
 // DisableChecked sends a checked request.
 // If an error occurs, it can be retrieved using DisableCookie.Check()
 func DisableChecked(c *xgb.Conn) DisableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'Disable' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -200,7 +209,9 @@ func disableRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DPMS"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -220,6 +231,8 @@ type EnableCookie struct {
 // Enable sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Enable(c *xgb.Conn) EnableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'Enable' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -231,6 +244,8 @@ func Enable(c *xgb.Conn) EnableCookie {
 // EnableChecked sends a checked request.
 // If an error occurs, it can be retrieved using EnableCookie.Check()
 func EnableChecked(c *xgb.Conn) EnableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'Enable' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -252,7 +267,9 @@ func enableRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DPMS"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -272,6 +289,8 @@ type ForceLevelCookie struct {
 // ForceLevel sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ForceLevel(c *xgb.Conn, PowerLevel uint16) ForceLevelCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'ForceLevel' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -283,6 +302,8 @@ func ForceLevel(c *xgb.Conn, PowerLevel uint16) ForceLevelCookie {
 // ForceLevelChecked sends a checked request.
 // If an error occurs, it can be retrieved using ForceLevelCookie.Check()
 func ForceLevelChecked(c *xgb.Conn, PowerLevel uint16) ForceLevelCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'ForceLevel' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -304,7 +325,9 @@ func forceLevelRequest(c *xgb.Conn, PowerLevel uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DPMS"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -327,6 +350,8 @@ type GetTimeoutsCookie struct {
 // GetTimeouts sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetTimeoutsCookie.Reply()
 func GetTimeouts(c *xgb.Conn) GetTimeoutsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'GetTimeouts' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -338,6 +363,8 @@ func GetTimeouts(c *xgb.Conn) GetTimeoutsCookie {
 // GetTimeoutsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetTimeoutsUnchecked(c *xgb.Conn) GetTimeoutsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'GetTimeouts' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -403,7 +430,9 @@ func getTimeoutsRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DPMS"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -423,6 +452,8 @@ type GetVersionCookie struct {
 // GetVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetVersionCookie.Reply()
 func GetVersion(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint16) GetVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'GetVersion' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -434,6 +465,8 @@ func GetVersion(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint1
 // GetVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetVersionUnchecked(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint16) GetVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'GetVersion' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -492,7 +525,9 @@ func getVersionRequest(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersio
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DPMS"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -518,6 +553,8 @@ type InfoCookie struct {
 // Info sends a checked request.
 // If an error occurs, it will be returned with the reply by calling InfoCookie.Reply()
 func Info(c *xgb.Conn) InfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'Info' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -529,6 +566,8 @@ func Info(c *xgb.Conn) InfoCookie {
 // InfoUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func InfoUnchecked(c *xgb.Conn) InfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'Info' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -594,7 +633,9 @@ func infoRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DPMS"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -614,6 +655,8 @@ type SetTimeoutsCookie struct {
 // SetTimeouts sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetTimeouts(c *xgb.Conn, StandbyTimeout uint16, SuspendTimeout uint16, OffTimeout uint16) SetTimeoutsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'SetTimeouts' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -625,6 +668,8 @@ func SetTimeouts(c *xgb.Conn, StandbyTimeout uint16, SuspendTimeout uint16, OffT
 // SetTimeoutsChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetTimeoutsCookie.Check()
 func SetTimeoutsChecked(c *xgb.Conn, StandbyTimeout uint16, SuspendTimeout uint16, OffTimeout uint16) SetTimeoutsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DPMS"]; !ok {
 		panic("Cannot issue request 'SetTimeouts' using the uninitialized extension 'DPMS'. dpms.Init(connObj) must be called first.")
 	}
@@ -646,7 +691,9 @@ func setTimeoutsRequest(c *xgb.Conn, StandbyTimeout uint16, SuspendTimeout uint1
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DPMS"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode

@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named DRI2 could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["DRI2"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["DRI2"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["DRI2"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -402,6 +401,8 @@ type AuthenticateCookie struct {
 // Authenticate sends a checked request.
 // If an error occurs, it will be returned with the reply by calling AuthenticateCookie.Reply()
 func Authenticate(c *xgb.Conn, Window xproto.Window, Magic uint32) AuthenticateCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'Authenticate' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -413,6 +414,8 @@ func Authenticate(c *xgb.Conn, Window xproto.Window, Magic uint32) AuthenticateC
 // AuthenticateUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func AuthenticateUnchecked(c *xgb.Conn, Window xproto.Window, Magic uint32) AuthenticateCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'Authenticate' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -467,7 +470,9 @@ func authenticateRequest(c *xgb.Conn, Window xproto.Window, Magic uint32) []byte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -493,6 +498,8 @@ type ConnectCookie struct {
 // Connect sends a checked request.
 // If an error occurs, it will be returned with the reply by calling ConnectCookie.Reply()
 func Connect(c *xgb.Conn, Window xproto.Window, DriverType uint32) ConnectCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'Connect' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -504,6 +511,8 @@ func Connect(c *xgb.Conn, Window xproto.Window, DriverType uint32) ConnectCookie
 // ConnectUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ConnectUnchecked(c *xgb.Conn, Window xproto.Window, DriverType uint32) ConnectCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'Connect' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -586,7 +595,9 @@ func connectRequest(c *xgb.Conn, Window xproto.Window, DriverType uint32) []byte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -612,6 +623,8 @@ type CopyRegionCookie struct {
 // CopyRegion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling CopyRegionCookie.Reply()
 func CopyRegion(c *xgb.Conn, Drawable xproto.Drawable, Region uint32, Dest uint32, Src uint32) CopyRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'CopyRegion' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -623,6 +636,8 @@ func CopyRegion(c *xgb.Conn, Drawable xproto.Drawable, Region uint32, Dest uint3
 // CopyRegionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CopyRegionUnchecked(c *xgb.Conn, Drawable xproto.Drawable, Region uint32, Dest uint32, Src uint32) CopyRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'CopyRegion' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -673,7 +688,9 @@ func copyRegionRequest(c *xgb.Conn, Drawable xproto.Drawable, Region uint32, Des
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -705,6 +722,8 @@ type CreateDrawableCookie struct {
 // CreateDrawable sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateDrawable(c *xgb.Conn, Drawable xproto.Drawable) CreateDrawableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'CreateDrawable' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -716,6 +735,8 @@ func CreateDrawable(c *xgb.Conn, Drawable xproto.Drawable) CreateDrawableCookie 
 // CreateDrawableChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateDrawableCookie.Check()
 func CreateDrawableChecked(c *xgb.Conn, Drawable xproto.Drawable) CreateDrawableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'CreateDrawable' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -737,7 +758,9 @@ func createDrawableRequest(c *xgb.Conn, Drawable xproto.Drawable) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -760,6 +783,8 @@ type DestroyDrawableCookie struct {
 // DestroyDrawable sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroyDrawable(c *xgb.Conn, Drawable xproto.Drawable) DestroyDrawableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'DestroyDrawable' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -771,6 +796,8 @@ func DestroyDrawable(c *xgb.Conn, Drawable xproto.Drawable) DestroyDrawableCooki
 // DestroyDrawableChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroyDrawableCookie.Check()
 func DestroyDrawableChecked(c *xgb.Conn, Drawable xproto.Drawable) DestroyDrawableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'DestroyDrawable' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -792,7 +819,9 @@ func destroyDrawableRequest(c *xgb.Conn, Drawable xproto.Drawable) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -815,6 +844,8 @@ type GetBuffersCookie struct {
 // GetBuffers sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetBuffersCookie.Reply()
 func GetBuffers(c *xgb.Conn, Drawable xproto.Drawable, Count uint32, Attachments []uint32) GetBuffersCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'GetBuffers' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -826,6 +857,8 @@ func GetBuffers(c *xgb.Conn, Drawable xproto.Drawable, Count uint32, Attachments
 // GetBuffersUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetBuffersUnchecked(c *xgb.Conn, Drawable xproto.Drawable, Count uint32, Attachments []uint32) GetBuffersCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'GetBuffers' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -895,7 +928,9 @@ func getBuffersRequest(c *xgb.Conn, Drawable xproto.Drawable, Count uint32, Atta
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -926,6 +961,8 @@ type GetBuffersWithFormatCookie struct {
 // GetBuffersWithFormat sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetBuffersWithFormatCookie.Reply()
 func GetBuffersWithFormat(c *xgb.Conn, Drawable xproto.Drawable, Count uint32, Attachments []AttachFormat) GetBuffersWithFormatCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'GetBuffersWithFormat' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -937,6 +974,8 @@ func GetBuffersWithFormat(c *xgb.Conn, Drawable xproto.Drawable, Count uint32, A
 // GetBuffersWithFormatUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetBuffersWithFormatUnchecked(c *xgb.Conn, Drawable xproto.Drawable, Count uint32, Attachments []AttachFormat) GetBuffersWithFormatCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'GetBuffersWithFormat' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1006,7 +1045,9 @@ func getBuffersWithFormatRequest(c *xgb.Conn, Drawable xproto.Drawable, Count ui
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -1034,6 +1075,8 @@ type GetMSCCookie struct {
 // GetMSC sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetMSCCookie.Reply()
 func GetMSC(c *xgb.Conn, Drawable xproto.Drawable) GetMSCCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'GetMSC' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1045,6 +1088,8 @@ func GetMSC(c *xgb.Conn, Drawable xproto.Drawable) GetMSCCookie {
 // GetMSCUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetMSCUnchecked(c *xgb.Conn, Drawable xproto.Drawable) GetMSCCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'GetMSC' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1119,7 +1164,9 @@ func getMSCRequest(c *xgb.Conn, Drawable xproto.Drawable) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 9 // request opcode
@@ -1142,6 +1189,8 @@ type GetParamCookie struct {
 // GetParam sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetParamCookie.Reply()
 func GetParam(c *xgb.Conn, Drawable xproto.Drawable, Param uint32) GetParamCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'GetParam' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1153,6 +1202,8 @@ func GetParam(c *xgb.Conn, Drawable xproto.Drawable, Param uint32) GetParamCooki
 // GetParamUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetParamUnchecked(c *xgb.Conn, Drawable xproto.Drawable, Param uint32) GetParamCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'GetParam' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1216,7 +1267,9 @@ func getParamRequest(c *xgb.Conn, Drawable xproto.Drawable, Param uint32) []byte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 13 // request opcode
@@ -1242,6 +1295,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1253,6 +1308,8 @@ func QueryVersion(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) QueryVe
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1311,7 +1368,9 @@ func queryVersionRequest(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -1337,6 +1396,8 @@ type SwapBuffersCookie struct {
 // SwapBuffers sends a checked request.
 // If an error occurs, it will be returned with the reply by calling SwapBuffersCookie.Reply()
 func SwapBuffers(c *xgb.Conn, Drawable xproto.Drawable, TargetMscHi uint32, TargetMscLo uint32, DivisorHi uint32, DivisorLo uint32, RemainderHi uint32, RemainderLo uint32) SwapBuffersCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'SwapBuffers' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1348,6 +1409,8 @@ func SwapBuffers(c *xgb.Conn, Drawable xproto.Drawable, TargetMscHi uint32, Targ
 // SwapBuffersUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SwapBuffersUnchecked(c *xgb.Conn, Drawable xproto.Drawable, TargetMscHi uint32, TargetMscLo uint32, DivisorHi uint32, DivisorLo uint32, RemainderHi uint32, RemainderLo uint32) SwapBuffersCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'SwapBuffers' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1406,7 +1469,9 @@ func swapBuffersRequest(c *xgb.Conn, Drawable xproto.Drawable, TargetMscHi uint3
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -1447,6 +1512,8 @@ type SwapIntervalCookie struct {
 // SwapInterval sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SwapInterval(c *xgb.Conn, Drawable xproto.Drawable, Interval uint32) SwapIntervalCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'SwapInterval' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1458,6 +1525,8 @@ func SwapInterval(c *xgb.Conn, Drawable xproto.Drawable, Interval uint32) SwapIn
 // SwapIntervalChecked sends a checked request.
 // If an error occurs, it can be retrieved using SwapIntervalCookie.Check()
 func SwapIntervalChecked(c *xgb.Conn, Drawable xproto.Drawable, Interval uint32) SwapIntervalCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'SwapInterval' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1479,7 +1548,9 @@ func swapIntervalRequest(c *xgb.Conn, Drawable xproto.Drawable, Interval uint32)
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 12 // request opcode
@@ -1505,6 +1576,8 @@ type WaitMSCCookie struct {
 // WaitMSC sends a checked request.
 // If an error occurs, it will be returned with the reply by calling WaitMSCCookie.Reply()
 func WaitMSC(c *xgb.Conn, Drawable xproto.Drawable, TargetMscHi uint32, TargetMscLo uint32, DivisorHi uint32, DivisorLo uint32, RemainderHi uint32, RemainderLo uint32) WaitMSCCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'WaitMSC' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1516,6 +1589,8 @@ func WaitMSC(c *xgb.Conn, Drawable xproto.Drawable, TargetMscHi uint32, TargetMs
 // WaitMSCUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func WaitMSCUnchecked(c *xgb.Conn, Drawable xproto.Drawable, TargetMscHi uint32, TargetMscLo uint32, DivisorHi uint32, DivisorLo uint32, RemainderHi uint32, RemainderLo uint32) WaitMSCCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'WaitMSC' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1590,7 +1665,9 @@ func waitMSCRequest(c *xgb.Conn, Drawable xproto.Drawable, TargetMscHi uint32, T
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 10 // request opcode
@@ -1631,6 +1708,8 @@ type WaitSBCCookie struct {
 // WaitSBC sends a checked request.
 // If an error occurs, it will be returned with the reply by calling WaitSBCCookie.Reply()
 func WaitSBC(c *xgb.Conn, Drawable xproto.Drawable, TargetSbcHi uint32, TargetSbcLo uint32) WaitSBCCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'WaitSBC' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1642,6 +1721,8 @@ func WaitSBC(c *xgb.Conn, Drawable xproto.Drawable, TargetSbcHi uint32, TargetSb
 // WaitSBCUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func WaitSBCUnchecked(c *xgb.Conn, Drawable xproto.Drawable, TargetSbcHi uint32, TargetSbcLo uint32) WaitSBCCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DRI2"]; !ok {
 		panic("Cannot issue request 'WaitSBC' using the uninitialized extension 'DRI2'. dri2.Init(connObj) must be called first.")
 	}
@@ -1716,7 +1797,9 @@ func waitSBCRequest(c *xgb.Conn, Drawable xproto.Drawable, TargetSbcHi uint32, T
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DRI2"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 11 // request opcode

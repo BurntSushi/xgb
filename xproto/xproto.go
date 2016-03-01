@@ -4227,6 +4227,10 @@ func NewPixmapId(c *xgb.Conn) (Pixmap, error) {
 	return Pixmap(id), nil
 }
 
+const (
+	PixmapNone = 0
+)
+
 // BadPixmap is the error number for a BadPixmap.
 const BadPixmap = 4
 
@@ -4264,10 +4268,6 @@ func (err PixmapError) Error() string {
 func init() {
 	xgb.NewErrorFuncs[4] = PixmapErrorNew
 }
-
-const (
-	PixmapNone = 0
-)
 
 const (
 	PlaceOnTop    = 0
@@ -6379,10 +6379,6 @@ func NewWindowId(c *xgb.Conn) (Window, error) {
 	return Window(id), nil
 }
 
-const (
-	WindowNone = 0
-)
-
 // BadWindow is the error number for a BadWindow.
 const BadWindow = 3
 
@@ -6420,6 +6416,10 @@ func (err WindowError) Error() string {
 func init() {
 	xgb.NewErrorFuncs[3] = WindowErrorNew
 }
+
+const (
+	WindowNone = 0
+)
 
 const (
 	WindowClassCopyFromParent = 0

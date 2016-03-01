@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named XFree86-DRI could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["XFree86-DRI"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["XFree86-DRI"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["XFree86-DRI"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -137,6 +136,8 @@ type AuthConnectionCookie struct {
 // AuthConnection sends a checked request.
 // If an error occurs, it will be returned with the reply by calling AuthConnectionCookie.Reply()
 func AuthConnection(c *xgb.Conn, Screen uint32, Magic uint32) AuthConnectionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'AuthConnection' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -148,6 +149,8 @@ func AuthConnection(c *xgb.Conn, Screen uint32, Magic uint32) AuthConnectionCook
 // AuthConnectionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func AuthConnectionUnchecked(c *xgb.Conn, Screen uint32, Magic uint32) AuthConnectionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'AuthConnection' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -202,7 +205,9 @@ func authConnectionRequest(c *xgb.Conn, Screen uint32, Magic uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 11 // request opcode
@@ -228,6 +233,8 @@ type CloseConnectionCookie struct {
 // CloseConnection sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CloseConnection(c *xgb.Conn, Screen uint32) CloseConnectionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'CloseConnection' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -239,6 +246,8 @@ func CloseConnection(c *xgb.Conn, Screen uint32) CloseConnectionCookie {
 // CloseConnectionChecked sends a checked request.
 // If an error occurs, it can be retrieved using CloseConnectionCookie.Check()
 func CloseConnectionChecked(c *xgb.Conn, Screen uint32) CloseConnectionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'CloseConnection' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -260,7 +269,9 @@ func closeConnectionRequest(c *xgb.Conn, Screen uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -283,6 +294,8 @@ type CreateContextCookie struct {
 // CreateContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling CreateContextCookie.Reply()
 func CreateContext(c *xgb.Conn, Screen uint32, Visual uint32, Context uint32) CreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'CreateContext' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -294,6 +307,8 @@ func CreateContext(c *xgb.Conn, Screen uint32, Visual uint32, Context uint32) Cr
 // CreateContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateContextUnchecked(c *xgb.Conn, Screen uint32, Visual uint32, Context uint32) CreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'CreateContext' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -348,7 +363,9 @@ func createContextRequest(c *xgb.Conn, Screen uint32, Visual uint32, Context uin
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -377,6 +394,8 @@ type CreateDrawableCookie struct {
 // CreateDrawable sends a checked request.
 // If an error occurs, it will be returned with the reply by calling CreateDrawableCookie.Reply()
 func CreateDrawable(c *xgb.Conn, Screen uint32, Drawable uint32) CreateDrawableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'CreateDrawable' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -388,6 +407,8 @@ func CreateDrawable(c *xgb.Conn, Screen uint32, Drawable uint32) CreateDrawableC
 // CreateDrawableUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateDrawableUnchecked(c *xgb.Conn, Screen uint32, Drawable uint32) CreateDrawableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'CreateDrawable' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -442,7 +463,9 @@ func createDrawableRequest(c *xgb.Conn, Screen uint32, Drawable uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -468,6 +491,8 @@ type DestroyContextCookie struct {
 // DestroyContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroyContext(c *xgb.Conn, Screen uint32, Context uint32) DestroyContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'DestroyContext' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -479,6 +504,8 @@ func DestroyContext(c *xgb.Conn, Screen uint32, Context uint32) DestroyContextCo
 // DestroyContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroyContextCookie.Check()
 func DestroyContextChecked(c *xgb.Conn, Screen uint32, Context uint32) DestroyContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'DestroyContext' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -500,7 +527,9 @@ func destroyContextRequest(c *xgb.Conn, Screen uint32, Context uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -526,6 +555,8 @@ type DestroyDrawableCookie struct {
 // DestroyDrawable sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroyDrawable(c *xgb.Conn, Screen uint32, Drawable uint32) DestroyDrawableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'DestroyDrawable' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -537,6 +568,8 @@ func DestroyDrawable(c *xgb.Conn, Screen uint32, Drawable uint32) DestroyDrawabl
 // DestroyDrawableChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroyDrawableCookie.Check()
 func DestroyDrawableChecked(c *xgb.Conn, Screen uint32, Drawable uint32) DestroyDrawableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'DestroyDrawable' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -558,7 +591,9 @@ func destroyDrawableRequest(c *xgb.Conn, Screen uint32, Drawable uint32) []byte 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -584,6 +619,8 @@ type GetClientDriverNameCookie struct {
 // GetClientDriverName sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetClientDriverNameCookie.Reply()
 func GetClientDriverName(c *xgb.Conn, Screen uint32) GetClientDriverNameCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'GetClientDriverName' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -595,6 +632,8 @@ func GetClientDriverName(c *xgb.Conn, Screen uint32) GetClientDriverNameCookie {
 // GetClientDriverNameUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetClientDriverNameUnchecked(c *xgb.Conn, Screen uint32) GetClientDriverNameCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'GetClientDriverName' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -672,7 +711,9 @@ func getClientDriverNameRequest(c *xgb.Conn, Screen uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -695,6 +736,8 @@ type GetDeviceInfoCookie struct {
 // GetDeviceInfo sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetDeviceInfoCookie.Reply()
 func GetDeviceInfo(c *xgb.Conn, Screen uint32) GetDeviceInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'GetDeviceInfo' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -706,6 +749,8 @@ func GetDeviceInfo(c *xgb.Conn, Screen uint32) GetDeviceInfoCookie {
 // GetDeviceInfoUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetDeviceInfoUnchecked(c *xgb.Conn, Screen uint32) GetDeviceInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'GetDeviceInfo' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -787,7 +832,9 @@ func getDeviceInfoRequest(c *xgb.Conn, Screen uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 10 // request opcode
@@ -810,6 +857,8 @@ type GetDrawableInfoCookie struct {
 // GetDrawableInfo sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetDrawableInfoCookie.Reply()
 func GetDrawableInfo(c *xgb.Conn, Screen uint32, Drawable uint32) GetDrawableInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'GetDrawableInfo' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -821,6 +870,8 @@ func GetDrawableInfo(c *xgb.Conn, Screen uint32, Drawable uint32) GetDrawableInf
 // GetDrawableInfoUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetDrawableInfoUnchecked(c *xgb.Conn, Screen uint32, Drawable uint32) GetDrawableInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'GetDrawableInfo' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -922,7 +973,9 @@ func getDrawableInfoRequest(c *xgb.Conn, Screen uint32, Drawable uint32) []byte 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 9 // request opcode
@@ -948,6 +1001,8 @@ type OpenConnectionCookie struct {
 // OpenConnection sends a checked request.
 // If an error occurs, it will be returned with the reply by calling OpenConnectionCookie.Reply()
 func OpenConnection(c *xgb.Conn, Screen uint32) OpenConnectionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'OpenConnection' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -959,6 +1014,8 @@ func OpenConnection(c *xgb.Conn, Screen uint32) OpenConnectionCookie {
 // OpenConnectionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func OpenConnectionUnchecked(c *xgb.Conn, Screen uint32) OpenConnectionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'OpenConnection' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -1032,7 +1089,9 @@ func openConnectionRequest(c *xgb.Conn, Screen uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -1055,6 +1114,8 @@ type QueryDirectRenderingCapableCookie struct {
 // QueryDirectRenderingCapable sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryDirectRenderingCapableCookie.Reply()
 func QueryDirectRenderingCapable(c *xgb.Conn, Screen uint32) QueryDirectRenderingCapableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'QueryDirectRenderingCapable' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -1066,6 +1127,8 @@ func QueryDirectRenderingCapable(c *xgb.Conn, Screen uint32) QueryDirectRenderin
 // QueryDirectRenderingCapableUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryDirectRenderingCapableUnchecked(c *xgb.Conn, Screen uint32) QueryDirectRenderingCapableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'QueryDirectRenderingCapable' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -1124,7 +1187,9 @@ func queryDirectRenderingCapableRequest(c *xgb.Conn, Screen uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -1147,6 +1212,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -1158,6 +1225,8 @@ func QueryVersion(c *xgb.Conn) QueryVersionCookie {
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-DRI"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XFree86-DRI'. xf86dri.Init(connObj) must be called first.")
 	}
@@ -1220,7 +1289,9 @@ func queryVersionRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-DRI"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode

@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named MIT-SCREEN-SAVER could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["MIT-SCREEN-SAVER"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["MIT-SCREEN-SAVER"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["MIT-SCREEN-SAVER"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -198,6 +197,8 @@ type QueryInfoCookie struct {
 // QueryInfo sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryInfoCookie.Reply()
 func QueryInfo(c *xgb.Conn, Drawable xproto.Drawable) QueryInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'QueryInfo' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -209,6 +210,8 @@ func QueryInfo(c *xgb.Conn, Drawable xproto.Drawable) QueryInfoCookie {
 // QueryInfoUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryInfoUnchecked(c *xgb.Conn, Drawable xproto.Drawable) QueryInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'QueryInfo' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -283,7 +286,9 @@ func queryInfoRequest(c *xgb.Conn, Drawable xproto.Drawable) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SCREEN-SAVER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -306,6 +311,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, ClientMajorVersion byte, ClientMinorVersion byte) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -317,6 +324,8 @@ func QueryVersion(c *xgb.Conn, ClientMajorVersion byte, ClientMinorVersion byte)
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, ClientMajorVersion byte, ClientMinorVersion byte) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -378,7 +387,9 @@ func queryVersionRequest(c *xgb.Conn, ClientMajorVersion byte, ClientMinorVersio
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SCREEN-SAVER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -406,6 +417,8 @@ type SelectInputCookie struct {
 // SelectInput sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SelectInput(c *xgb.Conn, Drawable xproto.Drawable, EventMask uint32) SelectInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'SelectInput' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -417,6 +430,8 @@ func SelectInput(c *xgb.Conn, Drawable xproto.Drawable, EventMask uint32) Select
 // SelectInputChecked sends a checked request.
 // If an error occurs, it can be retrieved using SelectInputCookie.Check()
 func SelectInputChecked(c *xgb.Conn, Drawable xproto.Drawable, EventMask uint32) SelectInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'SelectInput' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -438,7 +453,9 @@ func selectInputRequest(c *xgb.Conn, Drawable xproto.Drawable, EventMask uint32)
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SCREEN-SAVER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -464,6 +481,8 @@ type SetAttributesCookie struct {
 // SetAttributes sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetAttributes(c *xgb.Conn, Drawable xproto.Drawable, X int16, Y int16, Width uint16, Height uint16, BorderWidth uint16, Class byte, Depth byte, Visual xproto.Visualid, ValueMask uint32, ValueList []uint32) SetAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'SetAttributes' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -475,6 +494,8 @@ func SetAttributes(c *xgb.Conn, Drawable xproto.Drawable, X int16, Y int16, Widt
 // SetAttributesChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetAttributesCookie.Check()
 func SetAttributesChecked(c *xgb.Conn, Drawable xproto.Drawable, X int16, Y int16, Width uint16, Height uint16, BorderWidth uint16, Class byte, Depth byte, Visual xproto.Visualid, ValueMask uint32, ValueList []uint32) SetAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'SetAttributes' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -496,7 +517,9 @@ func setAttributesRequest(c *xgb.Conn, Drawable xproto.Drawable, X int16, Y int1
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SCREEN-SAVER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -551,6 +574,8 @@ type SuspendCookie struct {
 // Suspend sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Suspend(c *xgb.Conn, Suspend bool) SuspendCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'Suspend' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -562,6 +587,8 @@ func Suspend(c *xgb.Conn, Suspend bool) SuspendCookie {
 // SuspendChecked sends a checked request.
 // If an error occurs, it can be retrieved using SuspendCookie.Check()
 func SuspendChecked(c *xgb.Conn, Suspend bool) SuspendCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'Suspend' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -583,7 +610,9 @@ func suspendRequest(c *xgb.Conn, Suspend bool) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SCREEN-SAVER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -612,6 +641,8 @@ type UnsetAttributesCookie struct {
 // UnsetAttributes sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func UnsetAttributes(c *xgb.Conn, Drawable xproto.Drawable) UnsetAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'UnsetAttributes' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -623,6 +654,8 @@ func UnsetAttributes(c *xgb.Conn, Drawable xproto.Drawable) UnsetAttributesCooki
 // UnsetAttributesChecked sends a checked request.
 // If an error occurs, it can be retrieved using UnsetAttributesCookie.Check()
 func UnsetAttributesChecked(c *xgb.Conn, Drawable xproto.Drawable) UnsetAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SCREEN-SAVER"]; !ok {
 		panic("Cannot issue request 'UnsetAttributes' using the uninitialized extension 'MIT-SCREEN-SAVER'. screensaver.Init(connObj) must be called first.")
 	}
@@ -644,7 +677,9 @@ func unsetAttributesRequest(c *xgb.Conn, Drawable xproto.Drawable) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SCREEN-SAVER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode

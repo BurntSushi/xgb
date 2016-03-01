@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named XEVIE could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["XEVIE"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["XEVIE"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["XEVIE"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -119,6 +118,8 @@ type EndCookie struct {
 // End sends a checked request.
 // If an error occurs, it will be returned with the reply by calling EndCookie.Reply()
 func End(c *xgb.Conn, Cmap uint32) EndCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XEVIE"]; !ok {
 		panic("Cannot issue request 'End' using the uninitialized extension 'XEVIE'. xevie.Init(connObj) must be called first.")
 	}
@@ -130,6 +131,8 @@ func End(c *xgb.Conn, Cmap uint32) EndCookie {
 // EndUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func EndUnchecked(c *xgb.Conn, Cmap uint32) EndCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XEVIE"]; !ok {
 		panic("Cannot issue request 'End' using the uninitialized extension 'XEVIE'. xevie.Init(connObj) must be called first.")
 	}
@@ -183,7 +186,9 @@ func endRequest(c *xgb.Conn, Cmap uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XEVIE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -206,6 +211,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint16) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XEVIE"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XEVIE'. xevie.Init(connObj) must be called first.")
 	}
@@ -217,6 +224,8 @@ func QueryVersion(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uin
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint16) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XEVIE"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XEVIE'. xevie.Init(connObj) must be called first.")
 	}
@@ -278,7 +287,9 @@ func queryVersionRequest(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVers
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XEVIE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -304,6 +315,8 @@ type SelectInputCookie struct {
 // SelectInput sends a checked request.
 // If an error occurs, it will be returned with the reply by calling SelectInputCookie.Reply()
 func SelectInput(c *xgb.Conn, EventMask uint32) SelectInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XEVIE"]; !ok {
 		panic("Cannot issue request 'SelectInput' using the uninitialized extension 'XEVIE'. xevie.Init(connObj) must be called first.")
 	}
@@ -315,6 +328,8 @@ func SelectInput(c *xgb.Conn, EventMask uint32) SelectInputCookie {
 // SelectInputUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SelectInputUnchecked(c *xgb.Conn, EventMask uint32) SelectInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XEVIE"]; !ok {
 		panic("Cannot issue request 'SelectInput' using the uninitialized extension 'XEVIE'. xevie.Init(connObj) must be called first.")
 	}
@@ -368,7 +383,9 @@ func selectInputRequest(c *xgb.Conn, EventMask uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XEVIE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -391,6 +408,8 @@ type SendCookie struct {
 // Send sends a checked request.
 // If an error occurs, it will be returned with the reply by calling SendCookie.Reply()
 func Send(c *xgb.Conn, Event Event, DataType uint32) SendCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XEVIE"]; !ok {
 		panic("Cannot issue request 'Send' using the uninitialized extension 'XEVIE'. xevie.Init(connObj) must be called first.")
 	}
@@ -402,6 +421,8 @@ func Send(c *xgb.Conn, Event Event, DataType uint32) SendCookie {
 // SendUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SendUnchecked(c *xgb.Conn, Event Event, DataType uint32) SendCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XEVIE"]; !ok {
 		panic("Cannot issue request 'Send' using the uninitialized extension 'XEVIE'. xevie.Init(connObj) must be called first.")
 	}
@@ -455,7 +476,9 @@ func sendRequest(c *xgb.Conn, Event Event, DataType uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XEVIE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -486,6 +509,8 @@ type StartCookie struct {
 // Start sends a checked request.
 // If an error occurs, it will be returned with the reply by calling StartCookie.Reply()
 func Start(c *xgb.Conn, Screen uint32) StartCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XEVIE"]; !ok {
 		panic("Cannot issue request 'Start' using the uninitialized extension 'XEVIE'. xevie.Init(connObj) must be called first.")
 	}
@@ -497,6 +522,8 @@ func Start(c *xgb.Conn, Screen uint32) StartCookie {
 // StartUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func StartUnchecked(c *xgb.Conn, Screen uint32) StartCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XEVIE"]; !ok {
 		panic("Cannot issue request 'Start' using the uninitialized extension 'XEVIE'. xevie.Init(connObj) must be called first.")
 	}
@@ -550,7 +577,9 @@ func startRequest(c *xgb.Conn, Screen uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XEVIE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode

@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named Generic Event Extension could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["Generic Event Extension"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["Generic Event Extension"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["Generic Event Extension"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -69,6 +68,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint16) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["Generic Event Extension"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'Generic Event Extension'. ge.Init(connObj) must be called first.")
 	}
@@ -80,6 +81,8 @@ func QueryVersion(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uin
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint16) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["Generic Event Extension"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'Generic Event Extension'. ge.Init(connObj) must be called first.")
 	}
@@ -141,7 +144,9 @@ func queryVersionRequest(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVers
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["Generic Event Extension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode

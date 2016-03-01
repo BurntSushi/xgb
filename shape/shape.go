@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named SHAPE could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["SHAPE"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["SHAPE"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["SHAPE"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -214,6 +213,8 @@ type CombineCookie struct {
 // Combine sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Combine(c *xgb.Conn, Operation Op, DestinationKind Kind, SourceKind Kind, DestinationWindow xproto.Window, XOffset int16, YOffset int16, SourceWindow xproto.Window) CombineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'Combine' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -225,6 +226,8 @@ func Combine(c *xgb.Conn, Operation Op, DestinationKind Kind, SourceKind Kind, D
 // CombineChecked sends a checked request.
 // If an error occurs, it can be retrieved using CombineCookie.Check()
 func CombineChecked(c *xgb.Conn, Operation Op, DestinationKind Kind, SourceKind Kind, DestinationWindow xproto.Window, XOffset int16, YOffset int16, SourceWindow xproto.Window) CombineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'Combine' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -246,7 +249,9 @@ func combineRequest(c *xgb.Conn, Operation Op, DestinationKind Kind, SourceKind 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SHAPE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -289,6 +294,8 @@ type GetRectanglesCookie struct {
 // GetRectangles sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetRectanglesCookie.Reply()
 func GetRectangles(c *xgb.Conn, Window xproto.Window, SourceKind Kind) GetRectanglesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'GetRectangles' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -300,6 +307,8 @@ func GetRectangles(c *xgb.Conn, Window xproto.Window, SourceKind Kind) GetRectan
 // GetRectanglesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetRectanglesUnchecked(c *xgb.Conn, Window xproto.Window, SourceKind Kind) GetRectanglesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'GetRectangles' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -362,7 +371,9 @@ func getRectanglesRequest(c *xgb.Conn, Window xproto.Window, SourceKind Kind) []
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SHAPE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -390,6 +401,8 @@ type InputSelectedCookie struct {
 // InputSelected sends a checked request.
 // If an error occurs, it will be returned with the reply by calling InputSelectedCookie.Reply()
 func InputSelected(c *xgb.Conn, DestinationWindow xproto.Window) InputSelectedCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'InputSelected' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -401,6 +414,8 @@ func InputSelected(c *xgb.Conn, DestinationWindow xproto.Window) InputSelectedCo
 // InputSelectedUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func InputSelectedUnchecked(c *xgb.Conn, DestinationWindow xproto.Window) InputSelectedCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'InputSelected' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -456,7 +471,9 @@ func inputSelectedRequest(c *xgb.Conn, DestinationWindow xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SHAPE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -479,6 +496,8 @@ type MaskCookie struct {
 // Mask sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Mask(c *xgb.Conn, Operation Op, DestinationKind Kind, DestinationWindow xproto.Window, XOffset int16, YOffset int16, SourceBitmap xproto.Pixmap) MaskCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'Mask' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -490,6 +509,8 @@ func Mask(c *xgb.Conn, Operation Op, DestinationKind Kind, DestinationWindow xpr
 // MaskChecked sends a checked request.
 // If an error occurs, it can be retrieved using MaskCookie.Check()
 func MaskChecked(c *xgb.Conn, Operation Op, DestinationKind Kind, DestinationWindow xproto.Window, XOffset int16, YOffset int16, SourceBitmap xproto.Pixmap) MaskCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'Mask' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -511,7 +532,9 @@ func maskRequest(c *xgb.Conn, Operation Op, DestinationKind Kind, DestinationWin
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SHAPE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -551,6 +574,8 @@ type OffsetCookie struct {
 // Offset sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Offset(c *xgb.Conn, DestinationKind Kind, DestinationWindow xproto.Window, XOffset int16, YOffset int16) OffsetCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'Offset' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -562,6 +587,8 @@ func Offset(c *xgb.Conn, DestinationKind Kind, DestinationWindow xproto.Window, 
 // OffsetChecked sends a checked request.
 // If an error occurs, it can be retrieved using OffsetCookie.Check()
 func OffsetChecked(c *xgb.Conn, DestinationKind Kind, DestinationWindow xproto.Window, XOffset int16, YOffset int16) OffsetCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'Offset' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -583,7 +610,9 @@ func offsetRequest(c *xgb.Conn, DestinationKind Kind, DestinationWindow xproto.W
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SHAPE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -617,6 +646,8 @@ type QueryExtentsCookie struct {
 // QueryExtents sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryExtentsCookie.Reply()
 func QueryExtents(c *xgb.Conn, DestinationWindow xproto.Window) QueryExtentsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'QueryExtents' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -628,6 +659,8 @@ func QueryExtents(c *xgb.Conn, DestinationWindow xproto.Window) QueryExtentsCook
 // QueryExtentsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryExtentsUnchecked(c *xgb.Conn, DestinationWindow xproto.Window) QueryExtentsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'QueryExtents' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -729,7 +762,9 @@ func queryExtentsRequest(c *xgb.Conn, DestinationWindow xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SHAPE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -752,6 +787,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -763,6 +800,8 @@ func QueryVersion(c *xgb.Conn) QueryVersionCookie {
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -821,7 +860,9 @@ func queryVersionRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SHAPE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -841,6 +882,8 @@ type RectanglesCookie struct {
 // Rectangles sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Rectangles(c *xgb.Conn, Operation Op, DestinationKind Kind, Ordering byte, DestinationWindow xproto.Window, XOffset int16, YOffset int16, Rectangles []xproto.Rectangle) RectanglesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'Rectangles' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -852,6 +895,8 @@ func Rectangles(c *xgb.Conn, Operation Op, DestinationKind Kind, Ordering byte, 
 // RectanglesChecked sends a checked request.
 // If an error occurs, it can be retrieved using RectanglesCookie.Check()
 func RectanglesChecked(c *xgb.Conn, Operation Op, DestinationKind Kind, Ordering byte, DestinationWindow xproto.Window, XOffset int16, YOffset int16, Rectangles []xproto.Rectangle) RectanglesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'Rectangles' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -873,7 +918,9 @@ func rectanglesRequest(c *xgb.Conn, Operation Op, DestinationKind Kind, Ordering
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SHAPE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -915,6 +962,8 @@ type SelectInputCookie struct {
 // SelectInput sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SelectInput(c *xgb.Conn, DestinationWindow xproto.Window, Enable bool) SelectInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'SelectInput' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -926,6 +975,8 @@ func SelectInput(c *xgb.Conn, DestinationWindow xproto.Window, Enable bool) Sele
 // SelectInputChecked sends a checked request.
 // If an error occurs, it can be retrieved using SelectInputCookie.Check()
 func SelectInputChecked(c *xgb.Conn, DestinationWindow xproto.Window, Enable bool) SelectInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SHAPE"]; !ok {
 		panic("Cannot issue request 'SelectInput' using the uninitialized extension 'SHAPE'. shape.Init(connObj) must be called first.")
 	}
@@ -947,7 +998,9 @@ func selectInputRequest(c *xgb.Conn, DestinationWindow xproto.Window, Enable boo
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SHAPE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode

@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named SELinux could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["SELinux"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["SELinux"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["SELinux"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -161,6 +160,8 @@ type GetClientContextCookie struct {
 // GetClientContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetClientContextCookie.Reply()
 func GetClientContext(c *xgb.Conn, Resource uint32) GetClientContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetClientContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -172,6 +173,8 @@ func GetClientContext(c *xgb.Conn, Resource uint32) GetClientContextCookie {
 // GetClientContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetClientContextUnchecked(c *xgb.Conn, Resource uint32) GetClientContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetClientContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -237,7 +240,9 @@ func getClientContextRequest(c *xgb.Conn, Resource uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 22 // request opcode
@@ -260,6 +265,8 @@ type GetDeviceContextCookie struct {
 // GetDeviceContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetDeviceContextCookie.Reply()
 func GetDeviceContext(c *xgb.Conn, Device uint32) GetDeviceContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetDeviceContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -271,6 +278,8 @@ func GetDeviceContext(c *xgb.Conn, Device uint32) GetDeviceContextCookie {
 // GetDeviceContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetDeviceContextUnchecked(c *xgb.Conn, Device uint32) GetDeviceContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetDeviceContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -336,7 +345,9 @@ func getDeviceContextRequest(c *xgb.Conn, Device uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -359,6 +370,8 @@ type GetDeviceCreateContextCookie struct {
 // GetDeviceCreateContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetDeviceCreateContextCookie.Reply()
 func GetDeviceCreateContext(c *xgb.Conn) GetDeviceCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetDeviceCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -370,6 +383,8 @@ func GetDeviceCreateContext(c *xgb.Conn) GetDeviceCreateContextCookie {
 // GetDeviceCreateContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetDeviceCreateContextUnchecked(c *xgb.Conn) GetDeviceCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetDeviceCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -435,7 +450,9 @@ func getDeviceCreateContextRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -455,6 +472,8 @@ type GetPropertyContextCookie struct {
 // GetPropertyContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetPropertyContextCookie.Reply()
 func GetPropertyContext(c *xgb.Conn, Window xproto.Window, Property xproto.Atom) GetPropertyContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetPropertyContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -466,6 +485,8 @@ func GetPropertyContext(c *xgb.Conn, Window xproto.Window, Property xproto.Atom)
 // GetPropertyContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetPropertyContextUnchecked(c *xgb.Conn, Window xproto.Window, Property xproto.Atom) GetPropertyContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetPropertyContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -531,7 +552,9 @@ func getPropertyContextRequest(c *xgb.Conn, Window xproto.Window, Property xprot
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 12 // request opcode
@@ -557,6 +580,8 @@ type GetPropertyCreateContextCookie struct {
 // GetPropertyCreateContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetPropertyCreateContextCookie.Reply()
 func GetPropertyCreateContext(c *xgb.Conn) GetPropertyCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetPropertyCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -568,6 +593,8 @@ func GetPropertyCreateContext(c *xgb.Conn) GetPropertyCreateContextCookie {
 // GetPropertyCreateContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetPropertyCreateContextUnchecked(c *xgb.Conn) GetPropertyCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetPropertyCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -633,7 +660,9 @@ func getPropertyCreateContextRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 9 // request opcode
@@ -653,6 +682,8 @@ type GetPropertyDataContextCookie struct {
 // GetPropertyDataContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetPropertyDataContextCookie.Reply()
 func GetPropertyDataContext(c *xgb.Conn, Window xproto.Window, Property xproto.Atom) GetPropertyDataContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetPropertyDataContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -664,6 +695,8 @@ func GetPropertyDataContext(c *xgb.Conn, Window xproto.Window, Property xproto.A
 // GetPropertyDataContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetPropertyDataContextUnchecked(c *xgb.Conn, Window xproto.Window, Property xproto.Atom) GetPropertyDataContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetPropertyDataContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -729,7 +762,9 @@ func getPropertyDataContextRequest(c *xgb.Conn, Window xproto.Window, Property x
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 13 // request opcode
@@ -755,6 +790,8 @@ type GetPropertyUseContextCookie struct {
 // GetPropertyUseContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetPropertyUseContextCookie.Reply()
 func GetPropertyUseContext(c *xgb.Conn) GetPropertyUseContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetPropertyUseContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -766,6 +803,8 @@ func GetPropertyUseContext(c *xgb.Conn) GetPropertyUseContextCookie {
 // GetPropertyUseContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetPropertyUseContextUnchecked(c *xgb.Conn) GetPropertyUseContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetPropertyUseContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -831,7 +870,9 @@ func getPropertyUseContextRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 11 // request opcode
@@ -851,6 +892,8 @@ type GetSelectionContextCookie struct {
 // GetSelectionContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetSelectionContextCookie.Reply()
 func GetSelectionContext(c *xgb.Conn, Selection xproto.Atom) GetSelectionContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetSelectionContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -862,6 +905,8 @@ func GetSelectionContext(c *xgb.Conn, Selection xproto.Atom) GetSelectionContext
 // GetSelectionContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetSelectionContextUnchecked(c *xgb.Conn, Selection xproto.Atom) GetSelectionContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetSelectionContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -927,7 +972,9 @@ func getSelectionContextRequest(c *xgb.Conn, Selection xproto.Atom) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 19 // request opcode
@@ -950,6 +997,8 @@ type GetSelectionCreateContextCookie struct {
 // GetSelectionCreateContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetSelectionCreateContextCookie.Reply()
 func GetSelectionCreateContext(c *xgb.Conn) GetSelectionCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetSelectionCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -961,6 +1010,8 @@ func GetSelectionCreateContext(c *xgb.Conn) GetSelectionCreateContextCookie {
 // GetSelectionCreateContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetSelectionCreateContextUnchecked(c *xgb.Conn) GetSelectionCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetSelectionCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1026,7 +1077,9 @@ func getSelectionCreateContextRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 16 // request opcode
@@ -1046,6 +1099,8 @@ type GetSelectionDataContextCookie struct {
 // GetSelectionDataContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetSelectionDataContextCookie.Reply()
 func GetSelectionDataContext(c *xgb.Conn, Selection xproto.Atom) GetSelectionDataContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetSelectionDataContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1057,6 +1112,8 @@ func GetSelectionDataContext(c *xgb.Conn, Selection xproto.Atom) GetSelectionDat
 // GetSelectionDataContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetSelectionDataContextUnchecked(c *xgb.Conn, Selection xproto.Atom) GetSelectionDataContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetSelectionDataContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1122,7 +1179,9 @@ func getSelectionDataContextRequest(c *xgb.Conn, Selection xproto.Atom) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 20 // request opcode
@@ -1145,6 +1204,8 @@ type GetSelectionUseContextCookie struct {
 // GetSelectionUseContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetSelectionUseContextCookie.Reply()
 func GetSelectionUseContext(c *xgb.Conn) GetSelectionUseContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetSelectionUseContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1156,6 +1217,8 @@ func GetSelectionUseContext(c *xgb.Conn) GetSelectionUseContextCookie {
 // GetSelectionUseContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetSelectionUseContextUnchecked(c *xgb.Conn) GetSelectionUseContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetSelectionUseContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1221,7 +1284,9 @@ func getSelectionUseContextRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 18 // request opcode
@@ -1241,6 +1306,8 @@ type GetWindowContextCookie struct {
 // GetWindowContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetWindowContextCookie.Reply()
 func GetWindowContext(c *xgb.Conn, Window xproto.Window) GetWindowContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetWindowContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1252,6 +1319,8 @@ func GetWindowContext(c *xgb.Conn, Window xproto.Window) GetWindowContextCookie 
 // GetWindowContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetWindowContextUnchecked(c *xgb.Conn, Window xproto.Window) GetWindowContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetWindowContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1317,7 +1386,9 @@ func getWindowContextRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -1340,6 +1411,8 @@ type GetWindowCreateContextCookie struct {
 // GetWindowCreateContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetWindowCreateContextCookie.Reply()
 func GetWindowCreateContext(c *xgb.Conn) GetWindowCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetWindowCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1351,6 +1424,8 @@ func GetWindowCreateContext(c *xgb.Conn) GetWindowCreateContextCookie {
 // GetWindowCreateContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetWindowCreateContextUnchecked(c *xgb.Conn) GetWindowCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'GetWindowCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1416,7 +1491,9 @@ func getWindowCreateContextRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -1436,6 +1513,8 @@ type ListPropertiesCookie struct {
 // ListProperties sends a checked request.
 // If an error occurs, it will be returned with the reply by calling ListPropertiesCookie.Reply()
 func ListProperties(c *xgb.Conn, Window xproto.Window) ListPropertiesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'ListProperties' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1447,6 +1526,8 @@ func ListProperties(c *xgb.Conn, Window xproto.Window) ListPropertiesCookie {
 // ListPropertiesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ListPropertiesUnchecked(c *xgb.Conn, Window xproto.Window) ListPropertiesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'ListProperties' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1508,7 +1589,9 @@ func listPropertiesRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 14 // request opcode
@@ -1531,6 +1614,8 @@ type ListSelectionsCookie struct {
 // ListSelections sends a checked request.
 // If an error occurs, it will be returned with the reply by calling ListSelectionsCookie.Reply()
 func ListSelections(c *xgb.Conn) ListSelectionsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'ListSelections' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1542,6 +1627,8 @@ func ListSelections(c *xgb.Conn) ListSelectionsCookie {
 // ListSelectionsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ListSelectionsUnchecked(c *xgb.Conn) ListSelectionsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'ListSelections' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1603,7 +1690,9 @@ func listSelectionsRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 21 // request opcode
@@ -1623,6 +1712,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, ClientMajor byte, ClientMinor byte) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1634,6 +1725,8 @@ func QueryVersion(c *xgb.Conn, ClientMajor byte, ClientMinor byte) QueryVersionC
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, ClientMajor byte, ClientMinor byte) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1692,7 +1785,9 @@ func queryVersionRequest(c *xgb.Conn, ClientMajor byte, ClientMinor byte) []byte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -1718,6 +1813,8 @@ type SetDeviceContextCookie struct {
 // SetDeviceContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetDeviceContext(c *xgb.Conn, Device uint32, ContextLen uint32, Context string) SetDeviceContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetDeviceContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1729,6 +1826,8 @@ func SetDeviceContext(c *xgb.Conn, Device uint32, ContextLen uint32, Context str
 // SetDeviceContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetDeviceContextCookie.Check()
 func SetDeviceContextChecked(c *xgb.Conn, Device uint32, ContextLen uint32, Context string) SetDeviceContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetDeviceContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1750,7 +1849,9 @@ func setDeviceContextRequest(c *xgb.Conn, Device uint32, ContextLen uint32, Cont
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -1779,6 +1880,8 @@ type SetDeviceCreateContextCookie struct {
 // SetDeviceCreateContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetDeviceCreateContext(c *xgb.Conn, ContextLen uint32, Context string) SetDeviceCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetDeviceCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1790,6 +1893,8 @@ func SetDeviceCreateContext(c *xgb.Conn, ContextLen uint32, Context string) SetD
 // SetDeviceCreateContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetDeviceCreateContextCookie.Check()
 func SetDeviceCreateContextChecked(c *xgb.Conn, ContextLen uint32, Context string) SetDeviceCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetDeviceCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1811,7 +1916,9 @@ func setDeviceCreateContextRequest(c *xgb.Conn, ContextLen uint32, Context strin
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -1837,6 +1944,8 @@ type SetPropertyCreateContextCookie struct {
 // SetPropertyCreateContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetPropertyCreateContext(c *xgb.Conn, ContextLen uint32, Context string) SetPropertyCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetPropertyCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1848,6 +1957,8 @@ func SetPropertyCreateContext(c *xgb.Conn, ContextLen uint32, Context string) Se
 // SetPropertyCreateContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetPropertyCreateContextCookie.Check()
 func SetPropertyCreateContextChecked(c *xgb.Conn, ContextLen uint32, Context string) SetPropertyCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetPropertyCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1869,7 +1980,9 @@ func setPropertyCreateContextRequest(c *xgb.Conn, ContextLen uint32, Context str
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -1895,6 +2008,8 @@ type SetPropertyUseContextCookie struct {
 // SetPropertyUseContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetPropertyUseContext(c *xgb.Conn, ContextLen uint32, Context string) SetPropertyUseContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetPropertyUseContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1906,6 +2021,8 @@ func SetPropertyUseContext(c *xgb.Conn, ContextLen uint32, Context string) SetPr
 // SetPropertyUseContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetPropertyUseContextCookie.Check()
 func SetPropertyUseContextChecked(c *xgb.Conn, ContextLen uint32, Context string) SetPropertyUseContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetPropertyUseContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1927,7 +2044,9 @@ func setPropertyUseContextRequest(c *xgb.Conn, ContextLen uint32, Context string
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 10 // request opcode
@@ -1953,6 +2072,8 @@ type SetSelectionCreateContextCookie struct {
 // SetSelectionCreateContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetSelectionCreateContext(c *xgb.Conn, ContextLen uint32, Context string) SetSelectionCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetSelectionCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1964,6 +2085,8 @@ func SetSelectionCreateContext(c *xgb.Conn, ContextLen uint32, Context string) S
 // SetSelectionCreateContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetSelectionCreateContextCookie.Check()
 func SetSelectionCreateContextChecked(c *xgb.Conn, ContextLen uint32, Context string) SetSelectionCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetSelectionCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -1985,7 +2108,9 @@ func setSelectionCreateContextRequest(c *xgb.Conn, ContextLen uint32, Context st
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 15 // request opcode
@@ -2011,6 +2136,8 @@ type SetSelectionUseContextCookie struct {
 // SetSelectionUseContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetSelectionUseContext(c *xgb.Conn, ContextLen uint32, Context string) SetSelectionUseContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetSelectionUseContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -2022,6 +2149,8 @@ func SetSelectionUseContext(c *xgb.Conn, ContextLen uint32, Context string) SetS
 // SetSelectionUseContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetSelectionUseContextCookie.Check()
 func SetSelectionUseContextChecked(c *xgb.Conn, ContextLen uint32, Context string) SetSelectionUseContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetSelectionUseContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -2043,7 +2172,9 @@ func setSelectionUseContextRequest(c *xgb.Conn, ContextLen uint32, Context strin
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 17 // request opcode
@@ -2069,6 +2200,8 @@ type SetWindowCreateContextCookie struct {
 // SetWindowCreateContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetWindowCreateContext(c *xgb.Conn, ContextLen uint32, Context string) SetWindowCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetWindowCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -2080,6 +2213,8 @@ func SetWindowCreateContext(c *xgb.Conn, ContextLen uint32, Context string) SetW
 // SetWindowCreateContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetWindowCreateContextCookie.Check()
 func SetWindowCreateContextChecked(c *xgb.Conn, ContextLen uint32, Context string) SetWindowCreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["SELinux"]; !ok {
 		panic("Cannot issue request 'SetWindowCreateContext' using the uninitialized extension 'SELinux'. xselinux.Init(connObj) must be called first.")
 	}
@@ -2101,7 +2236,9 @@ func setWindowCreateContextRequest(c *xgb.Conn, ContextLen uint32, Context strin
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["SELinux"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode

@@ -79,6 +79,8 @@ func (r *Request) CheckExt(c *Context) {
 	if !c.protocol.isExt() {
 		return
 	}
+	c.Putln("c.ExtLock.RLock()")
+	c.Putln("defer c.ExtLock.RUnlock()")
 	c.Putln("if _, ok := c.Extensions[\"%s\"]; !ok {", c.protocol.ExtXName)
 	c.Putln("panic(\"Cannot issue request '%s' using the uninitialized "+
 		"extension '%s'. %s.Init(connObj) must be called first.\")",
@@ -169,7 +171,9 @@ func (r *Request) WriteRequest(c *Context) {
 	c.Putln("buf := make([]byte, size)")
 	c.Putln("")
 	if c.protocol.isExt() {
+		c.Putln("c.ExtLock.RLock()")
 		c.Putln("buf[b] = c.Extensions[\"%s\"]", c.protocol.ExtXName)
+		c.Putln("c.ExtLock.RUnlock()")
 		c.Putln("b += 1")
 		c.Putln("")
 	}

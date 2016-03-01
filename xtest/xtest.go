@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named XTEST could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["XTEST"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["XTEST"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["XTEST"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -74,6 +73,8 @@ type CompareCursorCookie struct {
 // CompareCursor sends a checked request.
 // If an error occurs, it will be returned with the reply by calling CompareCursorCookie.Reply()
 func CompareCursor(c *xgb.Conn, Window xproto.Window, Cursor xproto.Cursor) CompareCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XTEST"]; !ok {
 		panic("Cannot issue request 'CompareCursor' using the uninitialized extension 'XTEST'. xtest.Init(connObj) must be called first.")
 	}
@@ -85,6 +86,8 @@ func CompareCursor(c *xgb.Conn, Window xproto.Window, Cursor xproto.Cursor) Comp
 // CompareCursorUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CompareCursorUnchecked(c *xgb.Conn, Window xproto.Window, Cursor xproto.Cursor) CompareCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XTEST"]; !ok {
 		panic("Cannot issue request 'CompareCursor' using the uninitialized extension 'XTEST'. xtest.Init(connObj) must be called first.")
 	}
@@ -140,7 +143,9 @@ func compareCursorRequest(c *xgb.Conn, Window xproto.Window, Cursor xproto.Curso
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XTEST"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -166,6 +171,8 @@ type FakeInputCookie struct {
 // FakeInput sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func FakeInput(c *xgb.Conn, Type byte, Detail byte, Time uint32, Root xproto.Window, RootX int16, RootY int16, Deviceid byte) FakeInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XTEST"]; !ok {
 		panic("Cannot issue request 'FakeInput' using the uninitialized extension 'XTEST'. xtest.Init(connObj) must be called first.")
 	}
@@ -177,6 +184,8 @@ func FakeInput(c *xgb.Conn, Type byte, Detail byte, Time uint32, Root xproto.Win
 // FakeInputChecked sends a checked request.
 // If an error occurs, it can be retrieved using FakeInputCookie.Check()
 func FakeInputChecked(c *xgb.Conn, Type byte, Detail byte, Time uint32, Root xproto.Window, RootX int16, RootY int16, Deviceid byte) FakeInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XTEST"]; !ok {
 		panic("Cannot issue request 'FakeInput' using the uninitialized extension 'XTEST'. xtest.Init(connObj) must be called first.")
 	}
@@ -198,7 +207,9 @@ func fakeInputRequest(c *xgb.Conn, Type byte, Detail byte, Time uint32, Root xpr
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XTEST"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -245,6 +256,8 @@ type GetVersionCookie struct {
 // GetVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetVersionCookie.Reply()
 func GetVersion(c *xgb.Conn, MajorVersion byte, MinorVersion uint16) GetVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XTEST"]; !ok {
 		panic("Cannot issue request 'GetVersion' using the uninitialized extension 'XTEST'. xtest.Init(connObj) must be called first.")
 	}
@@ -256,6 +269,8 @@ func GetVersion(c *xgb.Conn, MajorVersion byte, MinorVersion uint16) GetVersionC
 // GetVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetVersionUnchecked(c *xgb.Conn, MajorVersion byte, MinorVersion uint16) GetVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XTEST"]; !ok {
 		panic("Cannot issue request 'GetVersion' using the uninitialized extension 'XTEST'. xtest.Init(connObj) must be called first.")
 	}
@@ -311,7 +326,9 @@ func getVersionRequest(c *xgb.Conn, MajorVersion byte, MinorVersion uint16) []by
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XTEST"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -339,6 +356,8 @@ type GrabControlCookie struct {
 // GrabControl sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GrabControl(c *xgb.Conn, Impervious bool) GrabControlCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XTEST"]; !ok {
 		panic("Cannot issue request 'GrabControl' using the uninitialized extension 'XTEST'. xtest.Init(connObj) must be called first.")
 	}
@@ -350,6 +369,8 @@ func GrabControl(c *xgb.Conn, Impervious bool) GrabControlCookie {
 // GrabControlChecked sends a checked request.
 // If an error occurs, it can be retrieved using GrabControlCookie.Check()
 func GrabControlChecked(c *xgb.Conn, Impervious bool) GrabControlCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XTEST"]; !ok {
 		panic("Cannot issue request 'GrabControl' using the uninitialized extension 'XTEST'. xtest.Init(connObj) must be called first.")
 	}
@@ -371,7 +392,9 @@ func grabControlRequest(c *xgb.Conn, Impervious bool) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XTEST"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode

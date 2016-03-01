@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named GLX could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["GLX"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["GLX"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["GLX"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -1029,6 +1028,8 @@ type AreTexturesResidentCookie struct {
 // AreTexturesResident sends a checked request.
 // If an error occurs, it will be returned with the reply by calling AreTexturesResidentCookie.Reply()
 func AreTexturesResident(c *xgb.Conn, ContextTag ContextTag, N int32, Textures []uint32) AreTexturesResidentCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'AreTexturesResident' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1040,6 +1041,8 @@ func AreTexturesResident(c *xgb.Conn, ContextTag ContextTag, N int32, Textures [
 // AreTexturesResidentUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func AreTexturesResidentUnchecked(c *xgb.Conn, ContextTag ContextTag, N int32, Textures []uint32) AreTexturesResidentCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'AreTexturesResident' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1108,7 +1111,9 @@ func areTexturesResidentRequest(c *xgb.Conn, ContextTag ContextTag, N int32, Tex
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 143 // request opcode
@@ -1139,6 +1144,8 @@ type ChangeDrawableAttributesCookie struct {
 // ChangeDrawableAttributes sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ChangeDrawableAttributes(c *xgb.Conn, Drawable Drawable, NumAttribs uint32, Attribs []uint32) ChangeDrawableAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'ChangeDrawableAttributes' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1150,6 +1157,8 @@ func ChangeDrawableAttributes(c *xgb.Conn, Drawable Drawable, NumAttribs uint32,
 // ChangeDrawableAttributesChecked sends a checked request.
 // If an error occurs, it can be retrieved using ChangeDrawableAttributesCookie.Check()
 func ChangeDrawableAttributesChecked(c *xgb.Conn, Drawable Drawable, NumAttribs uint32, Attribs []uint32) ChangeDrawableAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'ChangeDrawableAttributes' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1171,7 +1180,9 @@ func changeDrawableAttributesRequest(c *xgb.Conn, Drawable Drawable, NumAttribs 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 30 // request opcode
@@ -1202,6 +1213,8 @@ type ClientInfoCookie struct {
 // ClientInfo sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ClientInfo(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32, StrLen uint32, String string) ClientInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'ClientInfo' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1213,6 +1226,8 @@ func ClientInfo(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32, StrLen ui
 // ClientInfoChecked sends a checked request.
 // If an error occurs, it can be retrieved using ClientInfoCookie.Check()
 func ClientInfoChecked(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32, StrLen uint32, String string) ClientInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'ClientInfo' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1234,7 +1249,9 @@ func clientInfoRequest(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32, St
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 20 // request opcode
@@ -1266,6 +1283,8 @@ type CopyContextCookie struct {
 // CopyContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CopyContext(c *xgb.Conn, Src Context, Dest Context, Mask uint32, SrcContextTag ContextTag) CopyContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CopyContext' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1277,6 +1296,8 @@ func CopyContext(c *xgb.Conn, Src Context, Dest Context, Mask uint32, SrcContext
 // CopyContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using CopyContextCookie.Check()
 func CopyContextChecked(c *xgb.Conn, Src Context, Dest Context, Mask uint32, SrcContextTag ContextTag) CopyContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CopyContext' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1298,7 +1319,9 @@ func copyContextRequest(c *xgb.Conn, Src Context, Dest Context, Mask uint32, Src
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 10 // request opcode
@@ -1330,6 +1353,8 @@ type CreateContextCookie struct {
 // CreateContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateContext(c *xgb.Conn, Context Context, Visual xproto.Visualid, Screen uint32, ShareList Context, IsDirect bool) CreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreateContext' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1341,6 +1366,8 @@ func CreateContext(c *xgb.Conn, Context Context, Visual xproto.Visualid, Screen 
 // CreateContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateContextCookie.Check()
 func CreateContextChecked(c *xgb.Conn, Context Context, Visual xproto.Visualid, Screen uint32, ShareList Context, IsDirect bool) CreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreateContext' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1362,7 +1389,9 @@ func createContextRequest(c *xgb.Conn, Context Context, Visual xproto.Visualid, 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -1403,6 +1432,8 @@ type CreateContextAttribsARBCookie struct {
 // CreateContextAttribsARB sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateContextAttribsARB(c *xgb.Conn, Context Context, Fbconfig Fbconfig, Screen uint32, ShareList Context, IsDirect bool, NumAttribs uint32, Attribs []uint32) CreateContextAttribsARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreateContextAttribsARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1414,6 +1445,8 @@ func CreateContextAttribsARB(c *xgb.Conn, Context Context, Fbconfig Fbconfig, Sc
 // CreateContextAttribsARBChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateContextAttribsARBCookie.Check()
 func CreateContextAttribsARBChecked(c *xgb.Conn, Context Context, Fbconfig Fbconfig, Screen uint32, ShareList Context, IsDirect bool, NumAttribs uint32, Attribs []uint32) CreateContextAttribsARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreateContextAttribsARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1435,7 +1468,9 @@ func createContextAttribsARBRequest(c *xgb.Conn, Context Context, Fbconfig Fbcon
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 34 // request opcode
@@ -1484,6 +1519,8 @@ type CreateGLXPixmapCookie struct {
 // CreateGLXPixmap sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateGLXPixmap(c *xgb.Conn, Screen uint32, Visual xproto.Visualid, Pixmap xproto.Pixmap, GlxPixmap Pixmap) CreateGLXPixmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreateGLXPixmap' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1495,6 +1532,8 @@ func CreateGLXPixmap(c *xgb.Conn, Screen uint32, Visual xproto.Visualid, Pixmap 
 // CreateGLXPixmapChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateGLXPixmapCookie.Check()
 func CreateGLXPixmapChecked(c *xgb.Conn, Screen uint32, Visual xproto.Visualid, Pixmap xproto.Pixmap, GlxPixmap Pixmap) CreateGLXPixmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreateGLXPixmap' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1516,7 +1555,9 @@ func createGLXPixmapRequest(c *xgb.Conn, Screen uint32, Visual xproto.Visualid, 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 13 // request opcode
@@ -1548,6 +1589,8 @@ type CreateNewContextCookie struct {
 // CreateNewContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateNewContext(c *xgb.Conn, Context Context, Fbconfig Fbconfig, Screen uint32, RenderType uint32, ShareList Context, IsDirect bool) CreateNewContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreateNewContext' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1559,6 +1602,8 @@ func CreateNewContext(c *xgb.Conn, Context Context, Fbconfig Fbconfig, Screen ui
 // CreateNewContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateNewContextCookie.Check()
 func CreateNewContextChecked(c *xgb.Conn, Context Context, Fbconfig Fbconfig, Screen uint32, RenderType uint32, ShareList Context, IsDirect bool) CreateNewContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreateNewContext' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1580,7 +1625,9 @@ func createNewContextRequest(c *xgb.Conn, Context Context, Fbconfig Fbconfig, Sc
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 24 // request opcode
@@ -1624,6 +1671,8 @@ type CreatePbufferCookie struct {
 // CreatePbuffer sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreatePbuffer(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Pbuffer Pbuffer, NumAttribs uint32, Attribs []uint32) CreatePbufferCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreatePbuffer' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1635,6 +1684,8 @@ func CreatePbuffer(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Pbuffer Pbuffe
 // CreatePbufferChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreatePbufferCookie.Check()
 func CreatePbufferChecked(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Pbuffer Pbuffer, NumAttribs uint32, Attribs []uint32) CreatePbufferCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreatePbuffer' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1656,7 +1707,9 @@ func createPbufferRequest(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Pbuffer
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 27 // request opcode
@@ -1693,6 +1746,8 @@ type CreatePixmapCookie struct {
 // CreatePixmap sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreatePixmap(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Pixmap xproto.Pixmap, GlxPixmap Pixmap, NumAttribs uint32, Attribs []uint32) CreatePixmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreatePixmap' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1704,6 +1759,8 @@ func CreatePixmap(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Pixmap xproto.P
 // CreatePixmapChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreatePixmapCookie.Check()
 func CreatePixmapChecked(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Pixmap xproto.Pixmap, GlxPixmap Pixmap, NumAttribs uint32, Attribs []uint32) CreatePixmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreatePixmap' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1725,7 +1782,9 @@ func createPixmapRequest(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Pixmap x
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 22 // request opcode
@@ -1765,6 +1824,8 @@ type CreateWindowCookie struct {
 // CreateWindow sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateWindow(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Window xproto.Window, GlxWindow Window, NumAttribs uint32, Attribs []uint32) CreateWindowCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreateWindow' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1776,6 +1837,8 @@ func CreateWindow(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Window xproto.W
 // CreateWindowChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateWindowCookie.Check()
 func CreateWindowChecked(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Window xproto.Window, GlxWindow Window, NumAttribs uint32, Attribs []uint32) CreateWindowCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'CreateWindow' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1797,7 +1860,9 @@ func createWindowRequest(c *xgb.Conn, Screen uint32, Fbconfig Fbconfig, Window x
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 31 // request opcode
@@ -1837,6 +1902,8 @@ type DeleteListsCookie struct {
 // DeleteLists sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DeleteLists(c *xgb.Conn, ContextTag ContextTag, List uint32, Range int32) DeleteListsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DeleteLists' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1848,6 +1915,8 @@ func DeleteLists(c *xgb.Conn, ContextTag ContextTag, List uint32, Range int32) D
 // DeleteListsChecked sends a checked request.
 // If an error occurs, it can be retrieved using DeleteListsCookie.Check()
 func DeleteListsChecked(c *xgb.Conn, ContextTag ContextTag, List uint32, Range int32) DeleteListsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DeleteLists' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1869,7 +1938,9 @@ func deleteListsRequest(c *xgb.Conn, ContextTag ContextTag, List uint32, Range i
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 103 // request opcode
@@ -1898,6 +1969,8 @@ type DeleteQueriesARBCookie struct {
 // DeleteQueriesARB sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DeleteQueriesARB(c *xgb.Conn, ContextTag ContextTag, N int32, Ids []uint32) DeleteQueriesARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DeleteQueriesARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1909,6 +1982,8 @@ func DeleteQueriesARB(c *xgb.Conn, ContextTag ContextTag, N int32, Ids []uint32)
 // DeleteQueriesARBChecked sends a checked request.
 // If an error occurs, it can be retrieved using DeleteQueriesARBCookie.Check()
 func DeleteQueriesARBChecked(c *xgb.Conn, ContextTag ContextTag, N int32, Ids []uint32) DeleteQueriesARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DeleteQueriesARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1930,7 +2005,9 @@ func deleteQueriesARBRequest(c *xgb.Conn, ContextTag ContextTag, N int32, Ids []
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 161 // request opcode
@@ -1961,6 +2038,8 @@ type DeleteTexturesCookie struct {
 // DeleteTextures sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DeleteTextures(c *xgb.Conn, ContextTag ContextTag, N int32, Textures []uint32) DeleteTexturesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DeleteTextures' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1972,6 +2051,8 @@ func DeleteTextures(c *xgb.Conn, ContextTag ContextTag, N int32, Textures []uint
 // DeleteTexturesChecked sends a checked request.
 // If an error occurs, it can be retrieved using DeleteTexturesCookie.Check()
 func DeleteTexturesChecked(c *xgb.Conn, ContextTag ContextTag, N int32, Textures []uint32) DeleteTexturesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DeleteTextures' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -1993,7 +2074,9 @@ func deleteTexturesRequest(c *xgb.Conn, ContextTag ContextTag, N int32, Textures
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 144 // request opcode
@@ -2024,6 +2107,8 @@ type DeleteWindowCookie struct {
 // DeleteWindow sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DeleteWindow(c *xgb.Conn, Glxwindow Window) DeleteWindowCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DeleteWindow' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2035,6 +2120,8 @@ func DeleteWindow(c *xgb.Conn, Glxwindow Window) DeleteWindowCookie {
 // DeleteWindowChecked sends a checked request.
 // If an error occurs, it can be retrieved using DeleteWindowCookie.Check()
 func DeleteWindowChecked(c *xgb.Conn, Glxwindow Window) DeleteWindowCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DeleteWindow' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2056,7 +2143,9 @@ func deleteWindowRequest(c *xgb.Conn, Glxwindow Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 32 // request opcode
@@ -2079,6 +2168,8 @@ type DestroyContextCookie struct {
 // DestroyContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroyContext(c *xgb.Conn, Context Context) DestroyContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DestroyContext' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2090,6 +2181,8 @@ func DestroyContext(c *xgb.Conn, Context Context) DestroyContextCookie {
 // DestroyContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroyContextCookie.Check()
 func DestroyContextChecked(c *xgb.Conn, Context Context) DestroyContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DestroyContext' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2111,7 +2204,9 @@ func destroyContextRequest(c *xgb.Conn, Context Context) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -2134,6 +2229,8 @@ type DestroyGLXPixmapCookie struct {
 // DestroyGLXPixmap sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroyGLXPixmap(c *xgb.Conn, GlxPixmap Pixmap) DestroyGLXPixmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DestroyGLXPixmap' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2145,6 +2242,8 @@ func DestroyGLXPixmap(c *xgb.Conn, GlxPixmap Pixmap) DestroyGLXPixmapCookie {
 // DestroyGLXPixmapChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroyGLXPixmapCookie.Check()
 func DestroyGLXPixmapChecked(c *xgb.Conn, GlxPixmap Pixmap) DestroyGLXPixmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DestroyGLXPixmap' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2166,7 +2265,9 @@ func destroyGLXPixmapRequest(c *xgb.Conn, GlxPixmap Pixmap) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 15 // request opcode
@@ -2189,6 +2290,8 @@ type DestroyPbufferCookie struct {
 // DestroyPbuffer sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroyPbuffer(c *xgb.Conn, Pbuffer Pbuffer) DestroyPbufferCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DestroyPbuffer' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2200,6 +2303,8 @@ func DestroyPbuffer(c *xgb.Conn, Pbuffer Pbuffer) DestroyPbufferCookie {
 // DestroyPbufferChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroyPbufferCookie.Check()
 func DestroyPbufferChecked(c *xgb.Conn, Pbuffer Pbuffer) DestroyPbufferCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DestroyPbuffer' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2221,7 +2326,9 @@ func destroyPbufferRequest(c *xgb.Conn, Pbuffer Pbuffer) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 28 // request opcode
@@ -2244,6 +2351,8 @@ type DestroyPixmapCookie struct {
 // DestroyPixmap sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroyPixmap(c *xgb.Conn, GlxPixmap Pixmap) DestroyPixmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DestroyPixmap' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2255,6 +2364,8 @@ func DestroyPixmap(c *xgb.Conn, GlxPixmap Pixmap) DestroyPixmapCookie {
 // DestroyPixmapChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroyPixmapCookie.Check()
 func DestroyPixmapChecked(c *xgb.Conn, GlxPixmap Pixmap) DestroyPixmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'DestroyPixmap' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2276,7 +2387,9 @@ func destroyPixmapRequest(c *xgb.Conn, GlxPixmap Pixmap) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 23 // request opcode
@@ -2299,6 +2412,8 @@ type EndListCookie struct {
 // EndList sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func EndList(c *xgb.Conn, ContextTag ContextTag) EndListCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'EndList' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2310,6 +2425,8 @@ func EndList(c *xgb.Conn, ContextTag ContextTag) EndListCookie {
 // EndListChecked sends a checked request.
 // If an error occurs, it can be retrieved using EndListCookie.Check()
 func EndListChecked(c *xgb.Conn, ContextTag ContextTag) EndListCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'EndList' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2331,7 +2448,9 @@ func endListRequest(c *xgb.Conn, ContextTag ContextTag) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 102 // request opcode
@@ -2354,6 +2473,8 @@ type FeedbackBufferCookie struct {
 // FeedbackBuffer sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func FeedbackBuffer(c *xgb.Conn, ContextTag ContextTag, Size int32, Type int32) FeedbackBufferCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'FeedbackBuffer' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2365,6 +2486,8 @@ func FeedbackBuffer(c *xgb.Conn, ContextTag ContextTag, Size int32, Type int32) 
 // FeedbackBufferChecked sends a checked request.
 // If an error occurs, it can be retrieved using FeedbackBufferCookie.Check()
 func FeedbackBufferChecked(c *xgb.Conn, ContextTag ContextTag, Size int32, Type int32) FeedbackBufferCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'FeedbackBuffer' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2386,7 +2509,9 @@ func feedbackBufferRequest(c *xgb.Conn, ContextTag ContextTag, Size int32, Type 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 105 // request opcode
@@ -2415,6 +2540,8 @@ type FinishCookie struct {
 // Finish sends a checked request.
 // If an error occurs, it will be returned with the reply by calling FinishCookie.Reply()
 func Finish(c *xgb.Conn, ContextTag ContextTag) FinishCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'Finish' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2426,6 +2553,8 @@ func Finish(c *xgb.Conn, ContextTag ContextTag) FinishCookie {
 // FinishUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func FinishUnchecked(c *xgb.Conn, ContextTag ContextTag) FinishCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'Finish' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2476,7 +2605,9 @@ func finishRequest(c *xgb.Conn, ContextTag ContextTag) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 108 // request opcode
@@ -2499,6 +2630,8 @@ type FlushCookie struct {
 // Flush sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Flush(c *xgb.Conn, ContextTag ContextTag) FlushCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'Flush' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2510,6 +2643,8 @@ func Flush(c *xgb.Conn, ContextTag ContextTag) FlushCookie {
 // FlushChecked sends a checked request.
 // If an error occurs, it can be retrieved using FlushCookie.Check()
 func FlushChecked(c *xgb.Conn, ContextTag ContextTag) FlushCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'Flush' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2531,7 +2666,9 @@ func flushRequest(c *xgb.Conn, ContextTag ContextTag) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 142 // request opcode
@@ -2554,6 +2691,8 @@ type GenListsCookie struct {
 // GenLists sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GenListsCookie.Reply()
 func GenLists(c *xgb.Conn, ContextTag ContextTag, Range int32) GenListsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GenLists' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2565,6 +2704,8 @@ func GenLists(c *xgb.Conn, ContextTag ContextTag, Range int32) GenListsCookie {
 // GenListsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GenListsUnchecked(c *xgb.Conn, ContextTag ContextTag, Range int32) GenListsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GenLists' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2619,7 +2760,9 @@ func genListsRequest(c *xgb.Conn, ContextTag ContextTag, Range int32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 104 // request opcode
@@ -2645,6 +2788,8 @@ type GenQueriesARBCookie struct {
 // GenQueriesARB sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GenQueriesARBCookie.Reply()
 func GenQueriesARB(c *xgb.Conn, ContextTag ContextTag, N int32) GenQueriesARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GenQueriesARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2656,6 +2801,8 @@ func GenQueriesARB(c *xgb.Conn, ContextTag ContextTag, N int32) GenQueriesARBCoo
 // GenQueriesARBUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GenQueriesARBUnchecked(c *xgb.Conn, ContextTag ContextTag, N int32) GenQueriesARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GenQueriesARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2716,7 +2863,9 @@ func genQueriesARBRequest(c *xgb.Conn, ContextTag ContextTag, N int32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 162 // request opcode
@@ -2742,6 +2891,8 @@ type GenTexturesCookie struct {
 // GenTextures sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GenTexturesCookie.Reply()
 func GenTextures(c *xgb.Conn, ContextTag ContextTag, N int32) GenTexturesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GenTextures' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2753,6 +2904,8 @@ func GenTextures(c *xgb.Conn, ContextTag ContextTag, N int32) GenTexturesCookie 
 // GenTexturesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GenTexturesUnchecked(c *xgb.Conn, ContextTag ContextTag, N int32) GenTexturesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GenTextures' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2813,7 +2966,9 @@ func genTexturesRequest(c *xgb.Conn, ContextTag ContextTag, N int32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 145 // request opcode
@@ -2839,6 +2994,8 @@ type GetBooleanvCookie struct {
 // GetBooleanv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetBooleanvCookie.Reply()
 func GetBooleanv(c *xgb.Conn, ContextTag ContextTag, Pname int32) GetBooleanvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetBooleanv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2850,6 +3007,8 @@ func GetBooleanv(c *xgb.Conn, ContextTag ContextTag, Pname int32) GetBooleanvCoo
 // GetBooleanvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetBooleanvUnchecked(c *xgb.Conn, ContextTag ContextTag, Pname int32) GetBooleanvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetBooleanv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2929,7 +3088,9 @@ func getBooleanvRequest(c *xgb.Conn, ContextTag ContextTag, Pname int32) []byte 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 112 // request opcode
@@ -2955,6 +3116,8 @@ type GetClipPlaneCookie struct {
 // GetClipPlane sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetClipPlaneCookie.Reply()
 func GetClipPlane(c *xgb.Conn, ContextTag ContextTag, Plane int32) GetClipPlaneCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetClipPlane' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -2966,6 +3129,8 @@ func GetClipPlane(c *xgb.Conn, ContextTag ContextTag, Plane int32) GetClipPlaneC
 // GetClipPlaneUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetClipPlaneUnchecked(c *xgb.Conn, ContextTag ContextTag, Plane int32) GetClipPlaneCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetClipPlane' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3026,7 +3191,9 @@ func getClipPlaneRequest(c *xgb.Conn, ContextTag ContextTag, Plane int32) []byte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 113 // request opcode
@@ -3052,6 +3219,8 @@ type GetColorTableCookie struct {
 // GetColorTable sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetColorTableCookie.Reply()
 func GetColorTable(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint32, Type uint32, SwapBytes bool) GetColorTableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetColorTable' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3063,6 +3232,8 @@ func GetColorTable(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uin
 // GetColorTableUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetColorTableUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint32, Type uint32, SwapBytes bool) GetColorTableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetColorTable' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3128,7 +3299,9 @@ func getColorTableRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32, For
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 147 // request opcode
@@ -3167,6 +3340,8 @@ type GetColorTableParameterfvCookie struct {
 // GetColorTableParameterfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetColorTableParameterfvCookie.Reply()
 func GetColorTableParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetColorTableParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetColorTableParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3178,6 +3353,8 @@ func GetColorTableParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32,
 // GetColorTableParameterfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetColorTableParameterfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetColorTableParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetColorTableParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3249,7 +3426,9 @@ func getColorTableParameterfvRequest(c *xgb.Conn, ContextTag ContextTag, Target 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 148 // request opcode
@@ -3278,6 +3457,8 @@ type GetColorTableParameterivCookie struct {
 // GetColorTableParameteriv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetColorTableParameterivCookie.Reply()
 func GetColorTableParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetColorTableParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetColorTableParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3289,6 +3470,8 @@ func GetColorTableParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32,
 // GetColorTableParameterivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetColorTableParameterivUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetColorTableParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetColorTableParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3360,7 +3543,9 @@ func getColorTableParameterivRequest(c *xgb.Conn, ContextTag ContextTag, Target 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 149 // request opcode
@@ -3389,6 +3574,8 @@ type GetCompressedTexImageARBCookie struct {
 // GetCompressedTexImageARB sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetCompressedTexImageARBCookie.Reply()
 func GetCompressedTexImageARB(c *xgb.Conn, ContextTag ContextTag, Target uint32, Level int32) GetCompressedTexImageARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetCompressedTexImageARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3400,6 +3587,8 @@ func GetCompressedTexImageARB(c *xgb.Conn, ContextTag ContextTag, Target uint32,
 // GetCompressedTexImageARBUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetCompressedTexImageARBUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Level int32) GetCompressedTexImageARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetCompressedTexImageARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3465,7 +3654,9 @@ func getCompressedTexImageARBRequest(c *xgb.Conn, ContextTag ContextTag, Target 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 160 // request opcode
@@ -3494,6 +3685,8 @@ type GetConvolutionFilterCookie struct {
 // GetConvolutionFilter sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetConvolutionFilterCookie.Reply()
 func GetConvolutionFilter(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint32, Type uint32, SwapBytes bool) GetConvolutionFilterCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetConvolutionFilter' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3505,6 +3698,8 @@ func GetConvolutionFilter(c *xgb.Conn, ContextTag ContextTag, Target uint32, For
 // GetConvolutionFilterUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetConvolutionFilterUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint32, Type uint32, SwapBytes bool) GetConvolutionFilterCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetConvolutionFilter' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3574,7 +3769,9 @@ func getConvolutionFilterRequest(c *xgb.Conn, ContextTag ContextTag, Target uint
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 150 // request opcode
@@ -3613,6 +3810,8 @@ type GetConvolutionParameterfvCookie struct {
 // GetConvolutionParameterfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetConvolutionParameterfvCookie.Reply()
 func GetConvolutionParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetConvolutionParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetConvolutionParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3624,6 +3823,8 @@ func GetConvolutionParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32
 // GetConvolutionParameterfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetConvolutionParameterfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetConvolutionParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetConvolutionParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3695,7 +3896,9 @@ func getConvolutionParameterfvRequest(c *xgb.Conn, ContextTag ContextTag, Target
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 151 // request opcode
@@ -3724,6 +3927,8 @@ type GetConvolutionParameterivCookie struct {
 // GetConvolutionParameteriv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetConvolutionParameterivCookie.Reply()
 func GetConvolutionParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetConvolutionParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetConvolutionParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3735,6 +3940,8 @@ func GetConvolutionParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32
 // GetConvolutionParameterivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetConvolutionParameterivUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetConvolutionParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetConvolutionParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3806,7 +4013,9 @@ func getConvolutionParameterivRequest(c *xgb.Conn, ContextTag ContextTag, Target
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 152 // request opcode
@@ -3835,6 +4044,8 @@ type GetDoublevCookie struct {
 // GetDoublev sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetDoublevCookie.Reply()
 func GetDoublev(c *xgb.Conn, ContextTag ContextTag, Pname uint32) GetDoublevCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetDoublev' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3846,6 +4057,8 @@ func GetDoublev(c *xgb.Conn, ContextTag ContextTag, Pname uint32) GetDoublevCook
 // GetDoublevUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetDoublevUnchecked(c *xgb.Conn, ContextTag ContextTag, Pname uint32) GetDoublevCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetDoublev' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3917,7 +4130,9 @@ func getDoublevRequest(c *xgb.Conn, ContextTag ContextTag, Pname uint32) []byte 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 114 // request opcode
@@ -3943,6 +4158,8 @@ type GetDrawableAttributesCookie struct {
 // GetDrawableAttributes sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetDrawableAttributesCookie.Reply()
 func GetDrawableAttributes(c *xgb.Conn, Drawable Drawable) GetDrawableAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetDrawableAttributes' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -3954,6 +4171,8 @@ func GetDrawableAttributes(c *xgb.Conn, Drawable Drawable) GetDrawableAttributes
 // GetDrawableAttributesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetDrawableAttributesUnchecked(c *xgb.Conn, Drawable Drawable) GetDrawableAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetDrawableAttributes' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4018,7 +4237,9 @@ func getDrawableAttributesRequest(c *xgb.Conn, Drawable Drawable) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 29 // request opcode
@@ -4041,6 +4262,8 @@ type GetErrorCookie struct {
 // GetError sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetErrorCookie.Reply()
 func GetError(c *xgb.Conn, ContextTag ContextTag) GetErrorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetError' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4052,6 +4275,8 @@ func GetError(c *xgb.Conn, ContextTag ContextTag) GetErrorCookie {
 // GetErrorUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetErrorUnchecked(c *xgb.Conn, ContextTag ContextTag) GetErrorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetError' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4106,7 +4331,9 @@ func getErrorRequest(c *xgb.Conn, ContextTag ContextTag) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 115 // request opcode
@@ -4129,6 +4356,8 @@ type GetFBConfigsCookie struct {
 // GetFBConfigs sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetFBConfigsCookie.Reply()
 func GetFBConfigs(c *xgb.Conn, Screen uint32) GetFBConfigsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetFBConfigs' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4140,6 +4369,8 @@ func GetFBConfigs(c *xgb.Conn, Screen uint32) GetFBConfigsCookie {
 // GetFBConfigsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetFBConfigsUnchecked(c *xgb.Conn, Screen uint32) GetFBConfigsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetFBConfigs' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4208,7 +4439,9 @@ func getFBConfigsRequest(c *xgb.Conn, Screen uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 21 // request opcode
@@ -4231,6 +4464,8 @@ type GetFloatvCookie struct {
 // GetFloatv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetFloatvCookie.Reply()
 func GetFloatv(c *xgb.Conn, ContextTag ContextTag, Pname uint32) GetFloatvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetFloatv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4242,6 +4477,8 @@ func GetFloatv(c *xgb.Conn, ContextTag ContextTag, Pname uint32) GetFloatvCookie
 // GetFloatvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetFloatvUnchecked(c *xgb.Conn, ContextTag ContextTag, Pname uint32) GetFloatvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetFloatv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4313,7 +4550,9 @@ func getFloatvRequest(c *xgb.Conn, ContextTag ContextTag, Pname uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 116 // request opcode
@@ -4339,6 +4578,8 @@ type GetHistogramCookie struct {
 // GetHistogram sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetHistogramCookie.Reply()
 func GetHistogram(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint32, Type uint32, SwapBytes bool, Reset bool) GetHistogramCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetHistogram' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4350,6 +4591,8 @@ func GetHistogram(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint
 // GetHistogramUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetHistogramUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint32, Type uint32, SwapBytes bool, Reset bool) GetHistogramCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetHistogram' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4415,7 +4658,9 @@ func getHistogramRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32, Form
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 154 // request opcode
@@ -4461,6 +4706,8 @@ type GetHistogramParameterfvCookie struct {
 // GetHistogramParameterfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetHistogramParameterfvCookie.Reply()
 func GetHistogramParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetHistogramParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetHistogramParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4472,6 +4719,8 @@ func GetHistogramParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, 
 // GetHistogramParameterfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetHistogramParameterfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetHistogramParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetHistogramParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4543,7 +4792,9 @@ func getHistogramParameterfvRequest(c *xgb.Conn, ContextTag ContextTag, Target u
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 155 // request opcode
@@ -4572,6 +4823,8 @@ type GetHistogramParameterivCookie struct {
 // GetHistogramParameteriv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetHistogramParameterivCookie.Reply()
 func GetHistogramParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetHistogramParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetHistogramParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4583,6 +4836,8 @@ func GetHistogramParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32, 
 // GetHistogramParameterivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetHistogramParameterivUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetHistogramParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetHistogramParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4654,7 +4909,9 @@ func getHistogramParameterivRequest(c *xgb.Conn, ContextTag ContextTag, Target u
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 156 // request opcode
@@ -4683,6 +4940,8 @@ type GetIntegervCookie struct {
 // GetIntegerv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetIntegervCookie.Reply()
 func GetIntegerv(c *xgb.Conn, ContextTag ContextTag, Pname uint32) GetIntegervCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetIntegerv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4694,6 +4953,8 @@ func GetIntegerv(c *xgb.Conn, ContextTag ContextTag, Pname uint32) GetIntegervCo
 // GetIntegervUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetIntegervUnchecked(c *xgb.Conn, ContextTag ContextTag, Pname uint32) GetIntegervCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetIntegerv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4765,7 +5026,9 @@ func getIntegervRequest(c *xgb.Conn, ContextTag ContextTag, Pname uint32) []byte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 117 // request opcode
@@ -4791,6 +5054,8 @@ type GetLightfvCookie struct {
 // GetLightfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetLightfvCookie.Reply()
 func GetLightfv(c *xgb.Conn, ContextTag ContextTag, Light uint32, Pname uint32) GetLightfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetLightfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4802,6 +5067,8 @@ func GetLightfv(c *xgb.Conn, ContextTag ContextTag, Light uint32, Pname uint32) 
 // GetLightfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetLightfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Light uint32, Pname uint32) GetLightfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetLightfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4873,7 +5140,9 @@ func getLightfvRequest(c *xgb.Conn, ContextTag ContextTag, Light uint32, Pname u
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 118 // request opcode
@@ -4902,6 +5171,8 @@ type GetLightivCookie struct {
 // GetLightiv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetLightivCookie.Reply()
 func GetLightiv(c *xgb.Conn, ContextTag ContextTag, Light uint32, Pname uint32) GetLightivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetLightiv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4913,6 +5184,8 @@ func GetLightiv(c *xgb.Conn, ContextTag ContextTag, Light uint32, Pname uint32) 
 // GetLightivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetLightivUnchecked(c *xgb.Conn, ContextTag ContextTag, Light uint32, Pname uint32) GetLightivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetLightiv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -4984,7 +5257,9 @@ func getLightivRequest(c *xgb.Conn, ContextTag ContextTag, Light uint32, Pname u
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 119 // request opcode
@@ -5013,6 +5288,8 @@ type GetMapdvCookie struct {
 // GetMapdv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetMapdvCookie.Reply()
 func GetMapdv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query uint32) GetMapdvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMapdv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5024,6 +5301,8 @@ func GetMapdv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query uint32) G
 // GetMapdvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetMapdvUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query uint32) GetMapdvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMapdv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5095,7 +5374,9 @@ func getMapdvRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query ui
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 120 // request opcode
@@ -5124,6 +5405,8 @@ type GetMapfvCookie struct {
 // GetMapfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetMapfvCookie.Reply()
 func GetMapfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query uint32) GetMapfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMapfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5135,6 +5418,8 @@ func GetMapfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query uint32) G
 // GetMapfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetMapfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query uint32) GetMapfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMapfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5206,7 +5491,9 @@ func getMapfvRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query ui
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 121 // request opcode
@@ -5235,6 +5522,8 @@ type GetMapivCookie struct {
 // GetMapiv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetMapivCookie.Reply()
 func GetMapiv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query uint32) GetMapivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMapiv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5246,6 +5535,8 @@ func GetMapiv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query uint32) G
 // GetMapivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetMapivUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query uint32) GetMapivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMapiv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5317,7 +5608,9 @@ func getMapivRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32, Query ui
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 122 // request opcode
@@ -5346,6 +5639,8 @@ type GetMaterialfvCookie struct {
 // GetMaterialfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetMaterialfvCookie.Reply()
 func GetMaterialfv(c *xgb.Conn, ContextTag ContextTag, Face uint32, Pname uint32) GetMaterialfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMaterialfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5357,6 +5652,8 @@ func GetMaterialfv(c *xgb.Conn, ContextTag ContextTag, Face uint32, Pname uint32
 // GetMaterialfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetMaterialfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Face uint32, Pname uint32) GetMaterialfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMaterialfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5428,7 +5725,9 @@ func getMaterialfvRequest(c *xgb.Conn, ContextTag ContextTag, Face uint32, Pname
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 123 // request opcode
@@ -5457,6 +5756,8 @@ type GetMaterialivCookie struct {
 // GetMaterialiv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetMaterialivCookie.Reply()
 func GetMaterialiv(c *xgb.Conn, ContextTag ContextTag, Face uint32, Pname uint32) GetMaterialivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMaterialiv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5468,6 +5769,8 @@ func GetMaterialiv(c *xgb.Conn, ContextTag ContextTag, Face uint32, Pname uint32
 // GetMaterialivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetMaterialivUnchecked(c *xgb.Conn, ContextTag ContextTag, Face uint32, Pname uint32) GetMaterialivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMaterialiv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5539,7 +5842,9 @@ func getMaterialivRequest(c *xgb.Conn, ContextTag ContextTag, Face uint32, Pname
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 124 // request opcode
@@ -5568,6 +5873,8 @@ type GetMinmaxCookie struct {
 // GetMinmax sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetMinmaxCookie.Reply()
 func GetMinmax(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint32, Type uint32, SwapBytes bool, Reset bool) GetMinmaxCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMinmax' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5579,6 +5886,8 @@ func GetMinmax(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint32,
 // GetMinmaxUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetMinmaxUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint32, Type uint32, SwapBytes bool, Reset bool) GetMinmaxCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMinmax' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5637,7 +5946,9 @@ func getMinmaxRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 157 // request opcode
@@ -5683,6 +5994,8 @@ type GetMinmaxParameterfvCookie struct {
 // GetMinmaxParameterfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetMinmaxParameterfvCookie.Reply()
 func GetMinmaxParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetMinmaxParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMinmaxParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5694,6 +6007,8 @@ func GetMinmaxParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pna
 // GetMinmaxParameterfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetMinmaxParameterfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetMinmaxParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMinmaxParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5765,7 +6080,9 @@ func getMinmaxParameterfvRequest(c *xgb.Conn, ContextTag ContextTag, Target uint
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 158 // request opcode
@@ -5794,6 +6111,8 @@ type GetMinmaxParameterivCookie struct {
 // GetMinmaxParameteriv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetMinmaxParameterivCookie.Reply()
 func GetMinmaxParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetMinmaxParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMinmaxParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5805,6 +6124,8 @@ func GetMinmaxParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pna
 // GetMinmaxParameterivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetMinmaxParameterivUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetMinmaxParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetMinmaxParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5876,7 +6197,9 @@ func getMinmaxParameterivRequest(c *xgb.Conn, ContextTag ContextTag, Target uint
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 159 // request opcode
@@ -5905,6 +6228,8 @@ type GetPixelMapfvCookie struct {
 // GetPixelMapfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetPixelMapfvCookie.Reply()
 func GetPixelMapfv(c *xgb.Conn, ContextTag ContextTag, Map uint32) GetPixelMapfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetPixelMapfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5916,6 +6241,8 @@ func GetPixelMapfv(c *xgb.Conn, ContextTag ContextTag, Map uint32) GetPixelMapfv
 // GetPixelMapfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetPixelMapfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Map uint32) GetPixelMapfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetPixelMapfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -5987,7 +6314,9 @@ func getPixelMapfvRequest(c *xgb.Conn, ContextTag ContextTag, Map uint32) []byte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 125 // request opcode
@@ -6013,6 +6342,8 @@ type GetPixelMapuivCookie struct {
 // GetPixelMapuiv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetPixelMapuivCookie.Reply()
 func GetPixelMapuiv(c *xgb.Conn, ContextTag ContextTag, Map uint32) GetPixelMapuivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetPixelMapuiv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6024,6 +6355,8 @@ func GetPixelMapuiv(c *xgb.Conn, ContextTag ContextTag, Map uint32) GetPixelMapu
 // GetPixelMapuivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetPixelMapuivUnchecked(c *xgb.Conn, ContextTag ContextTag, Map uint32) GetPixelMapuivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetPixelMapuiv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6095,7 +6428,9 @@ func getPixelMapuivRequest(c *xgb.Conn, ContextTag ContextTag, Map uint32) []byt
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 126 // request opcode
@@ -6121,6 +6456,8 @@ type GetPixelMapusvCookie struct {
 // GetPixelMapusv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetPixelMapusvCookie.Reply()
 func GetPixelMapusv(c *xgb.Conn, ContextTag ContextTag, Map uint32) GetPixelMapusvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetPixelMapusv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6132,6 +6469,8 @@ func GetPixelMapusv(c *xgb.Conn, ContextTag ContextTag, Map uint32) GetPixelMapu
 // GetPixelMapusvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetPixelMapusvUnchecked(c *xgb.Conn, ContextTag ContextTag, Map uint32) GetPixelMapusvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetPixelMapusv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6203,7 +6542,9 @@ func getPixelMapusvRequest(c *xgb.Conn, ContextTag ContextTag, Map uint32) []byt
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 127 // request opcode
@@ -6229,6 +6570,8 @@ type GetPolygonStippleCookie struct {
 // GetPolygonStipple sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetPolygonStippleCookie.Reply()
 func GetPolygonStipple(c *xgb.Conn, ContextTag ContextTag, LsbFirst bool) GetPolygonStippleCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetPolygonStipple' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6240,6 +6583,8 @@ func GetPolygonStipple(c *xgb.Conn, ContextTag ContextTag, LsbFirst bool) GetPol
 // GetPolygonStippleUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetPolygonStippleUnchecked(c *xgb.Conn, ContextTag ContextTag, LsbFirst bool) GetPolygonStippleCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetPolygonStipple' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6298,7 +6643,9 @@ func getPolygonStippleRequest(c *xgb.Conn, ContextTag ContextTag, LsbFirst bool)
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 128 // request opcode
@@ -6328,6 +6675,8 @@ type GetQueryObjectivARBCookie struct {
 // GetQueryObjectivARB sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetQueryObjectivARBCookie.Reply()
 func GetQueryObjectivARB(c *xgb.Conn, ContextTag ContextTag, Id uint32, Pname uint32) GetQueryObjectivARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetQueryObjectivARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6339,6 +6688,8 @@ func GetQueryObjectivARB(c *xgb.Conn, ContextTag ContextTag, Id uint32, Pname ui
 // GetQueryObjectivARBUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetQueryObjectivARBUnchecked(c *xgb.Conn, ContextTag ContextTag, Id uint32, Pname uint32) GetQueryObjectivARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetQueryObjectivARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6410,7 +6761,9 @@ func getQueryObjectivARBRequest(c *xgb.Conn, ContextTag ContextTag, Id uint32, P
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 165 // request opcode
@@ -6439,6 +6792,8 @@ type GetQueryObjectuivARBCookie struct {
 // GetQueryObjectuivARB sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetQueryObjectuivARBCookie.Reply()
 func GetQueryObjectuivARB(c *xgb.Conn, ContextTag ContextTag, Id uint32, Pname uint32) GetQueryObjectuivARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetQueryObjectuivARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6450,6 +6805,8 @@ func GetQueryObjectuivARB(c *xgb.Conn, ContextTag ContextTag, Id uint32, Pname u
 // GetQueryObjectuivARBUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetQueryObjectuivARBUnchecked(c *xgb.Conn, ContextTag ContextTag, Id uint32, Pname uint32) GetQueryObjectuivARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetQueryObjectuivARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6521,7 +6878,9 @@ func getQueryObjectuivARBRequest(c *xgb.Conn, ContextTag ContextTag, Id uint32, 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 166 // request opcode
@@ -6550,6 +6909,8 @@ type GetQueryivARBCookie struct {
 // GetQueryivARB sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetQueryivARBCookie.Reply()
 func GetQueryivARB(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetQueryivARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetQueryivARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6561,6 +6922,8 @@ func GetQueryivARB(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint
 // GetQueryivARBUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetQueryivARBUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetQueryivARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetQueryivARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6632,7 +6995,9 @@ func getQueryivARBRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pna
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 164 // request opcode
@@ -6661,6 +7026,8 @@ type GetSeparableFilterCookie struct {
 // GetSeparableFilter sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetSeparableFilterCookie.Reply()
 func GetSeparableFilter(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint32, Type uint32, SwapBytes bool) GetSeparableFilterCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetSeparableFilter' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6672,6 +7039,8 @@ func GetSeparableFilter(c *xgb.Conn, ContextTag ContextTag, Target uint32, Forma
 // GetSeparableFilterUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetSeparableFilterUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Format uint32, Type uint32, SwapBytes bool) GetSeparableFilterCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetSeparableFilter' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6741,7 +7110,9 @@ func getSeparableFilterRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 153 // request opcode
@@ -6780,6 +7151,8 @@ type GetStringCookie struct {
 // GetString sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetStringCookie.Reply()
 func GetString(c *xgb.Conn, ContextTag ContextTag, Name uint32) GetStringCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetString' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6791,6 +7164,8 @@ func GetString(c *xgb.Conn, ContextTag ContextTag, Name uint32) GetStringCookie 
 // GetStringUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetStringUnchecked(c *xgb.Conn, ContextTag ContextTag, Name uint32) GetStringCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetString' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6859,7 +7234,9 @@ func getStringRequest(c *xgb.Conn, ContextTag ContextTag, Name uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 129 // request opcode
@@ -6885,6 +7262,8 @@ type GetTexEnvfvCookie struct {
 // GetTexEnvfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetTexEnvfvCookie.Reply()
 func GetTexEnvfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetTexEnvfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexEnvfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6896,6 +7275,8 @@ func GetTexEnvfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32
 // GetTexEnvfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetTexEnvfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetTexEnvfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexEnvfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -6967,7 +7348,9 @@ func getTexEnvfvRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 130 // request opcode
@@ -6996,6 +7379,8 @@ type GetTexEnvivCookie struct {
 // GetTexEnviv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetTexEnvivCookie.Reply()
 func GetTexEnviv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetTexEnvivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexEnviv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7007,6 +7392,8 @@ func GetTexEnviv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32
 // GetTexEnvivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetTexEnvivUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetTexEnvivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexEnviv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7078,7 +7465,9 @@ func getTexEnvivRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 131 // request opcode
@@ -7107,6 +7496,8 @@ type GetTexGendvCookie struct {
 // GetTexGendv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetTexGendvCookie.Reply()
 func GetTexGendv(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname uint32) GetTexGendvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexGendv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7118,6 +7509,8 @@ func GetTexGendv(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname uint32)
 // GetTexGendvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetTexGendvUnchecked(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname uint32) GetTexGendvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexGendv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7189,7 +7582,9 @@ func getTexGendvRequest(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 132 // request opcode
@@ -7218,6 +7613,8 @@ type GetTexGenfvCookie struct {
 // GetTexGenfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetTexGenfvCookie.Reply()
 func GetTexGenfv(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname uint32) GetTexGenfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexGenfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7229,6 +7626,8 @@ func GetTexGenfv(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname uint32)
 // GetTexGenfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetTexGenfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname uint32) GetTexGenfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexGenfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7300,7 +7699,9 @@ func getTexGenfvRequest(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 133 // request opcode
@@ -7329,6 +7730,8 @@ type GetTexGenivCookie struct {
 // GetTexGeniv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetTexGenivCookie.Reply()
 func GetTexGeniv(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname uint32) GetTexGenivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexGeniv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7340,6 +7743,8 @@ func GetTexGeniv(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname uint32)
 // GetTexGenivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetTexGenivUnchecked(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname uint32) GetTexGenivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexGeniv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7411,7 +7816,9 @@ func getTexGenivRequest(c *xgb.Conn, ContextTag ContextTag, Coord uint32, Pname 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 134 // request opcode
@@ -7440,6 +7847,8 @@ type GetTexImageCookie struct {
 // GetTexImage sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetTexImageCookie.Reply()
 func GetTexImage(c *xgb.Conn, ContextTag ContextTag, Target uint32, Level int32, Format uint32, Type uint32, SwapBytes bool) GetTexImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexImage' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7451,6 +7860,8 @@ func GetTexImage(c *xgb.Conn, ContextTag ContextTag, Target uint32, Level int32,
 // GetTexImageUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetTexImageUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Level int32, Format uint32, Type uint32, SwapBytes bool) GetTexImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexImage' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7524,7 +7935,9 @@ func getTexImageRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32, Level
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 135 // request opcode
@@ -7566,6 +7979,8 @@ type GetTexLevelParameterfvCookie struct {
 // GetTexLevelParameterfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetTexLevelParameterfvCookie.Reply()
 func GetTexLevelParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Level int32, Pname uint32) GetTexLevelParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexLevelParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7577,6 +7992,8 @@ func GetTexLevelParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, L
 // GetTexLevelParameterfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetTexLevelParameterfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Level int32, Pname uint32) GetTexLevelParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexLevelParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7648,7 +8065,9 @@ func getTexLevelParameterfvRequest(c *xgb.Conn, ContextTag ContextTag, Target ui
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 138 // request opcode
@@ -7680,6 +8099,8 @@ type GetTexLevelParameterivCookie struct {
 // GetTexLevelParameteriv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetTexLevelParameterivCookie.Reply()
 func GetTexLevelParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Level int32, Pname uint32) GetTexLevelParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexLevelParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7691,6 +8112,8 @@ func GetTexLevelParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32, L
 // GetTexLevelParameterivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetTexLevelParameterivUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Level int32, Pname uint32) GetTexLevelParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexLevelParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7762,7 +8185,9 @@ func getTexLevelParameterivRequest(c *xgb.Conn, ContextTag ContextTag, Target ui
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 139 // request opcode
@@ -7794,6 +8219,8 @@ type GetTexParameterfvCookie struct {
 // GetTexParameterfv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetTexParameterfvCookie.Reply()
 func GetTexParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetTexParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7805,6 +8232,8 @@ func GetTexParameterfv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname 
 // GetTexParameterfvUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetTexParameterfvUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetTexParameterfvCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexParameterfv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7876,7 +8305,9 @@ func getTexParameterfvRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32,
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 136 // request opcode
@@ -7905,6 +8336,8 @@ type GetTexParameterivCookie struct {
 // GetTexParameteriv sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetTexParameterivCookie.Reply()
 func GetTexParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetTexParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7916,6 +8349,8 @@ func GetTexParameteriv(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname 
 // GetTexParameterivUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetTexParameterivUnchecked(c *xgb.Conn, ContextTag ContextTag, Target uint32, Pname uint32) GetTexParameterivCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetTexParameteriv' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -7987,7 +8422,9 @@ func getTexParameterivRequest(c *xgb.Conn, ContextTag ContextTag, Target uint32,
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 137 // request opcode
@@ -8016,6 +8453,8 @@ type GetVisualConfigsCookie struct {
 // GetVisualConfigs sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetVisualConfigsCookie.Reply()
 func GetVisualConfigs(c *xgb.Conn, Screen uint32) GetVisualConfigsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetVisualConfigs' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8027,6 +8466,8 @@ func GetVisualConfigs(c *xgb.Conn, Screen uint32) GetVisualConfigsCookie {
 // GetVisualConfigsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetVisualConfigsUnchecked(c *xgb.Conn, Screen uint32) GetVisualConfigsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'GetVisualConfigs' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8095,7 +8536,9 @@ func getVisualConfigsRequest(c *xgb.Conn, Screen uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 14 // request opcode
@@ -8118,6 +8561,8 @@ type IsDirectCookie struct {
 // IsDirect sends a checked request.
 // If an error occurs, it will be returned with the reply by calling IsDirectCookie.Reply()
 func IsDirect(c *xgb.Conn, Context Context) IsDirectCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'IsDirect' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8129,6 +8574,8 @@ func IsDirect(c *xgb.Conn, Context Context) IsDirectCookie {
 // IsDirectUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func IsDirectUnchecked(c *xgb.Conn, Context Context) IsDirectCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'IsDirect' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8190,7 +8637,9 @@ func isDirectRequest(c *xgb.Conn, Context Context) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -8213,6 +8662,8 @@ type IsListCookie struct {
 // IsList sends a checked request.
 // If an error occurs, it will be returned with the reply by calling IsListCookie.Reply()
 func IsList(c *xgb.Conn, ContextTag ContextTag, List uint32) IsListCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'IsList' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8224,6 +8675,8 @@ func IsList(c *xgb.Conn, ContextTag ContextTag, List uint32) IsListCookie {
 // IsListUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func IsListUnchecked(c *xgb.Conn, ContextTag ContextTag, List uint32) IsListCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'IsList' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8278,7 +8731,9 @@ func isListRequest(c *xgb.Conn, ContextTag ContextTag, List uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 141 // request opcode
@@ -8304,6 +8759,8 @@ type IsQueryARBCookie struct {
 // IsQueryARB sends a checked request.
 // If an error occurs, it will be returned with the reply by calling IsQueryARBCookie.Reply()
 func IsQueryARB(c *xgb.Conn, ContextTag ContextTag, Id uint32) IsQueryARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'IsQueryARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8315,6 +8772,8 @@ func IsQueryARB(c *xgb.Conn, ContextTag ContextTag, Id uint32) IsQueryARBCookie 
 // IsQueryARBUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func IsQueryARBUnchecked(c *xgb.Conn, ContextTag ContextTag, Id uint32) IsQueryARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'IsQueryARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8369,7 +8828,9 @@ func isQueryARBRequest(c *xgb.Conn, ContextTag ContextTag, Id uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 163 // request opcode
@@ -8395,6 +8856,8 @@ type IsTextureCookie struct {
 // IsTexture sends a checked request.
 // If an error occurs, it will be returned with the reply by calling IsTextureCookie.Reply()
 func IsTexture(c *xgb.Conn, ContextTag ContextTag, Texture uint32) IsTextureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'IsTexture' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8406,6 +8869,8 @@ func IsTexture(c *xgb.Conn, ContextTag ContextTag, Texture uint32) IsTextureCook
 // IsTextureUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func IsTextureUnchecked(c *xgb.Conn, ContextTag ContextTag, Texture uint32) IsTextureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'IsTexture' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8460,7 +8925,9 @@ func isTextureRequest(c *xgb.Conn, ContextTag ContextTag, Texture uint32) []byte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 146 // request opcode
@@ -8486,6 +8953,8 @@ type MakeContextCurrentCookie struct {
 // MakeContextCurrent sends a checked request.
 // If an error occurs, it will be returned with the reply by calling MakeContextCurrentCookie.Reply()
 func MakeContextCurrent(c *xgb.Conn, OldContextTag ContextTag, Drawable Drawable, ReadDrawable Drawable, Context Context) MakeContextCurrentCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'MakeContextCurrent' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8497,6 +8966,8 @@ func MakeContextCurrent(c *xgb.Conn, OldContextTag ContextTag, Drawable Drawable
 // MakeContextCurrentUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func MakeContextCurrentUnchecked(c *xgb.Conn, OldContextTag ContextTag, Drawable Drawable, ReadDrawable Drawable, Context Context) MakeContextCurrentCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'MakeContextCurrent' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8554,7 +9025,9 @@ func makeContextCurrentRequest(c *xgb.Conn, OldContextTag ContextTag, Drawable D
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 26 // request opcode
@@ -8586,6 +9059,8 @@ type MakeCurrentCookie struct {
 // MakeCurrent sends a checked request.
 // If an error occurs, it will be returned with the reply by calling MakeCurrentCookie.Reply()
 func MakeCurrent(c *xgb.Conn, Drawable Drawable, Context Context, OldContextTag ContextTag) MakeCurrentCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'MakeCurrent' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8597,6 +9072,8 @@ func MakeCurrent(c *xgb.Conn, Drawable Drawable, Context Context, OldContextTag 
 // MakeCurrentUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func MakeCurrentUnchecked(c *xgb.Conn, Drawable Drawable, Context Context, OldContextTag ContextTag) MakeCurrentCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'MakeCurrent' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8654,7 +9131,9 @@ func makeCurrentRequest(c *xgb.Conn, Drawable Drawable, Context Context, OldCont
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -8683,6 +9162,8 @@ type NewListCookie struct {
 // NewList sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func NewList(c *xgb.Conn, ContextTag ContextTag, List uint32, Mode uint32) NewListCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'NewList' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8694,6 +9175,8 @@ func NewList(c *xgb.Conn, ContextTag ContextTag, List uint32, Mode uint32) NewLi
 // NewListChecked sends a checked request.
 // If an error occurs, it can be retrieved using NewListCookie.Check()
 func NewListChecked(c *xgb.Conn, ContextTag ContextTag, List uint32, Mode uint32) NewListCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'NewList' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8715,7 +9198,9 @@ func newListRequest(c *xgb.Conn, ContextTag ContextTag, List uint32, Mode uint32
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 101 // request opcode
@@ -8744,6 +9229,8 @@ type PixelStorefCookie struct {
 // PixelStoref sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PixelStoref(c *xgb.Conn, ContextTag ContextTag, Pname uint32, Datum Float32) PixelStorefCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'PixelStoref' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8755,6 +9242,8 @@ func PixelStoref(c *xgb.Conn, ContextTag ContextTag, Pname uint32, Datum Float32
 // PixelStorefChecked sends a checked request.
 // If an error occurs, it can be retrieved using PixelStorefCookie.Check()
 func PixelStorefChecked(c *xgb.Conn, ContextTag ContextTag, Pname uint32, Datum Float32) PixelStorefCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'PixelStoref' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8776,7 +9265,9 @@ func pixelStorefRequest(c *xgb.Conn, ContextTag ContextTag, Pname uint32, Datum 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 109 // request opcode
@@ -8805,6 +9296,8 @@ type PixelStoreiCookie struct {
 // PixelStorei sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PixelStorei(c *xgb.Conn, ContextTag ContextTag, Pname uint32, Datum int32) PixelStoreiCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'PixelStorei' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8816,6 +9309,8 @@ func PixelStorei(c *xgb.Conn, ContextTag ContextTag, Pname uint32, Datum int32) 
 // PixelStoreiChecked sends a checked request.
 // If an error occurs, it can be retrieved using PixelStoreiCookie.Check()
 func PixelStoreiChecked(c *xgb.Conn, ContextTag ContextTag, Pname uint32, Datum int32) PixelStoreiCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'PixelStorei' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8837,7 +9332,9 @@ func pixelStoreiRequest(c *xgb.Conn, ContextTag ContextTag, Pname uint32, Datum 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 110 // request opcode
@@ -8866,6 +9363,8 @@ type QueryContextCookie struct {
 // QueryContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryContextCookie.Reply()
 func QueryContext(c *xgb.Conn, Context Context) QueryContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'QueryContext' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8877,6 +9376,8 @@ func QueryContext(c *xgb.Conn, Context Context) QueryContextCookie {
 // QueryContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryContextUnchecked(c *xgb.Conn, Context Context) QueryContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'QueryContext' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8941,7 +9442,9 @@ func queryContextRequest(c *xgb.Conn, Context Context) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 25 // request opcode
@@ -8964,6 +9467,8 @@ type QueryExtensionsStringCookie struct {
 // QueryExtensionsString sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryExtensionsStringCookie.Reply()
 func QueryExtensionsString(c *xgb.Conn, Screen uint32) QueryExtensionsStringCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'QueryExtensionsString' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -8975,6 +9480,8 @@ func QueryExtensionsString(c *xgb.Conn, Screen uint32) QueryExtensionsStringCook
 // QueryExtensionsStringUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryExtensionsStringUnchecked(c *xgb.Conn, Screen uint32) QueryExtensionsStringCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'QueryExtensionsString' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9035,7 +9542,9 @@ func queryExtensionsStringRequest(c *xgb.Conn, Screen uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 18 // request opcode
@@ -9058,6 +9567,8 @@ type QueryServerStringCookie struct {
 // QueryServerString sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryServerStringCookie.Reply()
 func QueryServerString(c *xgb.Conn, Screen uint32, Name uint32) QueryServerStringCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'QueryServerString' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9069,6 +9580,8 @@ func QueryServerString(c *xgb.Conn, Screen uint32, Name uint32) QueryServerStrin
 // QueryServerStringUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryServerStringUnchecked(c *xgb.Conn, Screen uint32, Name uint32) QueryServerStringCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'QueryServerString' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9137,7 +9650,9 @@ func queryServerStringRequest(c *xgb.Conn, Screen uint32, Name uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 19 // request opcode
@@ -9163,6 +9678,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9174,6 +9691,8 @@ func QueryVersion(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) QueryVe
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9235,7 +9754,9 @@ func queryVersionRequest(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -9261,6 +9782,8 @@ type ReadPixelsCookie struct {
 // ReadPixels sends a checked request.
 // If an error occurs, it will be returned with the reply by calling ReadPixelsCookie.Reply()
 func ReadPixels(c *xgb.Conn, ContextTag ContextTag, X int32, Y int32, Width int32, Height int32, Format uint32, Type uint32, SwapBytes bool, LsbFirst bool) ReadPixelsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'ReadPixels' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9272,6 +9795,8 @@ func ReadPixels(c *xgb.Conn, ContextTag ContextTag, X int32, Y int32, Width int3
 // ReadPixelsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ReadPixelsUnchecked(c *xgb.Conn, ContextTag ContextTag, X int32, Y int32, Width int32, Height int32, Format uint32, Type uint32, SwapBytes bool, LsbFirst bool) ReadPixelsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'ReadPixels' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9330,7 +9855,9 @@ func readPixelsRequest(c *xgb.Conn, ContextTag ContextTag, X int32, Y int32, Wid
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 111 // request opcode
@@ -9385,6 +9912,8 @@ type RenderCookie struct {
 // Render sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Render(c *xgb.Conn, ContextTag ContextTag, Data []byte) RenderCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'Render' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9396,6 +9925,8 @@ func Render(c *xgb.Conn, ContextTag ContextTag, Data []byte) RenderCookie {
 // RenderChecked sends a checked request.
 // If an error occurs, it can be retrieved using RenderCookie.Check()
 func RenderChecked(c *xgb.Conn, ContextTag ContextTag, Data []byte) RenderCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'Render' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9417,7 +9948,9 @@ func renderRequest(c *xgb.Conn, ContextTag ContextTag, Data []byte) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -9443,6 +9976,8 @@ type RenderLargeCookie struct {
 // RenderLarge sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func RenderLarge(c *xgb.Conn, ContextTag ContextTag, RequestNum uint16, RequestTotal uint16, DataLen uint32, Data []byte) RenderLargeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'RenderLarge' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9454,6 +9989,8 @@ func RenderLarge(c *xgb.Conn, ContextTag ContextTag, RequestNum uint16, RequestT
 // RenderLargeChecked sends a checked request.
 // If an error occurs, it can be retrieved using RenderLargeCookie.Check()
 func RenderLargeChecked(c *xgb.Conn, ContextTag ContextTag, RequestNum uint16, RequestTotal uint16, DataLen uint32, Data []byte) RenderLargeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'RenderLarge' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9475,7 +10012,9 @@ func renderLargeRequest(c *xgb.Conn, ContextTag ContextTag, RequestNum uint16, R
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -9510,6 +10049,8 @@ type RenderModeCookie struct {
 // RenderMode sends a checked request.
 // If an error occurs, it will be returned with the reply by calling RenderModeCookie.Reply()
 func RenderMode(c *xgb.Conn, ContextTag ContextTag, Mode uint32) RenderModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'RenderMode' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9521,6 +10062,8 @@ func RenderMode(c *xgb.Conn, ContextTag ContextTag, Mode uint32) RenderModeCooki
 // RenderModeUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func RenderModeUnchecked(c *xgb.Conn, ContextTag ContextTag, Mode uint32) RenderModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'RenderMode' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9593,7 +10136,9 @@ func renderModeRequest(c *xgb.Conn, ContextTag ContextTag, Mode uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 107 // request opcode
@@ -9619,6 +10164,8 @@ type SelectBufferCookie struct {
 // SelectBuffer sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SelectBuffer(c *xgb.Conn, ContextTag ContextTag, Size int32) SelectBufferCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'SelectBuffer' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9630,6 +10177,8 @@ func SelectBuffer(c *xgb.Conn, ContextTag ContextTag, Size int32) SelectBufferCo
 // SelectBufferChecked sends a checked request.
 // If an error occurs, it can be retrieved using SelectBufferCookie.Check()
 func SelectBufferChecked(c *xgb.Conn, ContextTag ContextTag, Size int32) SelectBufferCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'SelectBuffer' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9651,7 +10200,9 @@ func selectBufferRequest(c *xgb.Conn, ContextTag ContextTag, Size int32) []byte 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 106 // request opcode
@@ -9677,6 +10228,8 @@ type SetClientInfo2ARBCookie struct {
 // SetClientInfo2ARB sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetClientInfo2ARB(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32, NumVersions uint32, GlStrLen uint32, GlxStrLen uint32, GlVersions []uint32, GlExtensionString string, GlxExtensionString string) SetClientInfo2ARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'SetClientInfo2ARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9688,6 +10241,8 @@ func SetClientInfo2ARB(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32, Nu
 // SetClientInfo2ARBChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetClientInfo2ARBCookie.Check()
 func SetClientInfo2ARBChecked(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32, NumVersions uint32, GlStrLen uint32, GlxStrLen uint32, GlVersions []uint32, GlExtensionString string, GlxExtensionString string) SetClientInfo2ARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'SetClientInfo2ARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9709,7 +10264,9 @@ func setClientInfo2ARBRequest(c *xgb.Conn, MajorVersion uint32, MinorVersion uin
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 35 // request opcode
@@ -9755,6 +10312,8 @@ type SetClientInfoARBCookie struct {
 // SetClientInfoARB sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetClientInfoARB(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32, NumVersions uint32, GlStrLen uint32, GlxStrLen uint32, GlVersions []uint32, GlExtensionString string, GlxExtensionString string) SetClientInfoARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'SetClientInfoARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9766,6 +10325,8 @@ func SetClientInfoARB(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32, Num
 // SetClientInfoARBChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetClientInfoARBCookie.Check()
 func SetClientInfoARBChecked(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32, NumVersions uint32, GlStrLen uint32, GlxStrLen uint32, GlVersions []uint32, GlExtensionString string, GlxExtensionString string) SetClientInfoARBCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'SetClientInfoARB' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9787,7 +10348,9 @@ func setClientInfoARBRequest(c *xgb.Conn, MajorVersion uint32, MinorVersion uint
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 33 // request opcode
@@ -9833,6 +10396,8 @@ type SwapBuffersCookie struct {
 // SwapBuffers sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SwapBuffers(c *xgb.Conn, ContextTag ContextTag, Drawable Drawable) SwapBuffersCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'SwapBuffers' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9844,6 +10409,8 @@ func SwapBuffers(c *xgb.Conn, ContextTag ContextTag, Drawable Drawable) SwapBuff
 // SwapBuffersChecked sends a checked request.
 // If an error occurs, it can be retrieved using SwapBuffersCookie.Check()
 func SwapBuffersChecked(c *xgb.Conn, ContextTag ContextTag, Drawable Drawable) SwapBuffersCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'SwapBuffers' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9865,7 +10432,9 @@ func swapBuffersRequest(c *xgb.Conn, ContextTag ContextTag, Drawable Drawable) [
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 11 // request opcode
@@ -9891,6 +10460,8 @@ type UseXFontCookie struct {
 // UseXFont sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func UseXFont(c *xgb.Conn, ContextTag ContextTag, Font xproto.Font, First uint32, Count uint32, ListBase uint32) UseXFontCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'UseXFont' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9902,6 +10473,8 @@ func UseXFont(c *xgb.Conn, ContextTag ContextTag, Font xproto.Font, First uint32
 // UseXFontChecked sends a checked request.
 // If an error occurs, it can be retrieved using UseXFontCookie.Check()
 func UseXFontChecked(c *xgb.Conn, ContextTag ContextTag, Font xproto.Font, First uint32, Count uint32, ListBase uint32) UseXFontCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'UseXFont' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9923,7 +10496,9 @@ func useXFontRequest(c *xgb.Conn, ContextTag ContextTag, Font xproto.Font, First
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 12 // request opcode
@@ -9958,6 +10533,8 @@ type VendorPrivateCookie struct {
 // VendorPrivate sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func VendorPrivate(c *xgb.Conn, VendorCode uint32, ContextTag ContextTag, Data []byte) VendorPrivateCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'VendorPrivate' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9969,6 +10546,8 @@ func VendorPrivate(c *xgb.Conn, VendorCode uint32, ContextTag ContextTag, Data [
 // VendorPrivateChecked sends a checked request.
 // If an error occurs, it can be retrieved using VendorPrivateCookie.Check()
 func VendorPrivateChecked(c *xgb.Conn, VendorCode uint32, ContextTag ContextTag, Data []byte) VendorPrivateCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'VendorPrivate' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -9990,7 +10569,9 @@ func vendorPrivateRequest(c *xgb.Conn, VendorCode uint32, ContextTag ContextTag,
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 16 // request opcode
@@ -10019,6 +10600,8 @@ type VendorPrivateWithReplyCookie struct {
 // VendorPrivateWithReply sends a checked request.
 // If an error occurs, it will be returned with the reply by calling VendorPrivateWithReplyCookie.Reply()
 func VendorPrivateWithReply(c *xgb.Conn, VendorCode uint32, ContextTag ContextTag, Data []byte) VendorPrivateWithReplyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'VendorPrivateWithReply' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -10030,6 +10613,8 @@ func VendorPrivateWithReply(c *xgb.Conn, VendorCode uint32, ContextTag ContextTa
 // VendorPrivateWithReplyUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func VendorPrivateWithReplyUnchecked(c *xgb.Conn, VendorCode uint32, ContextTag ContextTag, Data []byte) VendorPrivateWithReplyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'VendorPrivateWithReply' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -10094,7 +10679,9 @@ func vendorPrivateWithReplyRequest(c *xgb.Conn, VendorCode uint32, ContextTag Co
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 17 // request opcode
@@ -10123,6 +10710,8 @@ type WaitGLCookie struct {
 // WaitGL sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func WaitGL(c *xgb.Conn, ContextTag ContextTag) WaitGLCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'WaitGL' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -10134,6 +10723,8 @@ func WaitGL(c *xgb.Conn, ContextTag ContextTag) WaitGLCookie {
 // WaitGLChecked sends a checked request.
 // If an error occurs, it can be retrieved using WaitGLCookie.Check()
 func WaitGLChecked(c *xgb.Conn, ContextTag ContextTag) WaitGLCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'WaitGL' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -10155,7 +10746,9 @@ func waitGLRequest(c *xgb.Conn, ContextTag ContextTag) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -10178,6 +10771,8 @@ type WaitXCookie struct {
 // WaitX sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func WaitX(c *xgb.Conn, ContextTag ContextTag) WaitXCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'WaitX' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -10189,6 +10784,8 @@ func WaitX(c *xgb.Conn, ContextTag ContextTag) WaitXCookie {
 // WaitXChecked sends a checked request.
 // If an error occurs, it can be retrieved using WaitXCookie.Check()
 func WaitXChecked(c *xgb.Conn, ContextTag ContextTag) WaitXCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["GLX"]; !ok {
 		panic("Cannot issue request 'WaitX' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
 	}
@@ -10210,7 +10807,9 @@ func waitXRequest(c *xgb.Conn, ContextTag ContextTag) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 9 // request opcode

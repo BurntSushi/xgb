@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named RECORD could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["RECORD"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["RECORD"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["RECORD"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -523,6 +522,8 @@ type CreateContextCookie struct {
 // CreateContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateContext(c *xgb.Conn, Context Context, ElementHeader ElementHeader, NumClientSpecs uint32, NumRanges uint32, ClientSpecs []ClientSpec, Ranges []Range) CreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'CreateContext' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -534,6 +535,8 @@ func CreateContext(c *xgb.Conn, Context Context, ElementHeader ElementHeader, Nu
 // CreateContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateContextCookie.Check()
 func CreateContextChecked(c *xgb.Conn, Context Context, ElementHeader ElementHeader, NumClientSpecs uint32, NumRanges uint32, ClientSpecs []ClientSpec, Ranges []Range) CreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'CreateContext' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -555,7 +558,9 @@ func createContextRequest(c *xgb.Conn, Context Context, ElementHeader ElementHea
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RECORD"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -600,6 +605,8 @@ type DisableContextCookie struct {
 // DisableContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DisableContext(c *xgb.Conn, Context Context) DisableContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'DisableContext' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -611,6 +618,8 @@ func DisableContext(c *xgb.Conn, Context Context) DisableContextCookie {
 // DisableContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using DisableContextCookie.Check()
 func DisableContextChecked(c *xgb.Conn, Context Context) DisableContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'DisableContext' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -632,7 +641,9 @@ func disableContextRequest(c *xgb.Conn, Context Context) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RECORD"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -655,6 +666,8 @@ type EnableContextCookie struct {
 // EnableContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling EnableContextCookie.Reply()
 func EnableContext(c *xgb.Conn, Context Context) EnableContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'EnableContext' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -666,6 +679,8 @@ func EnableContext(c *xgb.Conn, Context Context) EnableContextCookie {
 // EnableContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func EnableContextUnchecked(c *xgb.Conn, Context Context) EnableContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'EnableContext' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -752,7 +767,9 @@ func enableContextRequest(c *xgb.Conn, Context Context) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RECORD"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -775,6 +792,8 @@ type FreeContextCookie struct {
 // FreeContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func FreeContext(c *xgb.Conn, Context Context) FreeContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'FreeContext' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -786,6 +805,8 @@ func FreeContext(c *xgb.Conn, Context Context) FreeContextCookie {
 // FreeContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using FreeContextCookie.Check()
 func FreeContextChecked(c *xgb.Conn, Context Context) FreeContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'FreeContext' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -807,7 +828,9 @@ func freeContextRequest(c *xgb.Conn, Context Context) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RECORD"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -830,6 +853,8 @@ type GetContextCookie struct {
 // GetContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetContextCookie.Reply()
 func GetContext(c *xgb.Conn, Context Context) GetContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'GetContext' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -841,6 +866,8 @@ func GetContext(c *xgb.Conn, Context Context) GetContextCookie {
 // GetContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetContextUnchecked(c *xgb.Conn, Context Context) GetContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'GetContext' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -914,7 +941,9 @@ func getContextRequest(c *xgb.Conn, Context Context) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RECORD"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -937,6 +966,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, MajorVersion uint16, MinorVersion uint16) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -948,6 +979,8 @@ func QueryVersion(c *xgb.Conn, MajorVersion uint16, MinorVersion uint16) QueryVe
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, MajorVersion uint16, MinorVersion uint16) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -1006,7 +1039,9 @@ func queryVersionRequest(c *xgb.Conn, MajorVersion uint16, MinorVersion uint16) 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RECORD"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -1032,6 +1067,8 @@ type RegisterClientsCookie struct {
 // RegisterClients sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func RegisterClients(c *xgb.Conn, Context Context, ElementHeader ElementHeader, NumClientSpecs uint32, NumRanges uint32, ClientSpecs []ClientSpec, Ranges []Range) RegisterClientsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'RegisterClients' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -1043,6 +1080,8 @@ func RegisterClients(c *xgb.Conn, Context Context, ElementHeader ElementHeader, 
 // RegisterClientsChecked sends a checked request.
 // If an error occurs, it can be retrieved using RegisterClientsCookie.Check()
 func RegisterClientsChecked(c *xgb.Conn, Context Context, ElementHeader ElementHeader, NumClientSpecs uint32, NumRanges uint32, ClientSpecs []ClientSpec, Ranges []Range) RegisterClientsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'RegisterClients' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -1064,7 +1103,9 @@ func registerClientsRequest(c *xgb.Conn, Context Context, ElementHeader ElementH
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RECORD"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -1109,6 +1150,8 @@ type UnregisterClientsCookie struct {
 // UnregisterClients sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func UnregisterClients(c *xgb.Conn, Context Context, NumClientSpecs uint32, ClientSpecs []ClientSpec) UnregisterClientsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'UnregisterClients' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -1120,6 +1163,8 @@ func UnregisterClients(c *xgb.Conn, Context Context, NumClientSpecs uint32, Clie
 // UnregisterClientsChecked sends a checked request.
 // If an error occurs, it can be retrieved using UnregisterClientsCookie.Check()
 func UnregisterClientsChecked(c *xgb.Conn, Context Context, NumClientSpecs uint32, ClientSpecs []ClientSpec) UnregisterClientsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RECORD"]; !ok {
 		panic("Cannot issue request 'UnregisterClients' using the uninitialized extension 'RECORD'. record.Init(connObj) must be called first.")
 	}
@@ -1141,7 +1186,9 @@ func unregisterClientsRequest(c *xgb.Conn, Context Context, NumClientSpecs uint3
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RECORD"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
