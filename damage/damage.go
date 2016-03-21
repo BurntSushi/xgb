@@ -20,16 +20,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named DAMAGE could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["DAMAGE"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["DAMAGE"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["DAMAGE"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -235,6 +234,8 @@ type AddCookie struct {
 // Add sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Add(c *xgb.Conn, Drawable xproto.Drawable, Region xfixes.Region) AddCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DAMAGE"]; !ok {
 		panic("Cannot issue request 'Add' using the uninitialized extension 'DAMAGE'. damage.Init(connObj) must be called first.")
 	}
@@ -246,6 +247,8 @@ func Add(c *xgb.Conn, Drawable xproto.Drawable, Region xfixes.Region) AddCookie 
 // AddChecked sends a checked request.
 // If an error occurs, it can be retrieved using AddCookie.Check()
 func AddChecked(c *xgb.Conn, Drawable xproto.Drawable, Region xfixes.Region) AddCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DAMAGE"]; !ok {
 		panic("Cannot issue request 'Add' using the uninitialized extension 'DAMAGE'. damage.Init(connObj) must be called first.")
 	}
@@ -267,7 +270,9 @@ func addRequest(c *xgb.Conn, Drawable xproto.Drawable, Region xfixes.Region) []b
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DAMAGE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -293,6 +298,8 @@ type CreateCookie struct {
 // Create sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Create(c *xgb.Conn, Damage Damage, Drawable xproto.Drawable, Level byte) CreateCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DAMAGE"]; !ok {
 		panic("Cannot issue request 'Create' using the uninitialized extension 'DAMAGE'. damage.Init(connObj) must be called first.")
 	}
@@ -304,6 +311,8 @@ func Create(c *xgb.Conn, Damage Damage, Drawable xproto.Drawable, Level byte) Cr
 // CreateChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateCookie.Check()
 func CreateChecked(c *xgb.Conn, Damage Damage, Drawable xproto.Drawable, Level byte) CreateCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DAMAGE"]; !ok {
 		panic("Cannot issue request 'Create' using the uninitialized extension 'DAMAGE'. damage.Init(connObj) must be called first.")
 	}
@@ -325,7 +334,9 @@ func createRequest(c *xgb.Conn, Damage Damage, Drawable xproto.Drawable, Level b
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DAMAGE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -356,6 +367,8 @@ type DestroyCookie struct {
 // Destroy sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Destroy(c *xgb.Conn, Damage Damage) DestroyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DAMAGE"]; !ok {
 		panic("Cannot issue request 'Destroy' using the uninitialized extension 'DAMAGE'. damage.Init(connObj) must be called first.")
 	}
@@ -367,6 +380,8 @@ func Destroy(c *xgb.Conn, Damage Damage) DestroyCookie {
 // DestroyChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroyCookie.Check()
 func DestroyChecked(c *xgb.Conn, Damage Damage) DestroyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DAMAGE"]; !ok {
 		panic("Cannot issue request 'Destroy' using the uninitialized extension 'DAMAGE'. damage.Init(connObj) must be called first.")
 	}
@@ -388,7 +403,9 @@ func destroyRequest(c *xgb.Conn, Damage Damage) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DAMAGE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -411,6 +428,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DAMAGE"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'DAMAGE'. damage.Init(connObj) must be called first.")
 	}
@@ -422,6 +441,8 @@ func QueryVersion(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uin
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DAMAGE"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'DAMAGE'. damage.Init(connObj) must be called first.")
 	}
@@ -483,7 +504,9 @@ func queryVersionRequest(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVers
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DAMAGE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -509,6 +532,8 @@ type SubtractCookie struct {
 // Subtract sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Subtract(c *xgb.Conn, Damage Damage, Repair xfixes.Region, Parts xfixes.Region) SubtractCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DAMAGE"]; !ok {
 		panic("Cannot issue request 'Subtract' using the uninitialized extension 'DAMAGE'. damage.Init(connObj) must be called first.")
 	}
@@ -520,6 +545,8 @@ func Subtract(c *xgb.Conn, Damage Damage, Repair xfixes.Region, Parts xfixes.Reg
 // SubtractChecked sends a checked request.
 // If an error occurs, it can be retrieved using SubtractCookie.Check()
 func SubtractChecked(c *xgb.Conn, Damage Damage, Repair xfixes.Region, Parts xfixes.Region) SubtractCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["DAMAGE"]; !ok {
 		panic("Cannot issue request 'Subtract' using the uninitialized extension 'DAMAGE'. damage.Init(connObj) must be called first.")
 	}
@@ -541,7 +568,9 @@ func subtractRequest(c *xgb.Conn, Damage Damage, Repair xfixes.Region, Parts xfi
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["DAMAGE"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode

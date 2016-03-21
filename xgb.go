@@ -13,11 +13,6 @@ var (
 	// Where to log error-messages. Defaults to stderr.
 	// To disable logging, just set this to log.New(ioutil.Discard, "", 0)
 	Logger = log.New(os.Stderr, "XGB: ", log.Lshortfile)
-
-	// ExtLock is a lock used whenever new extensions are initialized.
-	// It should not be used. It is exported for use in the extension
-	// sub-packages.
-	ExtLock sync.Mutex
 )
 
 const (
@@ -66,6 +61,11 @@ type Conn struct {
 	seqChan    chan uint16
 	reqChan    chan *request
 	closing    chan chan struct{}
+	
+	// ExtLock is a lock used whenever new extensions are initialized.
+	// It should not be used. It is exported for use in the extension
+	// sub-packages.
+	ExtLock sync.RWMutex
 
 	// Extensions is a map from extension name to major opcode. It should
 	// not be used. It is exported for use in the extension sub-packages.

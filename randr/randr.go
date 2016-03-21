@@ -20,16 +20,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named RANDR could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["RANDR"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["RANDR"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["RANDR"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -1680,6 +1679,8 @@ type AddOutputModeCookie struct {
 // AddOutputMode sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func AddOutputMode(c *xgb.Conn, Output Output, Mode Mode) AddOutputModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'AddOutputMode' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -1691,6 +1692,8 @@ func AddOutputMode(c *xgb.Conn, Output Output, Mode Mode) AddOutputModeCookie {
 // AddOutputModeChecked sends a checked request.
 // If an error occurs, it can be retrieved using AddOutputModeCookie.Check()
 func AddOutputModeChecked(c *xgb.Conn, Output Output, Mode Mode) AddOutputModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'AddOutputMode' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -1712,7 +1715,9 @@ func addOutputModeRequest(c *xgb.Conn, Output Output, Mode Mode) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 18 // request opcode
@@ -1738,6 +1743,8 @@ type ChangeOutputPropertyCookie struct {
 // ChangeOutputProperty sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ChangeOutputProperty(c *xgb.Conn, Output Output, Property xproto.Atom, Type xproto.Atom, Format byte, Mode byte, NumUnits uint32, Data []byte) ChangeOutputPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ChangeOutputProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -1749,6 +1756,8 @@ func ChangeOutputProperty(c *xgb.Conn, Output Output, Property xproto.Atom, Type
 // ChangeOutputPropertyChecked sends a checked request.
 // If an error occurs, it can be retrieved using ChangeOutputPropertyCookie.Check()
 func ChangeOutputPropertyChecked(c *xgb.Conn, Output Output, Property xproto.Atom, Type xproto.Atom, Format byte, Mode byte, NumUnits uint32, Data []byte) ChangeOutputPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ChangeOutputProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -1770,7 +1779,9 @@ func changeOutputPropertyRequest(c *xgb.Conn, Output Output, Property xproto.Ato
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 13 // request opcode
@@ -1813,6 +1824,8 @@ type ChangeProviderPropertyCookie struct {
 // ChangeProviderProperty sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ChangeProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom, Type xproto.Atom, Format byte, Mode byte, NumItems uint32, Data []byte) ChangeProviderPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ChangeProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -1824,6 +1837,8 @@ func ChangeProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom
 // ChangeProviderPropertyChecked sends a checked request.
 // If an error occurs, it can be retrieved using ChangeProviderPropertyCookie.Check()
 func ChangeProviderPropertyChecked(c *xgb.Conn, Provider Provider, Property xproto.Atom, Type xproto.Atom, Format byte, Mode byte, NumItems uint32, Data []byte) ChangeProviderPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ChangeProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -1845,7 +1860,9 @@ func changeProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property xpro
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 39 // request opcode
@@ -1888,6 +1905,8 @@ type ConfigureOutputPropertyCookie struct {
 // ConfigureOutputProperty sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ConfigureOutputProperty(c *xgb.Conn, Output Output, Property xproto.Atom, Pending bool, Range bool, Values []int32) ConfigureOutputPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ConfigureOutputProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -1899,6 +1918,8 @@ func ConfigureOutputProperty(c *xgb.Conn, Output Output, Property xproto.Atom, P
 // ConfigureOutputPropertyChecked sends a checked request.
 // If an error occurs, it can be retrieved using ConfigureOutputPropertyCookie.Check()
 func ConfigureOutputPropertyChecked(c *xgb.Conn, Output Output, Property xproto.Atom, Pending bool, Range bool, Values []int32) ConfigureOutputPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ConfigureOutputProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -1920,7 +1941,9 @@ func configureOutputPropertyRequest(c *xgb.Conn, Output Output, Property xproto.
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 12 // request opcode
@@ -1967,6 +1990,8 @@ type ConfigureProviderPropertyCookie struct {
 // ConfigureProviderProperty sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ConfigureProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom, Pending bool, Range bool, Values []int32) ConfigureProviderPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ConfigureProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -1978,6 +2003,8 @@ func ConfigureProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.A
 // ConfigureProviderPropertyChecked sends a checked request.
 // If an error occurs, it can be retrieved using ConfigureProviderPropertyCookie.Check()
 func ConfigureProviderPropertyChecked(c *xgb.Conn, Provider Provider, Property xproto.Atom, Pending bool, Range bool, Values []int32) ConfigureProviderPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ConfigureProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -1999,7 +2026,9 @@ func configureProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property x
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 38 // request opcode
@@ -2046,6 +2075,8 @@ type CreateModeCookie struct {
 // CreateMode sends a checked request.
 // If an error occurs, it will be returned with the reply by calling CreateModeCookie.Reply()
 func CreateMode(c *xgb.Conn, Window xproto.Window, ModeInfo ModeInfo, Name string) CreateModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'CreateMode' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2057,6 +2088,8 @@ func CreateMode(c *xgb.Conn, Window xproto.Window, ModeInfo ModeInfo, Name strin
 // CreateModeUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateModeUnchecked(c *xgb.Conn, Window xproto.Window, ModeInfo ModeInfo, Name string) CreateModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'CreateMode' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2114,7 +2147,9 @@ func createModeRequest(c *xgb.Conn, Window xproto.Window, ModeInfo ModeInfo, Nam
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 16 // request opcode
@@ -2146,6 +2181,8 @@ type DeleteOutputModeCookie struct {
 // DeleteOutputMode sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DeleteOutputMode(c *xgb.Conn, Output Output, Mode Mode) DeleteOutputModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'DeleteOutputMode' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2157,6 +2194,8 @@ func DeleteOutputMode(c *xgb.Conn, Output Output, Mode Mode) DeleteOutputModeCoo
 // DeleteOutputModeChecked sends a checked request.
 // If an error occurs, it can be retrieved using DeleteOutputModeCookie.Check()
 func DeleteOutputModeChecked(c *xgb.Conn, Output Output, Mode Mode) DeleteOutputModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'DeleteOutputMode' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2178,7 +2217,9 @@ func deleteOutputModeRequest(c *xgb.Conn, Output Output, Mode Mode) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 19 // request opcode
@@ -2204,6 +2245,8 @@ type DeleteOutputPropertyCookie struct {
 // DeleteOutputProperty sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DeleteOutputProperty(c *xgb.Conn, Output Output, Property xproto.Atom) DeleteOutputPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'DeleteOutputProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2215,6 +2258,8 @@ func DeleteOutputProperty(c *xgb.Conn, Output Output, Property xproto.Atom) Dele
 // DeleteOutputPropertyChecked sends a checked request.
 // If an error occurs, it can be retrieved using DeleteOutputPropertyCookie.Check()
 func DeleteOutputPropertyChecked(c *xgb.Conn, Output Output, Property xproto.Atom) DeleteOutputPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'DeleteOutputProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2236,7 +2281,9 @@ func deleteOutputPropertyRequest(c *xgb.Conn, Output Output, Property xproto.Ato
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 14 // request opcode
@@ -2262,6 +2309,8 @@ type DeleteProviderPropertyCookie struct {
 // DeleteProviderProperty sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DeleteProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom) DeleteProviderPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'DeleteProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2273,6 +2322,8 @@ func DeleteProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom
 // DeleteProviderPropertyChecked sends a checked request.
 // If an error occurs, it can be retrieved using DeleteProviderPropertyCookie.Check()
 func DeleteProviderPropertyChecked(c *xgb.Conn, Provider Provider, Property xproto.Atom) DeleteProviderPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'DeleteProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2294,7 +2345,9 @@ func deleteProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property xpro
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 40 // request opcode
@@ -2320,6 +2373,8 @@ type DestroyModeCookie struct {
 // DestroyMode sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroyMode(c *xgb.Conn, Mode Mode) DestroyModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'DestroyMode' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2331,6 +2386,8 @@ func DestroyMode(c *xgb.Conn, Mode Mode) DestroyModeCookie {
 // DestroyModeChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroyModeCookie.Check()
 func DestroyModeChecked(c *xgb.Conn, Mode Mode) DestroyModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'DestroyMode' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2352,7 +2409,9 @@ func destroyModeRequest(c *xgb.Conn, Mode Mode) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 17 // request opcode
@@ -2375,6 +2434,8 @@ type GetCrtcGammaCookie struct {
 // GetCrtcGamma sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetCrtcGammaCookie.Reply()
 func GetCrtcGamma(c *xgb.Conn, Crtc Crtc) GetCrtcGammaCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetCrtcGamma' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2386,6 +2447,8 @@ func GetCrtcGamma(c *xgb.Conn, Crtc Crtc) GetCrtcGammaCookie {
 // GetCrtcGammaUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetCrtcGammaUnchecked(c *xgb.Conn, Crtc Crtc) GetCrtcGammaCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetCrtcGamma' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2470,7 +2533,9 @@ func getCrtcGammaRequest(c *xgb.Conn, Crtc Crtc) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 23 // request opcode
@@ -2493,6 +2558,8 @@ type GetCrtcGammaSizeCookie struct {
 // GetCrtcGammaSize sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetCrtcGammaSizeCookie.Reply()
 func GetCrtcGammaSize(c *xgb.Conn, Crtc Crtc) GetCrtcGammaSizeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetCrtcGammaSize' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2504,6 +2571,8 @@ func GetCrtcGammaSize(c *xgb.Conn, Crtc Crtc) GetCrtcGammaSizeCookie {
 // GetCrtcGammaSizeUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetCrtcGammaSizeUnchecked(c *xgb.Conn, Crtc Crtc) GetCrtcGammaSizeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetCrtcGammaSize' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2561,7 +2630,9 @@ func getCrtcGammaSizeRequest(c *xgb.Conn, Crtc Crtc) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 22 // request opcode
@@ -2584,6 +2655,8 @@ type GetCrtcInfoCookie struct {
 // GetCrtcInfo sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetCrtcInfoCookie.Reply()
 func GetCrtcInfo(c *xgb.Conn, Crtc Crtc, ConfigTimestamp xproto.Timestamp) GetCrtcInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetCrtcInfo' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2595,6 +2668,8 @@ func GetCrtcInfo(c *xgb.Conn, Crtc Crtc, ConfigTimestamp xproto.Timestamp) GetCr
 // GetCrtcInfoUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetCrtcInfoUnchecked(c *xgb.Conn, Crtc Crtc, ConfigTimestamp xproto.Timestamp) GetCrtcInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetCrtcInfo' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2703,7 +2778,9 @@ func getCrtcInfoRequest(c *xgb.Conn, Crtc Crtc, ConfigTimestamp xproto.Timestamp
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 20 // request opcode
@@ -2729,6 +2806,8 @@ type GetCrtcTransformCookie struct {
 // GetCrtcTransform sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetCrtcTransformCookie.Reply()
 func GetCrtcTransform(c *xgb.Conn, Crtc Crtc) GetCrtcTransformCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetCrtcTransform' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2740,6 +2819,8 @@ func GetCrtcTransform(c *xgb.Conn, Crtc Crtc) GetCrtcTransformCookie {
 // GetCrtcTransformUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetCrtcTransformUnchecked(c *xgb.Conn, Crtc Crtc) GetCrtcTransformCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetCrtcTransform' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2864,7 +2945,9 @@ func getCrtcTransformRequest(c *xgb.Conn, Crtc Crtc) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 27 // request opcode
@@ -2887,6 +2970,8 @@ type GetOutputInfoCookie struct {
 // GetOutputInfo sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetOutputInfoCookie.Reply()
 func GetOutputInfo(c *xgb.Conn, Output Output, ConfigTimestamp xproto.Timestamp) GetOutputInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetOutputInfo' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -2898,6 +2983,8 @@ func GetOutputInfo(c *xgb.Conn, Output Output, ConfigTimestamp xproto.Timestamp)
 // GetOutputInfoUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetOutputInfoUnchecked(c *xgb.Conn, Output Output, ConfigTimestamp xproto.Timestamp) GetOutputInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetOutputInfo' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3025,7 +3112,9 @@ func getOutputInfoRequest(c *xgb.Conn, Output Output, ConfigTimestamp xproto.Tim
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 9 // request opcode
@@ -3051,6 +3140,8 @@ type GetOutputPrimaryCookie struct {
 // GetOutputPrimary sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetOutputPrimaryCookie.Reply()
 func GetOutputPrimary(c *xgb.Conn, Window xproto.Window) GetOutputPrimaryCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetOutputPrimary' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3062,6 +3153,8 @@ func GetOutputPrimary(c *xgb.Conn, Window xproto.Window) GetOutputPrimaryCookie 
 // GetOutputPrimaryUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetOutputPrimaryUnchecked(c *xgb.Conn, Window xproto.Window) GetOutputPrimaryCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetOutputPrimary' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3116,7 +3209,9 @@ func getOutputPrimaryRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 31 // request opcode
@@ -3139,6 +3234,8 @@ type GetOutputPropertyCookie struct {
 // GetOutputProperty sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetOutputPropertyCookie.Reply()
 func GetOutputProperty(c *xgb.Conn, Output Output, Property xproto.Atom, Type xproto.Atom, LongOffset uint32, LongLength uint32, Delete bool, Pending bool) GetOutputPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetOutputProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3150,6 +3247,8 @@ func GetOutputProperty(c *xgb.Conn, Output Output, Property xproto.Atom, Type xp
 // GetOutputPropertyUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetOutputPropertyUnchecked(c *xgb.Conn, Output Output, Property xproto.Atom, Type xproto.Atom, LongOffset uint32, LongLength uint32, Delete bool, Pending bool) GetOutputPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetOutputProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3221,7 +3320,9 @@ func getOutputPropertyRequest(c *xgb.Conn, Output Output, Property xproto.Atom, 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 15 // request opcode
@@ -3272,6 +3373,8 @@ type GetPanningCookie struct {
 // GetPanning sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetPanningCookie.Reply()
 func GetPanning(c *xgb.Conn, Crtc Crtc) GetPanningCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetPanning' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3283,6 +3386,8 @@ func GetPanning(c *xgb.Conn, Crtc Crtc) GetPanningCookie {
 // GetPanningUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetPanningUnchecked(c *xgb.Conn, Crtc Crtc) GetPanningCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetPanning' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3386,7 +3491,9 @@ func getPanningRequest(c *xgb.Conn, Crtc Crtc) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 28 // request opcode
@@ -3409,6 +3516,8 @@ type GetProviderInfoCookie struct {
 // GetProviderInfo sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetProviderInfoCookie.Reply()
 func GetProviderInfo(c *xgb.Conn, Provider Provider, ConfigTimestamp xproto.Timestamp) GetProviderInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetProviderInfo' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3420,6 +3529,8 @@ func GetProviderInfo(c *xgb.Conn, Provider Provider, ConfigTimestamp xproto.Time
 // GetProviderInfoUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetProviderInfoUnchecked(c *xgb.Conn, Provider Provider, ConfigTimestamp xproto.Timestamp) GetProviderInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetProviderInfo' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3543,7 +3654,9 @@ func getProviderInfoRequest(c *xgb.Conn, Provider Provider, ConfigTimestamp xpro
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 33 // request opcode
@@ -3569,6 +3682,8 @@ type GetProviderPropertyCookie struct {
 // GetProviderProperty sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetProviderPropertyCookie.Reply()
 func GetProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom, Type xproto.Atom, LongOffset uint32, LongLength uint32, Delete bool, Pending bool) GetProviderPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3580,6 +3695,8 @@ func GetProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom, T
 // GetProviderPropertyUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetProviderPropertyUnchecked(c *xgb.Conn, Provider Provider, Property xproto.Atom, Type xproto.Atom, LongOffset uint32, LongLength uint32, Delete bool, Pending bool) GetProviderPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3651,7 +3768,9 @@ func getProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property xproto.
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 41 // request opcode
@@ -3702,6 +3821,8 @@ type GetProvidersCookie struct {
 // GetProviders sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetProvidersCookie.Reply()
 func GetProviders(c *xgb.Conn, Window xproto.Window) GetProvidersCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetProviders' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3713,6 +3834,8 @@ func GetProviders(c *xgb.Conn, Window xproto.Window) GetProvidersCookie {
 // GetProvidersUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetProvidersUnchecked(c *xgb.Conn, Window xproto.Window) GetProvidersCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetProviders' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3781,7 +3904,9 @@ func getProvidersRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 32 // request opcode
@@ -3804,6 +3929,8 @@ type GetScreenInfoCookie struct {
 // GetScreenInfo sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetScreenInfoCookie.Reply()
 func GetScreenInfo(c *xgb.Conn, Window xproto.Window) GetScreenInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetScreenInfo' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3815,6 +3942,8 @@ func GetScreenInfo(c *xgb.Conn, Window xproto.Window) GetScreenInfoCookie {
 // GetScreenInfoUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetScreenInfoUnchecked(c *xgb.Conn, Window xproto.Window) GetScreenInfoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetScreenInfo' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3912,7 +4041,9 @@ func getScreenInfoRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -3935,6 +4066,8 @@ type GetScreenResourcesCookie struct {
 // GetScreenResources sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetScreenResourcesCookie.Reply()
 func GetScreenResources(c *xgb.Conn, Window xproto.Window) GetScreenResourcesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetScreenResources' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -3946,6 +4079,8 @@ func GetScreenResources(c *xgb.Conn, Window xproto.Window) GetScreenResourcesCoo
 // GetScreenResourcesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetScreenResourcesUnchecked(c *xgb.Conn, Window xproto.Window) GetScreenResourcesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetScreenResources' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4052,7 +4187,9 @@ func getScreenResourcesRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -4075,6 +4212,8 @@ type GetScreenResourcesCurrentCookie struct {
 // GetScreenResourcesCurrent sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetScreenResourcesCurrentCookie.Reply()
 func GetScreenResourcesCurrent(c *xgb.Conn, Window xproto.Window) GetScreenResourcesCurrentCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetScreenResourcesCurrent' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4086,6 +4225,8 @@ func GetScreenResourcesCurrent(c *xgb.Conn, Window xproto.Window) GetScreenResou
 // GetScreenResourcesCurrentUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetScreenResourcesCurrentUnchecked(c *xgb.Conn, Window xproto.Window) GetScreenResourcesCurrentCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetScreenResourcesCurrent' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4192,7 +4333,9 @@ func getScreenResourcesCurrentRequest(c *xgb.Conn, Window xproto.Window) []byte 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 25 // request opcode
@@ -4215,6 +4358,8 @@ type GetScreenSizeRangeCookie struct {
 // GetScreenSizeRange sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetScreenSizeRangeCookie.Reply()
 func GetScreenSizeRange(c *xgb.Conn, Window xproto.Window) GetScreenSizeRangeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetScreenSizeRange' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4226,6 +4371,8 @@ func GetScreenSizeRange(c *xgb.Conn, Window xproto.Window) GetScreenSizeRangeCoo
 // GetScreenSizeRangeUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetScreenSizeRangeUnchecked(c *xgb.Conn, Window xproto.Window) GetScreenSizeRangeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'GetScreenSizeRange' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4295,7 +4442,9 @@ func getScreenSizeRangeRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -4318,6 +4467,8 @@ type ListOutputPropertiesCookie struct {
 // ListOutputProperties sends a checked request.
 // If an error occurs, it will be returned with the reply by calling ListOutputPropertiesCookie.Reply()
 func ListOutputProperties(c *xgb.Conn, Output Output) ListOutputPropertiesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ListOutputProperties' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4329,6 +4480,8 @@ func ListOutputProperties(c *xgb.Conn, Output Output) ListOutputPropertiesCookie
 // ListOutputPropertiesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ListOutputPropertiesUnchecked(c *xgb.Conn, Output Output) ListOutputPropertiesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ListOutputProperties' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4393,7 +4546,9 @@ func listOutputPropertiesRequest(c *xgb.Conn, Output Output) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 10 // request opcode
@@ -4416,6 +4571,8 @@ type ListProviderPropertiesCookie struct {
 // ListProviderProperties sends a checked request.
 // If an error occurs, it will be returned with the reply by calling ListProviderPropertiesCookie.Reply()
 func ListProviderProperties(c *xgb.Conn, Provider Provider) ListProviderPropertiesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ListProviderProperties' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4427,6 +4584,8 @@ func ListProviderProperties(c *xgb.Conn, Provider Provider) ListProviderProperti
 // ListProviderPropertiesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ListProviderPropertiesUnchecked(c *xgb.Conn, Provider Provider) ListProviderPropertiesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'ListProviderProperties' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4491,7 +4650,9 @@ func listProviderPropertiesRequest(c *xgb.Conn, Provider Provider) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 36 // request opcode
@@ -4514,6 +4675,8 @@ type QueryOutputPropertyCookie struct {
 // QueryOutputProperty sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryOutputPropertyCookie.Reply()
 func QueryOutputProperty(c *xgb.Conn, Output Output, Property xproto.Atom) QueryOutputPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'QueryOutputProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4525,6 +4688,8 @@ func QueryOutputProperty(c *xgb.Conn, Output Output, Property xproto.Atom) Query
 // QueryOutputPropertyUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryOutputPropertyUnchecked(c *xgb.Conn, Output Output, Property xproto.Atom) QueryOutputPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'QueryOutputProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4609,7 +4774,9 @@ func queryOutputPropertyRequest(c *xgb.Conn, Output Output, Property xproto.Atom
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 11 // request opcode
@@ -4635,6 +4802,8 @@ type QueryProviderPropertyCookie struct {
 // QueryProviderProperty sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryProviderPropertyCookie.Reply()
 func QueryProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom) QueryProviderPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'QueryProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4646,6 +4815,8 @@ func QueryProviderProperty(c *xgb.Conn, Provider Provider, Property xproto.Atom)
 // QueryProviderPropertyUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryProviderPropertyUnchecked(c *xgb.Conn, Provider Provider, Property xproto.Atom) QueryProviderPropertyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'QueryProviderProperty' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4730,7 +4901,9 @@ func queryProviderPropertyRequest(c *xgb.Conn, Provider Provider, Property xprot
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 37 // request opcode
@@ -4756,6 +4929,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4767,6 +4942,8 @@ func QueryVersion(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) QueryVe
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4828,7 +5005,9 @@ func queryVersionRequest(c *xgb.Conn, MajorVersion uint32, MinorVersion uint32) 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -4854,6 +5033,8 @@ type SelectInputCookie struct {
 // SelectInput sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SelectInput(c *xgb.Conn, Window xproto.Window, Enable uint16) SelectInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SelectInput' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4865,6 +5046,8 @@ func SelectInput(c *xgb.Conn, Window xproto.Window, Enable uint16) SelectInputCo
 // SelectInputChecked sends a checked request.
 // If an error occurs, it can be retrieved using SelectInputCookie.Check()
 func SelectInputChecked(c *xgb.Conn, Window xproto.Window, Enable uint16) SelectInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SelectInput' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4886,7 +5069,9 @@ func selectInputRequest(c *xgb.Conn, Window xproto.Window, Enable uint16) []byte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -4914,6 +5099,8 @@ type SetCrtcConfigCookie struct {
 // SetCrtcConfig sends a checked request.
 // If an error occurs, it will be returned with the reply by calling SetCrtcConfigCookie.Reply()
 func SetCrtcConfig(c *xgb.Conn, Crtc Crtc, Timestamp xproto.Timestamp, ConfigTimestamp xproto.Timestamp, X int16, Y int16, Mode Mode, Rotation uint16, Outputs []Output) SetCrtcConfigCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetCrtcConfig' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4925,6 +5112,8 @@ func SetCrtcConfig(c *xgb.Conn, Crtc Crtc, Timestamp xproto.Timestamp, ConfigTim
 // SetCrtcConfigUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetCrtcConfigUnchecked(c *xgb.Conn, Crtc Crtc, Timestamp xproto.Timestamp, ConfigTimestamp xproto.Timestamp, X int16, Y int16, Mode Mode, Rotation uint16, Outputs []Output) SetCrtcConfigCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetCrtcConfig' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -4983,7 +5172,9 @@ func setCrtcConfigRequest(c *xgb.Conn, Crtc Crtc, Timestamp xproto.Timestamp, Co
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 21 // request opcode
@@ -5031,6 +5222,8 @@ type SetCrtcGammaCookie struct {
 // SetCrtcGamma sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetCrtcGamma(c *xgb.Conn, Crtc Crtc, Size uint16, Red []uint16, Green []uint16, Blue []uint16) SetCrtcGammaCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetCrtcGamma' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5042,6 +5235,8 @@ func SetCrtcGamma(c *xgb.Conn, Crtc Crtc, Size uint16, Red []uint16, Green []uin
 // SetCrtcGammaChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetCrtcGammaCookie.Check()
 func SetCrtcGammaChecked(c *xgb.Conn, Crtc Crtc, Size uint16, Red []uint16, Green []uint16, Blue []uint16) SetCrtcGammaCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetCrtcGamma' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5063,7 +5258,9 @@ func setCrtcGammaRequest(c *xgb.Conn, Crtc Crtc, Size uint16, Red []uint16, Gree
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 24 // request opcode
@@ -5112,6 +5309,8 @@ type SetCrtcTransformCookie struct {
 // SetCrtcTransform sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetCrtcTransform(c *xgb.Conn, Crtc Crtc, Transform render.Transform, FilterLen uint16, FilterName string, FilterParams []render.Fixed) SetCrtcTransformCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetCrtcTransform' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5123,6 +5322,8 @@ func SetCrtcTransform(c *xgb.Conn, Crtc Crtc, Transform render.Transform, Filter
 // SetCrtcTransformChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetCrtcTransformCookie.Check()
 func SetCrtcTransformChecked(c *xgb.Conn, Crtc Crtc, Transform render.Transform, FilterLen uint16, FilterName string, FilterParams []render.Fixed) SetCrtcTransformCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetCrtcTransform' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5144,7 +5345,9 @@ func setCrtcTransformRequest(c *xgb.Conn, Crtc Crtc, Transform render.Transform,
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 26 // request opcode
@@ -5190,6 +5393,8 @@ type SetOutputPrimaryCookie struct {
 // SetOutputPrimary sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetOutputPrimary(c *xgb.Conn, Window xproto.Window, Output Output) SetOutputPrimaryCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetOutputPrimary' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5201,6 +5406,8 @@ func SetOutputPrimary(c *xgb.Conn, Window xproto.Window, Output Output) SetOutpu
 // SetOutputPrimaryChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetOutputPrimaryCookie.Check()
 func SetOutputPrimaryChecked(c *xgb.Conn, Window xproto.Window, Output Output) SetOutputPrimaryCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetOutputPrimary' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5222,7 +5429,9 @@ func setOutputPrimaryRequest(c *xgb.Conn, Window xproto.Window, Output Output) [
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 30 // request opcode
@@ -5248,6 +5457,8 @@ type SetPanningCookie struct {
 // SetPanning sends a checked request.
 // If an error occurs, it will be returned with the reply by calling SetPanningCookie.Reply()
 func SetPanning(c *xgb.Conn, Crtc Crtc, Timestamp xproto.Timestamp, Left uint16, Top uint16, Width uint16, Height uint16, TrackLeft uint16, TrackTop uint16, TrackWidth uint16, TrackHeight uint16, BorderLeft int16, BorderTop int16, BorderRight int16, BorderBottom int16) SetPanningCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetPanning' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5259,6 +5470,8 @@ func SetPanning(c *xgb.Conn, Crtc Crtc, Timestamp xproto.Timestamp, Left uint16,
 // SetPanningUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetPanningUnchecked(c *xgb.Conn, Crtc Crtc, Timestamp xproto.Timestamp, Left uint16, Top uint16, Width uint16, Height uint16, TrackLeft uint16, TrackTop uint16, TrackWidth uint16, TrackHeight uint16, BorderLeft int16, BorderTop int16, BorderRight int16, BorderBottom int16) SetPanningCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetPanning' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5314,7 +5527,9 @@ func setPanningRequest(c *xgb.Conn, Crtc Crtc, Timestamp xproto.Timestamp, Left 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 29 // request opcode
@@ -5376,6 +5591,8 @@ type SetProviderOffloadSinkCookie struct {
 // SetProviderOffloadSink sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetProviderOffloadSink(c *xgb.Conn, Provider Provider, SinkProvider Provider, ConfigTimestamp xproto.Timestamp) SetProviderOffloadSinkCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetProviderOffloadSink' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5387,6 +5604,8 @@ func SetProviderOffloadSink(c *xgb.Conn, Provider Provider, SinkProvider Provide
 // SetProviderOffloadSinkChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetProviderOffloadSinkCookie.Check()
 func SetProviderOffloadSinkChecked(c *xgb.Conn, Provider Provider, SinkProvider Provider, ConfigTimestamp xproto.Timestamp) SetProviderOffloadSinkCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetProviderOffloadSink' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5408,7 +5627,9 @@ func setProviderOffloadSinkRequest(c *xgb.Conn, Provider Provider, SinkProvider 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 34 // request opcode
@@ -5437,6 +5658,8 @@ type SetProviderOutputSourceCookie struct {
 // SetProviderOutputSource sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetProviderOutputSource(c *xgb.Conn, Provider Provider, SourceProvider Provider, ConfigTimestamp xproto.Timestamp) SetProviderOutputSourceCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetProviderOutputSource' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5448,6 +5671,8 @@ func SetProviderOutputSource(c *xgb.Conn, Provider Provider, SourceProvider Prov
 // SetProviderOutputSourceChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetProviderOutputSourceCookie.Check()
 func SetProviderOutputSourceChecked(c *xgb.Conn, Provider Provider, SourceProvider Provider, ConfigTimestamp xproto.Timestamp) SetProviderOutputSourceCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetProviderOutputSource' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5469,7 +5694,9 @@ func setProviderOutputSourceRequest(c *xgb.Conn, Provider Provider, SourceProvid
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 35 // request opcode
@@ -5498,6 +5725,8 @@ type SetScreenConfigCookie struct {
 // SetScreenConfig sends a checked request.
 // If an error occurs, it will be returned with the reply by calling SetScreenConfigCookie.Reply()
 func SetScreenConfig(c *xgb.Conn, Window xproto.Window, Timestamp xproto.Timestamp, ConfigTimestamp xproto.Timestamp, SizeID uint16, Rotation uint16, Rate uint16) SetScreenConfigCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetScreenConfig' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5509,6 +5738,8 @@ func SetScreenConfig(c *xgb.Conn, Window xproto.Window, Timestamp xproto.Timesta
 // SetScreenConfigUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetScreenConfigUnchecked(c *xgb.Conn, Window xproto.Window, Timestamp xproto.Timestamp, ConfigTimestamp xproto.Timestamp, SizeID uint16, Rotation uint16, Rate uint16) SetScreenConfigCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetScreenConfig' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5579,7 +5810,9 @@ func setScreenConfigRequest(c *xgb.Conn, Window xproto.Window, Timestamp xproto.
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -5619,6 +5852,8 @@ type SetScreenSizeCookie struct {
 // SetScreenSize sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetScreenSize(c *xgb.Conn, Window xproto.Window, Width uint16, Height uint16, MmWidth uint32, MmHeight uint32) SetScreenSizeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetScreenSize' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5630,6 +5865,8 @@ func SetScreenSize(c *xgb.Conn, Window xproto.Window, Width uint16, Height uint1
 // SetScreenSizeChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetScreenSizeCookie.Check()
 func SetScreenSizeChecked(c *xgb.Conn, Window xproto.Window, Width uint16, Height uint16, MmWidth uint32, MmHeight uint32) SetScreenSizeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RANDR"]; !ok {
 		panic("Cannot issue request 'SetScreenSize' using the uninitialized extension 'RANDR'. randr.Init(connObj) must be called first.")
 	}
@@ -5651,7 +5888,9 @@ func setScreenSizeRequest(c *xgb.Conn, Window xproto.Window, Width uint16, Heigh
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RANDR"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode

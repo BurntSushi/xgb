@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named RENDER could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["RENDER"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["RENDER"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["RENDER"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -1582,6 +1581,8 @@ type AddGlyphsCookie struct {
 // AddGlyphs sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func AddGlyphs(c *xgb.Conn, Glyphset Glyphset, GlyphsLen uint32, Glyphids []uint32, Glyphs []Glyphinfo, Data []byte) AddGlyphsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'AddGlyphs' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1593,6 +1594,8 @@ func AddGlyphs(c *xgb.Conn, Glyphset Glyphset, GlyphsLen uint32, Glyphids []uint
 // AddGlyphsChecked sends a checked request.
 // If an error occurs, it can be retrieved using AddGlyphsCookie.Check()
 func AddGlyphsChecked(c *xgb.Conn, Glyphset Glyphset, GlyphsLen uint32, Glyphids []uint32, Glyphs []Glyphinfo, Data []byte) AddGlyphsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'AddGlyphs' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1614,7 +1617,9 @@ func addGlyphsRequest(c *xgb.Conn, Glyphset Glyphset, GlyphsLen uint32, Glyphids
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 20 // request opcode
@@ -1654,6 +1659,8 @@ type AddTrapsCookie struct {
 // AddTraps sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func AddTraps(c *xgb.Conn, Picture Picture, XOff int16, YOff int16, Traps []Trap) AddTrapsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'AddTraps' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1665,6 +1672,8 @@ func AddTraps(c *xgb.Conn, Picture Picture, XOff int16, YOff int16, Traps []Trap
 // AddTrapsChecked sends a checked request.
 // If an error occurs, it can be retrieved using AddTrapsCookie.Check()
 func AddTrapsChecked(c *xgb.Conn, Picture Picture, XOff int16, YOff int16, Traps []Trap) AddTrapsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'AddTraps' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1686,7 +1695,9 @@ func addTrapsRequest(c *xgb.Conn, Picture Picture, XOff int16, YOff int16, Traps
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 32 // request opcode
@@ -1717,6 +1728,8 @@ type ChangePictureCookie struct {
 // ChangePicture sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ChangePicture(c *xgb.Conn, Picture Picture, ValueMask uint32, ValueList []uint32) ChangePictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'ChangePicture' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1728,6 +1741,8 @@ func ChangePicture(c *xgb.Conn, Picture Picture, ValueMask uint32, ValueList []u
 // ChangePictureChecked sends a checked request.
 // If an error occurs, it can be retrieved using ChangePictureCookie.Check()
 func ChangePictureChecked(c *xgb.Conn, Picture Picture, ValueMask uint32, ValueList []uint32) ChangePictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'ChangePicture' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1749,7 +1764,9 @@ func changePictureRequest(c *xgb.Conn, Picture Picture, ValueMask uint32, ValueL
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -1780,6 +1797,8 @@ type CompositeCookie struct {
 // Composite sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Composite(c *xgb.Conn, Op byte, Src Picture, Mask Picture, Dst Picture, SrcX int16, SrcY int16, MaskX int16, MaskY int16, DstX int16, DstY int16, Width uint16, Height uint16) CompositeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'Composite' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1791,6 +1810,8 @@ func Composite(c *xgb.Conn, Op byte, Src Picture, Mask Picture, Dst Picture, Src
 // CompositeChecked sends a checked request.
 // If an error occurs, it can be retrieved using CompositeCookie.Check()
 func CompositeChecked(c *xgb.Conn, Op byte, Src Picture, Mask Picture, Dst Picture, SrcX int16, SrcY int16, MaskX int16, MaskY int16, DstX int16, DstY int16, Width uint16, Height uint16) CompositeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'Composite' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1812,7 +1833,9 @@ func compositeRequest(c *xgb.Conn, Op byte, Src Picture, Mask Picture, Dst Pictu
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -1870,6 +1893,8 @@ type CompositeGlyphs16Cookie struct {
 // CompositeGlyphs16 sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CompositeGlyphs16(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, Glyphset Glyphset, SrcX int16, SrcY int16, Glyphcmds []byte) CompositeGlyphs16Cookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CompositeGlyphs16' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1881,6 +1906,8 @@ func CompositeGlyphs16(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskForma
 // CompositeGlyphs16Checked sends a checked request.
 // If an error occurs, it can be retrieved using CompositeGlyphs16Cookie.Check()
 func CompositeGlyphs16Checked(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, Glyphset Glyphset, SrcX int16, SrcY int16, Glyphcmds []byte) CompositeGlyphs16Cookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CompositeGlyphs16' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1902,7 +1929,9 @@ func compositeGlyphs16Request(c *xgb.Conn, Op byte, Src Picture, Dst Picture, Ma
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 24 // request opcode
@@ -1948,6 +1977,8 @@ type CompositeGlyphs32Cookie struct {
 // CompositeGlyphs32 sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CompositeGlyphs32(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, Glyphset Glyphset, SrcX int16, SrcY int16, Glyphcmds []byte) CompositeGlyphs32Cookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CompositeGlyphs32' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1959,6 +1990,8 @@ func CompositeGlyphs32(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskForma
 // CompositeGlyphs32Checked sends a checked request.
 // If an error occurs, it can be retrieved using CompositeGlyphs32Cookie.Check()
 func CompositeGlyphs32Checked(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, Glyphset Glyphset, SrcX int16, SrcY int16, Glyphcmds []byte) CompositeGlyphs32Cookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CompositeGlyphs32' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -1980,7 +2013,9 @@ func compositeGlyphs32Request(c *xgb.Conn, Op byte, Src Picture, Dst Picture, Ma
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 25 // request opcode
@@ -2026,6 +2061,8 @@ type CompositeGlyphs8Cookie struct {
 // CompositeGlyphs8 sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CompositeGlyphs8(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, Glyphset Glyphset, SrcX int16, SrcY int16, Glyphcmds []byte) CompositeGlyphs8Cookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CompositeGlyphs8' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2037,6 +2074,8 @@ func CompositeGlyphs8(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat
 // CompositeGlyphs8Checked sends a checked request.
 // If an error occurs, it can be retrieved using CompositeGlyphs8Cookie.Check()
 func CompositeGlyphs8Checked(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, Glyphset Glyphset, SrcX int16, SrcY int16, Glyphcmds []byte) CompositeGlyphs8Cookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CompositeGlyphs8' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2058,7 +2097,9 @@ func compositeGlyphs8Request(c *xgb.Conn, Op byte, Src Picture, Dst Picture, Mas
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 23 // request opcode
@@ -2104,6 +2145,8 @@ type CreateAnimCursorCookie struct {
 // CreateAnimCursor sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateAnimCursor(c *xgb.Conn, Cid xproto.Cursor, Cursors []Animcursorelt) CreateAnimCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateAnimCursor' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2115,6 +2158,8 @@ func CreateAnimCursor(c *xgb.Conn, Cid xproto.Cursor, Cursors []Animcursorelt) C
 // CreateAnimCursorChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateAnimCursorCookie.Check()
 func CreateAnimCursorChecked(c *xgb.Conn, Cid xproto.Cursor, Cursors []Animcursorelt) CreateAnimCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateAnimCursor' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2136,7 +2181,9 @@ func createAnimCursorRequest(c *xgb.Conn, Cid xproto.Cursor, Cursors []Animcurso
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 31 // request opcode
@@ -2161,6 +2208,8 @@ type CreateConicalGradientCookie struct {
 // CreateConicalGradient sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateConicalGradient(c *xgb.Conn, Picture Picture, Center Pointfix, Angle Fixed, NumStops uint32, Stops []Fixed, Colors []Color) CreateConicalGradientCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateConicalGradient' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2172,6 +2221,8 @@ func CreateConicalGradient(c *xgb.Conn, Picture Picture, Center Pointfix, Angle 
 // CreateConicalGradientChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateConicalGradientCookie.Check()
 func CreateConicalGradientChecked(c *xgb.Conn, Picture Picture, Center Pointfix, Angle Fixed, NumStops uint32, Stops []Fixed, Colors []Color) CreateConicalGradientCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateConicalGradient' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2193,7 +2244,9 @@ func createConicalGradientRequest(c *xgb.Conn, Picture Picture, Center Pointfix,
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 36 // request opcode
@@ -2239,6 +2292,8 @@ type CreateCursorCookie struct {
 // CreateCursor sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateCursor(c *xgb.Conn, Cid xproto.Cursor, Source Picture, X uint16, Y uint16) CreateCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateCursor' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2250,6 +2305,8 @@ func CreateCursor(c *xgb.Conn, Cid xproto.Cursor, Source Picture, X uint16, Y ui
 // CreateCursorChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateCursorCookie.Check()
 func CreateCursorChecked(c *xgb.Conn, Cid xproto.Cursor, Source Picture, X uint16, Y uint16) CreateCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateCursor' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2271,7 +2328,9 @@ func createCursorRequest(c *xgb.Conn, Cid xproto.Cursor, Source Picture, X uint1
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 27 // request opcode
@@ -2303,6 +2362,8 @@ type CreateGlyphSetCookie struct {
 // CreateGlyphSet sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateGlyphSet(c *xgb.Conn, Gsid Glyphset, Format Pictformat) CreateGlyphSetCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateGlyphSet' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2314,6 +2375,8 @@ func CreateGlyphSet(c *xgb.Conn, Gsid Glyphset, Format Pictformat) CreateGlyphSe
 // CreateGlyphSetChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateGlyphSetCookie.Check()
 func CreateGlyphSetChecked(c *xgb.Conn, Gsid Glyphset, Format Pictformat) CreateGlyphSetCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateGlyphSet' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2335,7 +2398,9 @@ func createGlyphSetRequest(c *xgb.Conn, Gsid Glyphset, Format Pictformat) []byte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 17 // request opcode
@@ -2361,6 +2426,8 @@ type CreateLinearGradientCookie struct {
 // CreateLinearGradient sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateLinearGradient(c *xgb.Conn, Picture Picture, P1 Pointfix, P2 Pointfix, NumStops uint32, Stops []Fixed, Colors []Color) CreateLinearGradientCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateLinearGradient' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2372,6 +2439,8 @@ func CreateLinearGradient(c *xgb.Conn, Picture Picture, P1 Pointfix, P2 Pointfix
 // CreateLinearGradientChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateLinearGradientCookie.Check()
 func CreateLinearGradientChecked(c *xgb.Conn, Picture Picture, P1 Pointfix, P2 Pointfix, NumStops uint32, Stops []Fixed, Colors []Color) CreateLinearGradientCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateLinearGradient' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2393,7 +2462,9 @@ func createLinearGradientRequest(c *xgb.Conn, Picture Picture, P1 Pointfix, P2 P
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 34 // request opcode
@@ -2442,6 +2513,8 @@ type CreatePictureCookie struct {
 // CreatePicture sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreatePicture(c *xgb.Conn, Pid Picture, Drawable xproto.Drawable, Format Pictformat, ValueMask uint32, ValueList []uint32) CreatePictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreatePicture' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2453,6 +2526,8 @@ func CreatePicture(c *xgb.Conn, Pid Picture, Drawable xproto.Drawable, Format Pi
 // CreatePictureChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreatePictureCookie.Check()
 func CreatePictureChecked(c *xgb.Conn, Pid Picture, Drawable xproto.Drawable, Format Pictformat, ValueMask uint32, ValueList []uint32) CreatePictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreatePicture' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2474,7 +2549,9 @@ func createPictureRequest(c *xgb.Conn, Pid Picture, Drawable xproto.Drawable, Fo
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -2511,6 +2588,8 @@ type CreateRadialGradientCookie struct {
 // CreateRadialGradient sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateRadialGradient(c *xgb.Conn, Picture Picture, Inner Pointfix, Outer Pointfix, InnerRadius Fixed, OuterRadius Fixed, NumStops uint32, Stops []Fixed, Colors []Color) CreateRadialGradientCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateRadialGradient' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2522,6 +2601,8 @@ func CreateRadialGradient(c *xgb.Conn, Picture Picture, Inner Pointfix, Outer Po
 // CreateRadialGradientChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateRadialGradientCookie.Check()
 func CreateRadialGradientChecked(c *xgb.Conn, Picture Picture, Inner Pointfix, Outer Pointfix, InnerRadius Fixed, OuterRadius Fixed, NumStops uint32, Stops []Fixed, Colors []Color) CreateRadialGradientCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateRadialGradient' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2543,7 +2624,9 @@ func createRadialGradientRequest(c *xgb.Conn, Picture Picture, Inner Pointfix, O
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 35 // request opcode
@@ -2598,6 +2681,8 @@ type CreateSolidFillCookie struct {
 // CreateSolidFill sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateSolidFill(c *xgb.Conn, Picture Picture, Color Color) CreateSolidFillCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateSolidFill' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2609,6 +2694,8 @@ func CreateSolidFill(c *xgb.Conn, Picture Picture, Color Color) CreateSolidFillC
 // CreateSolidFillChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateSolidFillCookie.Check()
 func CreateSolidFillChecked(c *xgb.Conn, Picture Picture, Color Color) CreateSolidFillCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'CreateSolidFill' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2630,7 +2717,9 @@ func createSolidFillRequest(c *xgb.Conn, Picture Picture, Color Color) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 33 // request opcode
@@ -2659,6 +2748,8 @@ type FillRectanglesCookie struct {
 // FillRectangles sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func FillRectangles(c *xgb.Conn, Op byte, Dst Picture, Color Color, Rects []xproto.Rectangle) FillRectanglesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'FillRectangles' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2670,6 +2761,8 @@ func FillRectangles(c *xgb.Conn, Op byte, Dst Picture, Color Color, Rects []xpro
 // FillRectanglesChecked sends a checked request.
 // If an error occurs, it can be retrieved using FillRectanglesCookie.Check()
 func FillRectanglesChecked(c *xgb.Conn, Op byte, Dst Picture, Color Color, Rects []xproto.Rectangle) FillRectanglesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'FillRectangles' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2691,7 +2784,9 @@ func fillRectanglesRequest(c *xgb.Conn, Op byte, Dst Picture, Color Color, Rects
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 26 // request opcode
@@ -2727,6 +2822,8 @@ type FreeGlyphSetCookie struct {
 // FreeGlyphSet sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func FreeGlyphSet(c *xgb.Conn, Glyphset Glyphset) FreeGlyphSetCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'FreeGlyphSet' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2738,6 +2835,8 @@ func FreeGlyphSet(c *xgb.Conn, Glyphset Glyphset) FreeGlyphSetCookie {
 // FreeGlyphSetChecked sends a checked request.
 // If an error occurs, it can be retrieved using FreeGlyphSetCookie.Check()
 func FreeGlyphSetChecked(c *xgb.Conn, Glyphset Glyphset) FreeGlyphSetCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'FreeGlyphSet' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2759,7 +2858,9 @@ func freeGlyphSetRequest(c *xgb.Conn, Glyphset Glyphset) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 19 // request opcode
@@ -2782,6 +2883,8 @@ type FreeGlyphsCookie struct {
 // FreeGlyphs sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func FreeGlyphs(c *xgb.Conn, Glyphset Glyphset, Glyphs []Glyph) FreeGlyphsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'FreeGlyphs' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2793,6 +2896,8 @@ func FreeGlyphs(c *xgb.Conn, Glyphset Glyphset, Glyphs []Glyph) FreeGlyphsCookie
 // FreeGlyphsChecked sends a checked request.
 // If an error occurs, it can be retrieved using FreeGlyphsCookie.Check()
 func FreeGlyphsChecked(c *xgb.Conn, Glyphset Glyphset, Glyphs []Glyph) FreeGlyphsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'FreeGlyphs' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2814,7 +2919,9 @@ func freeGlyphsRequest(c *xgb.Conn, Glyphset Glyphset, Glyphs []Glyph) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 22 // request opcode
@@ -2842,6 +2949,8 @@ type FreePictureCookie struct {
 // FreePicture sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func FreePicture(c *xgb.Conn, Picture Picture) FreePictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'FreePicture' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2853,6 +2962,8 @@ func FreePicture(c *xgb.Conn, Picture Picture) FreePictureCookie {
 // FreePictureChecked sends a checked request.
 // If an error occurs, it can be retrieved using FreePictureCookie.Check()
 func FreePictureChecked(c *xgb.Conn, Picture Picture) FreePictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'FreePicture' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2874,7 +2985,9 @@ func freePictureRequest(c *xgb.Conn, Picture Picture) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -2897,6 +3010,8 @@ type QueryFiltersCookie struct {
 // QueryFilters sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryFiltersCookie.Reply()
 func QueryFilters(c *xgb.Conn, Drawable xproto.Drawable) QueryFiltersCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'QueryFilters' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2908,6 +3023,8 @@ func QueryFilters(c *xgb.Conn, Drawable xproto.Drawable) QueryFiltersCookie {
 // QueryFiltersUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryFiltersUnchecked(c *xgb.Conn, Drawable xproto.Drawable) QueryFiltersCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'QueryFilters' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -2980,7 +3097,9 @@ func queryFiltersRequest(c *xgb.Conn, Drawable xproto.Drawable) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 29 // request opcode
@@ -3003,6 +3122,8 @@ type QueryPictFormatsCookie struct {
 // QueryPictFormats sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryPictFormatsCookie.Reply()
 func QueryPictFormats(c *xgb.Conn) QueryPictFormatsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'QueryPictFormats' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3014,6 +3135,8 @@ func QueryPictFormats(c *xgb.Conn) QueryPictFormatsCookie {
 // QueryPictFormatsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryPictFormatsUnchecked(c *xgb.Conn) QueryPictFormatsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'QueryPictFormats' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3108,7 +3231,9 @@ func queryPictFormatsRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -3128,6 +3253,8 @@ type QueryPictIndexValuesCookie struct {
 // QueryPictIndexValues sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryPictIndexValuesCookie.Reply()
 func QueryPictIndexValues(c *xgb.Conn, Format Pictformat) QueryPictIndexValuesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'QueryPictIndexValues' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3139,6 +3266,8 @@ func QueryPictIndexValues(c *xgb.Conn, Format Pictformat) QueryPictIndexValuesCo
 // QueryPictIndexValuesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryPictIndexValuesUnchecked(c *xgb.Conn, Format Pictformat) QueryPictIndexValuesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'QueryPictIndexValues' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3200,7 +3329,9 @@ func queryPictIndexValuesRequest(c *xgb.Conn, Format Pictformat) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -3223,6 +3354,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3234,6 +3367,8 @@ func QueryVersion(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uin
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3295,7 +3430,9 @@ func queryVersionRequest(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVers
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -3321,6 +3458,8 @@ type ReferenceGlyphSetCookie struct {
 // ReferenceGlyphSet sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ReferenceGlyphSet(c *xgb.Conn, Gsid Glyphset, Existing Glyphset) ReferenceGlyphSetCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'ReferenceGlyphSet' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3332,6 +3471,8 @@ func ReferenceGlyphSet(c *xgb.Conn, Gsid Glyphset, Existing Glyphset) ReferenceG
 // ReferenceGlyphSetChecked sends a checked request.
 // If an error occurs, it can be retrieved using ReferenceGlyphSetCookie.Check()
 func ReferenceGlyphSetChecked(c *xgb.Conn, Gsid Glyphset, Existing Glyphset) ReferenceGlyphSetCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'ReferenceGlyphSet' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3353,7 +3494,9 @@ func referenceGlyphSetRequest(c *xgb.Conn, Gsid Glyphset, Existing Glyphset) []b
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 18 // request opcode
@@ -3379,6 +3522,8 @@ type SetPictureClipRectanglesCookie struct {
 // SetPictureClipRectangles sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetPictureClipRectangles(c *xgb.Conn, Picture Picture, ClipXOrigin int16, ClipYOrigin int16, Rectangles []xproto.Rectangle) SetPictureClipRectanglesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'SetPictureClipRectangles' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3390,6 +3535,8 @@ func SetPictureClipRectangles(c *xgb.Conn, Picture Picture, ClipXOrigin int16, C
 // SetPictureClipRectanglesChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetPictureClipRectanglesCookie.Check()
 func SetPictureClipRectanglesChecked(c *xgb.Conn, Picture Picture, ClipXOrigin int16, ClipYOrigin int16, Rectangles []xproto.Rectangle) SetPictureClipRectanglesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'SetPictureClipRectangles' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3411,7 +3558,9 @@ func setPictureClipRectanglesRequest(c *xgb.Conn, Picture Picture, ClipXOrigin i
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -3442,6 +3591,8 @@ type SetPictureFilterCookie struct {
 // SetPictureFilter sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetPictureFilter(c *xgb.Conn, Picture Picture, FilterLen uint16, Filter string, Values []Fixed) SetPictureFilterCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'SetPictureFilter' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3453,6 +3604,8 @@ func SetPictureFilter(c *xgb.Conn, Picture Picture, FilterLen uint16, Filter str
 // SetPictureFilterChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetPictureFilterCookie.Check()
 func SetPictureFilterChecked(c *xgb.Conn, Picture Picture, FilterLen uint16, Filter string, Values []Fixed) SetPictureFilterCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'SetPictureFilter' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3474,7 +3627,9 @@ func setPictureFilterRequest(c *xgb.Conn, Picture Picture, FilterLen uint16, Fil
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 30 // request opcode
@@ -3514,6 +3669,8 @@ type SetPictureTransformCookie struct {
 // SetPictureTransform sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetPictureTransform(c *xgb.Conn, Picture Picture, Transform Transform) SetPictureTransformCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'SetPictureTransform' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3525,6 +3682,8 @@ func SetPictureTransform(c *xgb.Conn, Picture Picture, Transform Transform) SetP
 // SetPictureTransformChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetPictureTransformCookie.Check()
 func SetPictureTransformChecked(c *xgb.Conn, Picture Picture, Transform Transform) SetPictureTransformCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'SetPictureTransform' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3546,7 +3705,9 @@ func setPictureTransformRequest(c *xgb.Conn, Picture Picture, Transform Transfor
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 28 // request opcode
@@ -3575,6 +3736,8 @@ type TrapezoidsCookie struct {
 // Trapezoids sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Trapezoids(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, SrcX int16, SrcY int16, Traps []Trapezoid) TrapezoidsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'Trapezoids' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3586,6 +3749,8 @@ func Trapezoids(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictf
 // TrapezoidsChecked sends a checked request.
 // If an error occurs, it can be retrieved using TrapezoidsCookie.Check()
 func TrapezoidsChecked(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, SrcX int16, SrcY int16, Traps []Trapezoid) TrapezoidsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'Trapezoids' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3607,7 +3772,9 @@ func trapezoidsRequest(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskForma
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 10 // request opcode
@@ -3649,6 +3816,8 @@ type TriFanCookie struct {
 // TriFan sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func TriFan(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, SrcX int16, SrcY int16, Points []Pointfix) TriFanCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'TriFan' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3660,6 +3829,8 @@ func TriFan(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictforma
 // TriFanChecked sends a checked request.
 // If an error occurs, it can be retrieved using TriFanCookie.Check()
 func TriFanChecked(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, SrcX int16, SrcY int16, Points []Pointfix) TriFanCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'TriFan' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3681,7 +3852,9 @@ func triFanRequest(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pi
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 13 // request opcode
@@ -3723,6 +3896,8 @@ type TriStripCookie struct {
 // TriStrip sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func TriStrip(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, SrcX int16, SrcY int16, Points []Pointfix) TriStripCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'TriStrip' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3734,6 +3909,8 @@ func TriStrip(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictfor
 // TriStripChecked sends a checked request.
 // If an error occurs, it can be retrieved using TriStripCookie.Check()
 func TriStripChecked(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, SrcX int16, SrcY int16, Points []Pointfix) TriStripCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'TriStrip' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3755,7 +3932,9 @@ func triStripRequest(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 12 // request opcode
@@ -3797,6 +3976,8 @@ type TrianglesCookie struct {
 // Triangles sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Triangles(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, SrcX int16, SrcY int16, Triangles []Triangle) TrianglesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'Triangles' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3808,6 +3989,8 @@ func Triangles(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictfo
 // TrianglesChecked sends a checked request.
 // If an error occurs, it can be retrieved using TrianglesCookie.Check()
 func TrianglesChecked(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat Pictformat, SrcX int16, SrcY int16, Triangles []Triangle) TrianglesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["RENDER"]; !ok {
 		panic("Cannot issue request 'Triangles' using the uninitialized extension 'RENDER'. render.Init(connObj) must be called first.")
 	}
@@ -3829,7 +4012,9 @@ func trianglesRequest(c *xgb.Conn, Op byte, Src Picture, Dst Picture, MaskFormat
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["RENDER"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 11 // request opcode

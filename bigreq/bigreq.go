@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named BIG-REQUESTS could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["BIG-REQUESTS"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["BIG-REQUESTS"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["BIG-REQUESTS"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -69,6 +68,8 @@ type EnableCookie struct {
 // Enable sends a checked request.
 // If an error occurs, it will be returned with the reply by calling EnableCookie.Reply()
 func Enable(c *xgb.Conn) EnableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["BIG-REQUESTS"]; !ok {
 		panic("Cannot issue request 'Enable' using the uninitialized extension 'BIG-REQUESTS'. bigreq.Init(connObj) must be called first.")
 	}
@@ -80,6 +81,8 @@ func Enable(c *xgb.Conn) EnableCookie {
 // EnableUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func EnableUnchecked(c *xgb.Conn) EnableCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["BIG-REQUESTS"]; !ok {
 		panic("Cannot issue request 'Enable' using the uninitialized extension 'BIG-REQUESTS'. bigreq.Init(connObj) must be called first.")
 	}
@@ -134,7 +137,9 @@ func enableRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["BIG-REQUESTS"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode

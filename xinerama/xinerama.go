@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named XINERAMA could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["XINERAMA"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["XINERAMA"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["XINERAMA"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -137,6 +136,8 @@ type GetScreenCountCookie struct {
 // GetScreenCount sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetScreenCountCookie.Reply()
 func GetScreenCount(c *xgb.Conn, Window xproto.Window) GetScreenCountCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'GetScreenCount' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -148,6 +149,8 @@ func GetScreenCount(c *xgb.Conn, Window xproto.Window) GetScreenCountCookie {
 // GetScreenCountUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetScreenCountUnchecked(c *xgb.Conn, Window xproto.Window) GetScreenCountCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'GetScreenCount' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -203,7 +206,9 @@ func getScreenCountRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XINERAMA"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -226,6 +231,8 @@ type GetScreenSizeCookie struct {
 // GetScreenSize sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetScreenSizeCookie.Reply()
 func GetScreenSize(c *xgb.Conn, Window xproto.Window, Screen uint32) GetScreenSizeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'GetScreenSize' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -237,6 +244,8 @@ func GetScreenSize(c *xgb.Conn, Window xproto.Window, Screen uint32) GetScreenSi
 // GetScreenSizeUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetScreenSizeUnchecked(c *xgb.Conn, Window xproto.Window, Screen uint32) GetScreenSizeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'GetScreenSize' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -303,7 +312,9 @@ func getScreenSizeRequest(c *xgb.Conn, Window xproto.Window, Screen uint32) []by
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XINERAMA"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -329,6 +340,8 @@ type GetStateCookie struct {
 // GetState sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetStateCookie.Reply()
 func GetState(c *xgb.Conn, Window xproto.Window) GetStateCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'GetState' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -340,6 +353,8 @@ func GetState(c *xgb.Conn, Window xproto.Window) GetStateCookie {
 // GetStateUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetStateUnchecked(c *xgb.Conn, Window xproto.Window) GetStateCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'GetState' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -395,7 +410,9 @@ func getStateRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XINERAMA"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -418,6 +435,8 @@ type IsActiveCookie struct {
 // IsActive sends a checked request.
 // If an error occurs, it will be returned with the reply by calling IsActiveCookie.Reply()
 func IsActive(c *xgb.Conn) IsActiveCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'IsActive' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -429,6 +448,8 @@ func IsActive(c *xgb.Conn) IsActiveCookie {
 // IsActiveUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func IsActiveUnchecked(c *xgb.Conn) IsActiveCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'IsActive' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -483,7 +504,9 @@ func isActiveRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XINERAMA"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -503,6 +526,8 @@ type QueryScreensCookie struct {
 // QueryScreens sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryScreensCookie.Reply()
 func QueryScreens(c *xgb.Conn) QueryScreensCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'QueryScreens' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -514,6 +539,8 @@ func QueryScreens(c *xgb.Conn) QueryScreensCookie {
 // QueryScreensUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryScreensUnchecked(c *xgb.Conn) QueryScreensCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'QueryScreens' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -575,7 +602,9 @@ func queryScreensRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XINERAMA"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -595,6 +624,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, Major byte, Minor byte) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -606,6 +637,8 @@ func QueryVersion(c *xgb.Conn, Major byte, Minor byte) QueryVersionCookie {
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, Major byte, Minor byte) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XINERAMA"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XINERAMA'. xinerama.Init(connObj) must be called first.")
 	}
@@ -664,7 +697,9 @@ func queryVersionRequest(c *xgb.Conn, Major byte, Minor byte) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XINERAMA"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode

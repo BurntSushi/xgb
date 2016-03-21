@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named MIT-SHM could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["MIT-SHM"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["MIT-SHM"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["MIT-SHM"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -217,6 +216,8 @@ type AttachCookie struct {
 // Attach sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Attach(c *xgb.Conn, Shmseg Seg, Shmid uint32, ReadOnly bool) AttachCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'Attach' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -228,6 +229,8 @@ func Attach(c *xgb.Conn, Shmseg Seg, Shmid uint32, ReadOnly bool) AttachCookie {
 // AttachChecked sends a checked request.
 // If an error occurs, it can be retrieved using AttachCookie.Check()
 func AttachChecked(c *xgb.Conn, Shmseg Seg, Shmid uint32, ReadOnly bool) AttachCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'Attach' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -249,7 +252,9 @@ func attachRequest(c *xgb.Conn, Shmseg Seg, Shmid uint32, ReadOnly bool) []byte 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SHM"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -284,6 +289,8 @@ type AttachFdCookie struct {
 // AttachFd sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func AttachFd(c *xgb.Conn, Shmseg Seg, ReadOnly bool) AttachFdCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'AttachFd' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -295,6 +302,8 @@ func AttachFd(c *xgb.Conn, Shmseg Seg, ReadOnly bool) AttachFdCookie {
 // AttachFdChecked sends a checked request.
 // If an error occurs, it can be retrieved using AttachFdCookie.Check()
 func AttachFdChecked(c *xgb.Conn, Shmseg Seg, ReadOnly bool) AttachFdCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'AttachFd' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -316,7 +325,9 @@ func attachFdRequest(c *xgb.Conn, Shmseg Seg, ReadOnly bool) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SHM"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -348,6 +359,8 @@ type CreatePixmapCookie struct {
 // CreatePixmap sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreatePixmap(c *xgb.Conn, Pid xproto.Pixmap, Drawable xproto.Drawable, Width uint16, Height uint16, Depth byte, Shmseg Seg, Offset uint32) CreatePixmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'CreatePixmap' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -359,6 +372,8 @@ func CreatePixmap(c *xgb.Conn, Pid xproto.Pixmap, Drawable xproto.Drawable, Widt
 // CreatePixmapChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreatePixmapCookie.Check()
 func CreatePixmapChecked(c *xgb.Conn, Pid xproto.Pixmap, Drawable xproto.Drawable, Width uint16, Height uint16, Depth byte, Shmseg Seg, Offset uint32) CreatePixmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'CreatePixmap' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -380,7 +395,9 @@ func createPixmapRequest(c *xgb.Conn, Pid xproto.Pixmap, Drawable xproto.Drawabl
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SHM"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -423,6 +440,8 @@ type CreateSegmentCookie struct {
 // CreateSegment sends a checked request.
 // If an error occurs, it will be returned with the reply by calling CreateSegmentCookie.Reply()
 func CreateSegment(c *xgb.Conn, Shmseg Seg, Size uint32, ReadOnly bool) CreateSegmentCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'CreateSegment' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -434,6 +453,8 @@ func CreateSegment(c *xgb.Conn, Shmseg Seg, Size uint32, ReadOnly bool) CreateSe
 // CreateSegmentUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateSegmentUnchecked(c *xgb.Conn, Shmseg Seg, Size uint32, ReadOnly bool) CreateSegmentCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'CreateSegment' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -488,7 +509,9 @@ func createSegmentRequest(c *xgb.Conn, Shmseg Seg, Size uint32, ReadOnly bool) [
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SHM"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -523,6 +546,8 @@ type DetachCookie struct {
 // Detach sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func Detach(c *xgb.Conn, Shmseg Seg) DetachCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'Detach' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -534,6 +559,8 @@ func Detach(c *xgb.Conn, Shmseg Seg) DetachCookie {
 // DetachChecked sends a checked request.
 // If an error occurs, it can be retrieved using DetachCookie.Check()
 func DetachChecked(c *xgb.Conn, Shmseg Seg) DetachCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'Detach' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -555,7 +582,9 @@ func detachRequest(c *xgb.Conn, Shmseg Seg) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SHM"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -578,6 +607,8 @@ type GetImageCookie struct {
 // GetImage sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetImageCookie.Reply()
 func GetImage(c *xgb.Conn, Drawable xproto.Drawable, X int16, Y int16, Width uint16, Height uint16, PlaneMask uint32, Format byte, Shmseg Seg, Offset uint32) GetImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'GetImage' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -589,6 +620,8 @@ func GetImage(c *xgb.Conn, Drawable xproto.Drawable, X int16, Y int16, Width uin
 // GetImageUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetImageUnchecked(c *xgb.Conn, Drawable xproto.Drawable, X int16, Y int16, Width uint16, Height uint16, PlaneMask uint32, Format byte, Shmseg Seg, Offset uint32) GetImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'GetImage' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -648,7 +681,9 @@ func getImageRequest(c *xgb.Conn, Drawable xproto.Drawable, X int16, Y int16, Wi
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SHM"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -697,6 +732,8 @@ type PutImageCookie struct {
 // PutImage sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PutImage(c *xgb.Conn, Drawable xproto.Drawable, Gc xproto.Gcontext, TotalWidth uint16, TotalHeight uint16, SrcX uint16, SrcY uint16, SrcWidth uint16, SrcHeight uint16, DstX int16, DstY int16, Depth byte, Format byte, SendEvent byte, Shmseg Seg, Offset uint32) PutImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'PutImage' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -708,6 +745,8 @@ func PutImage(c *xgb.Conn, Drawable xproto.Drawable, Gc xproto.Gcontext, TotalWi
 // PutImageChecked sends a checked request.
 // If an error occurs, it can be retrieved using PutImageCookie.Check()
 func PutImageChecked(c *xgb.Conn, Drawable xproto.Drawable, Gc xproto.Gcontext, TotalWidth uint16, TotalHeight uint16, SrcX uint16, SrcY uint16, SrcWidth uint16, SrcHeight uint16, DstX int16, DstY int16, Depth byte, Format byte, SendEvent byte, Shmseg Seg, Offset uint32) PutImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'PutImage' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -729,7 +768,9 @@ func putImageRequest(c *xgb.Conn, Drawable xproto.Drawable, Gc xproto.Gcontext, 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SHM"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -796,6 +837,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -807,6 +850,8 @@ func QueryVersion(c *xgb.Conn) QueryVersionCookie {
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["MIT-SHM"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'MIT-SHM'. shm.Init(connObj) must be called first.")
 	}
@@ -885,7 +930,9 @@ func queryVersionRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["MIT-SHM"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode

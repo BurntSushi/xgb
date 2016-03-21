@@ -21,16 +21,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named XFIXES could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["XFIXES"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["XFIXES"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["XFIXES"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -100,10 +99,6 @@ const (
 	BarrierDirectionsPositiveY = 2
 	BarrierDirectionsNegativeX = 4
 	BarrierDirectionsNegativeY = 8
-)
-
-const (
-	CursorNotifyDisplayCursor = 0
 )
 
 // CursorNotify is the event number for a CursorNotifyEvent.
@@ -200,6 +195,10 @@ func (v CursorNotifyEvent) String() string {
 func init() {
 	xgb.NewExtEventFuncs["XFIXES"][1] = CursorNotifyEventNew
 }
+
+const (
+	CursorNotifyDisplayCursor = 0
+)
 
 const (
 	CursorNotifyMaskDisplayCursor = 1
@@ -381,6 +380,8 @@ type ChangeCursorCookie struct {
 // ChangeCursor sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ChangeCursor(c *xgb.Conn, Source xproto.Cursor, Destination xproto.Cursor) ChangeCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'ChangeCursor' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -392,6 +393,8 @@ func ChangeCursor(c *xgb.Conn, Source xproto.Cursor, Destination xproto.Cursor) 
 // ChangeCursorChecked sends a checked request.
 // If an error occurs, it can be retrieved using ChangeCursorCookie.Check()
 func ChangeCursorChecked(c *xgb.Conn, Source xproto.Cursor, Destination xproto.Cursor) ChangeCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'ChangeCursor' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -413,7 +416,9 @@ func changeCursorRequest(c *xgb.Conn, Source xproto.Cursor, Destination xproto.C
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 26 // request opcode
@@ -439,6 +444,8 @@ type ChangeCursorByNameCookie struct {
 // ChangeCursorByName sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ChangeCursorByName(c *xgb.Conn, Src xproto.Cursor, Nbytes uint16, Name string) ChangeCursorByNameCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'ChangeCursorByName' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -450,6 +457,8 @@ func ChangeCursorByName(c *xgb.Conn, Src xproto.Cursor, Nbytes uint16, Name stri
 // ChangeCursorByNameChecked sends a checked request.
 // If an error occurs, it can be retrieved using ChangeCursorByNameCookie.Check()
 func ChangeCursorByNameChecked(c *xgb.Conn, Src xproto.Cursor, Nbytes uint16, Name string) ChangeCursorByNameCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'ChangeCursorByName' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -471,7 +480,9 @@ func changeCursorByNameRequest(c *xgb.Conn, Src xproto.Cursor, Nbytes uint16, Na
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 27 // request opcode
@@ -502,6 +513,8 @@ type ChangeSaveSetCookie struct {
 // ChangeSaveSet sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ChangeSaveSet(c *xgb.Conn, Mode byte, Target byte, Map byte, Window xproto.Window) ChangeSaveSetCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'ChangeSaveSet' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -513,6 +526,8 @@ func ChangeSaveSet(c *xgb.Conn, Mode byte, Target byte, Map byte, Window xproto.
 // ChangeSaveSetChecked sends a checked request.
 // If an error occurs, it can be retrieved using ChangeSaveSetCookie.Check()
 func ChangeSaveSetChecked(c *xgb.Conn, Mode byte, Target byte, Map byte, Window xproto.Window) ChangeSaveSetCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'ChangeSaveSet' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -534,7 +549,9 @@ func changeSaveSetRequest(c *xgb.Conn, Mode byte, Target byte, Map byte, Window 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -568,6 +585,8 @@ type CopyRegionCookie struct {
 // CopyRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CopyRegion(c *xgb.Conn, Source Region, Destination Region) CopyRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CopyRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -579,6 +598,8 @@ func CopyRegion(c *xgb.Conn, Source Region, Destination Region) CopyRegionCookie
 // CopyRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using CopyRegionCookie.Check()
 func CopyRegionChecked(c *xgb.Conn, Source Region, Destination Region) CopyRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CopyRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -600,7 +621,9 @@ func copyRegionRequest(c *xgb.Conn, Source Region, Destination Region) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 12 // request opcode
@@ -626,6 +649,8 @@ type CreatePointerBarrierCookie struct {
 // CreatePointerBarrier sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreatePointerBarrier(c *xgb.Conn, Barrier Barrier, Window xproto.Window, X1 uint16, Y1 uint16, X2 uint16, Y2 uint16, Directions uint32, NumDevices uint16, Devices []uint16) CreatePointerBarrierCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreatePointerBarrier' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -637,6 +662,8 @@ func CreatePointerBarrier(c *xgb.Conn, Barrier Barrier, Window xproto.Window, X1
 // CreatePointerBarrierChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreatePointerBarrierCookie.Check()
 func CreatePointerBarrierChecked(c *xgb.Conn, Barrier Barrier, Window xproto.Window, X1 uint16, Y1 uint16, X2 uint16, Y2 uint16, Directions uint32, NumDevices uint16, Devices []uint16) CreatePointerBarrierCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreatePointerBarrier' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -658,7 +685,9 @@ func createPointerBarrierRequest(c *xgb.Conn, Barrier Barrier, Window xproto.Win
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 31 // request opcode
@@ -709,6 +738,8 @@ type CreateRegionCookie struct {
 // CreateRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateRegion(c *xgb.Conn, Region Region, Rectangles []xproto.Rectangle) CreateRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreateRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -720,6 +751,8 @@ func CreateRegion(c *xgb.Conn, Region Region, Rectangles []xproto.Rectangle) Cre
 // CreateRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateRegionCookie.Check()
 func CreateRegionChecked(c *xgb.Conn, Region Region, Rectangles []xproto.Rectangle) CreateRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreateRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -741,7 +774,9 @@ func createRegionRequest(c *xgb.Conn, Region Region, Rectangles []xproto.Rectang
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -766,6 +801,8 @@ type CreateRegionFromBitmapCookie struct {
 // CreateRegionFromBitmap sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateRegionFromBitmap(c *xgb.Conn, Region Region, Bitmap xproto.Pixmap) CreateRegionFromBitmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreateRegionFromBitmap' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -777,6 +814,8 @@ func CreateRegionFromBitmap(c *xgb.Conn, Region Region, Bitmap xproto.Pixmap) Cr
 // CreateRegionFromBitmapChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateRegionFromBitmapCookie.Check()
 func CreateRegionFromBitmapChecked(c *xgb.Conn, Region Region, Bitmap xproto.Pixmap) CreateRegionFromBitmapCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreateRegionFromBitmap' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -798,7 +837,9 @@ func createRegionFromBitmapRequest(c *xgb.Conn, Region Region, Bitmap xproto.Pix
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -824,6 +865,8 @@ type CreateRegionFromGCCookie struct {
 // CreateRegionFromGC sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateRegionFromGC(c *xgb.Conn, Region Region, Gc xproto.Gcontext) CreateRegionFromGCCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreateRegionFromGC' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -835,6 +878,8 @@ func CreateRegionFromGC(c *xgb.Conn, Region Region, Gc xproto.Gcontext) CreateRe
 // CreateRegionFromGCChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateRegionFromGCCookie.Check()
 func CreateRegionFromGCChecked(c *xgb.Conn, Region Region, Gc xproto.Gcontext) CreateRegionFromGCCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreateRegionFromGC' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -856,7 +901,9 @@ func createRegionFromGCRequest(c *xgb.Conn, Region Region, Gc xproto.Gcontext) [
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -882,6 +929,8 @@ type CreateRegionFromPictureCookie struct {
 // CreateRegionFromPicture sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateRegionFromPicture(c *xgb.Conn, Region Region, Picture render.Picture) CreateRegionFromPictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreateRegionFromPicture' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -893,6 +942,8 @@ func CreateRegionFromPicture(c *xgb.Conn, Region Region, Picture render.Picture)
 // CreateRegionFromPictureChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateRegionFromPictureCookie.Check()
 func CreateRegionFromPictureChecked(c *xgb.Conn, Region Region, Picture render.Picture) CreateRegionFromPictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreateRegionFromPicture' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -914,7 +965,9 @@ func createRegionFromPictureRequest(c *xgb.Conn, Region Region, Picture render.P
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 9 // request opcode
@@ -940,6 +993,8 @@ type CreateRegionFromWindowCookie struct {
 // CreateRegionFromWindow sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateRegionFromWindow(c *xgb.Conn, Region Region, Window xproto.Window, Kind shape.Kind) CreateRegionFromWindowCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreateRegionFromWindow' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -951,6 +1006,8 @@ func CreateRegionFromWindow(c *xgb.Conn, Region Region, Window xproto.Window, Ki
 // CreateRegionFromWindowChecked sends a checked request.
 // If an error occurs, it can be retrieved using CreateRegionFromWindowCookie.Check()
 func CreateRegionFromWindowChecked(c *xgb.Conn, Region Region, Window xproto.Window, Kind shape.Kind) CreateRegionFromWindowCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'CreateRegionFromWindow' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -972,7 +1029,9 @@ func createRegionFromWindowRequest(c *xgb.Conn, Region Region, Window xproto.Win
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -1003,6 +1062,8 @@ type DeletePointerBarrierCookie struct {
 // DeletePointerBarrier sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DeletePointerBarrier(c *xgb.Conn, Barrier Barrier) DeletePointerBarrierCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'DeletePointerBarrier' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1014,6 +1075,8 @@ func DeletePointerBarrier(c *xgb.Conn, Barrier Barrier) DeletePointerBarrierCook
 // DeletePointerBarrierChecked sends a checked request.
 // If an error occurs, it can be retrieved using DeletePointerBarrierCookie.Check()
 func DeletePointerBarrierChecked(c *xgb.Conn, Barrier Barrier) DeletePointerBarrierCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'DeletePointerBarrier' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1035,7 +1098,9 @@ func deletePointerBarrierRequest(c *xgb.Conn, Barrier Barrier) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 32 // request opcode
@@ -1058,6 +1123,8 @@ type DestroyRegionCookie struct {
 // DestroyRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroyRegion(c *xgb.Conn, Region Region) DestroyRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'DestroyRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1069,6 +1136,8 @@ func DestroyRegion(c *xgb.Conn, Region Region) DestroyRegionCookie {
 // DestroyRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroyRegionCookie.Check()
 func DestroyRegionChecked(c *xgb.Conn, Region Region) DestroyRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'DestroyRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1090,7 +1159,9 @@ func destroyRegionRequest(c *xgb.Conn, Region Region) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 10 // request opcode
@@ -1113,6 +1184,8 @@ type ExpandRegionCookie struct {
 // ExpandRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ExpandRegion(c *xgb.Conn, Source Region, Destination Region, Left uint16, Right uint16, Top uint16, Bottom uint16) ExpandRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'ExpandRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1124,6 +1197,8 @@ func ExpandRegion(c *xgb.Conn, Source Region, Destination Region, Left uint16, R
 // ExpandRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using ExpandRegionCookie.Check()
 func ExpandRegionChecked(c *xgb.Conn, Source Region, Destination Region, Left uint16, Right uint16, Top uint16, Bottom uint16) ExpandRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'ExpandRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1145,7 +1220,9 @@ func expandRegionRequest(c *xgb.Conn, Source Region, Destination Region, Left ui
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 28 // request opcode
@@ -1183,6 +1260,8 @@ type FetchRegionCookie struct {
 // FetchRegion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling FetchRegionCookie.Reply()
 func FetchRegion(c *xgb.Conn, Region Region) FetchRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'FetchRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1194,6 +1273,8 @@ func FetchRegion(c *xgb.Conn, Region Region) FetchRegionCookie {
 // FetchRegionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func FetchRegionUnchecked(c *xgb.Conn, Region Region) FetchRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'FetchRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1255,7 +1336,9 @@ func fetchRegionRequest(c *xgb.Conn, Region Region) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 19 // request opcode
@@ -1278,6 +1361,8 @@ type GetCursorImageCookie struct {
 // GetCursorImage sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetCursorImageCookie.Reply()
 func GetCursorImage(c *xgb.Conn) GetCursorImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'GetCursorImage' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1289,6 +1374,8 @@ func GetCursorImage(c *xgb.Conn) GetCursorImageCookie {
 // GetCursorImageUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetCursorImageUnchecked(c *xgb.Conn) GetCursorImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'GetCursorImage' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1377,7 +1464,9 @@ func getCursorImageRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -1397,6 +1486,8 @@ type GetCursorImageAndNameCookie struct {
 // GetCursorImageAndName sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetCursorImageAndNameCookie.Reply()
 func GetCursorImageAndName(c *xgb.Conn) GetCursorImageAndNameCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'GetCursorImageAndName' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1408,6 +1499,8 @@ func GetCursorImageAndName(c *xgb.Conn) GetCursorImageAndNameCookie {
 // GetCursorImageAndNameUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetCursorImageAndNameUnchecked(c *xgb.Conn) GetCursorImageAndNameCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'GetCursorImageAndName' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1515,7 +1608,9 @@ func getCursorImageAndNameRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 25 // request opcode
@@ -1535,6 +1630,8 @@ type GetCursorNameCookie struct {
 // GetCursorName sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetCursorNameCookie.Reply()
 func GetCursorName(c *xgb.Conn, Cursor xproto.Cursor) GetCursorNameCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'GetCursorName' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1546,6 +1643,8 @@ func GetCursorName(c *xgb.Conn, Cursor xproto.Cursor) GetCursorNameCookie {
 // GetCursorNameUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetCursorNameUnchecked(c *xgb.Conn, Cursor xproto.Cursor) GetCursorNameCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'GetCursorName' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1615,7 +1714,9 @@ func getCursorNameRequest(c *xgb.Conn, Cursor xproto.Cursor) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 24 // request opcode
@@ -1638,6 +1739,8 @@ type HideCursorCookie struct {
 // HideCursor sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func HideCursor(c *xgb.Conn, Window xproto.Window) HideCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'HideCursor' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1649,6 +1752,8 @@ func HideCursor(c *xgb.Conn, Window xproto.Window) HideCursorCookie {
 // HideCursorChecked sends a checked request.
 // If an error occurs, it can be retrieved using HideCursorCookie.Check()
 func HideCursorChecked(c *xgb.Conn, Window xproto.Window) HideCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'HideCursor' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1670,7 +1775,9 @@ func hideCursorRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 29 // request opcode
@@ -1693,6 +1800,8 @@ type IntersectRegionCookie struct {
 // IntersectRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func IntersectRegion(c *xgb.Conn, Source1 Region, Source2 Region, Destination Region) IntersectRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'IntersectRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1704,6 +1813,8 @@ func IntersectRegion(c *xgb.Conn, Source1 Region, Source2 Region, Destination Re
 // IntersectRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using IntersectRegionCookie.Check()
 func IntersectRegionChecked(c *xgb.Conn, Source1 Region, Source2 Region, Destination Region) IntersectRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'IntersectRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1725,7 +1836,9 @@ func intersectRegionRequest(c *xgb.Conn, Source1 Region, Source2 Region, Destina
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 14 // request opcode
@@ -1754,6 +1867,8 @@ type InvertRegionCookie struct {
 // InvertRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func InvertRegion(c *xgb.Conn, Source Region, Bounds xproto.Rectangle, Destination Region) InvertRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'InvertRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1765,6 +1880,8 @@ func InvertRegion(c *xgb.Conn, Source Region, Bounds xproto.Rectangle, Destinati
 // InvertRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using InvertRegionCookie.Check()
 func InvertRegionChecked(c *xgb.Conn, Source Region, Bounds xproto.Rectangle, Destination Region) InvertRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'InvertRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1786,7 +1903,9 @@ func invertRegionRequest(c *xgb.Conn, Source Region, Bounds xproto.Rectangle, De
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 16 // request opcode
@@ -1818,6 +1937,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1829,6 +1950,8 @@ func QueryVersion(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uin
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVersion uint32) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1890,7 +2013,9 @@ func queryVersionRequest(c *xgb.Conn, ClientMajorVersion uint32, ClientMinorVers
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -1916,6 +2041,8 @@ type RegionExtentsCookie struct {
 // RegionExtents sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func RegionExtents(c *xgb.Conn, Source Region, Destination Region) RegionExtentsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'RegionExtents' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1927,6 +2054,8 @@ func RegionExtents(c *xgb.Conn, Source Region, Destination Region) RegionExtents
 // RegionExtentsChecked sends a checked request.
 // If an error occurs, it can be retrieved using RegionExtentsCookie.Check()
 func RegionExtentsChecked(c *xgb.Conn, Source Region, Destination Region) RegionExtentsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'RegionExtents' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1948,7 +2077,9 @@ func regionExtentsRequest(c *xgb.Conn, Source Region, Destination Region) []byte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 18 // request opcode
@@ -1974,6 +2105,8 @@ type SelectCursorInputCookie struct {
 // SelectCursorInput sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SelectCursorInput(c *xgb.Conn, Window xproto.Window, EventMask uint32) SelectCursorInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SelectCursorInput' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -1985,6 +2118,8 @@ func SelectCursorInput(c *xgb.Conn, Window xproto.Window, EventMask uint32) Sele
 // SelectCursorInputChecked sends a checked request.
 // If an error occurs, it can be retrieved using SelectCursorInputCookie.Check()
 func SelectCursorInputChecked(c *xgb.Conn, Window xproto.Window, EventMask uint32) SelectCursorInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SelectCursorInput' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2006,7 +2141,9 @@ func selectCursorInputRequest(c *xgb.Conn, Window xproto.Window, EventMask uint3
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -2032,6 +2169,8 @@ type SelectSelectionInputCookie struct {
 // SelectSelectionInput sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SelectSelectionInput(c *xgb.Conn, Window xproto.Window, Selection xproto.Atom, EventMask uint32) SelectSelectionInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SelectSelectionInput' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2043,6 +2182,8 @@ func SelectSelectionInput(c *xgb.Conn, Window xproto.Window, Selection xproto.At
 // SelectSelectionInputChecked sends a checked request.
 // If an error occurs, it can be retrieved using SelectSelectionInputCookie.Check()
 func SelectSelectionInputChecked(c *xgb.Conn, Window xproto.Window, Selection xproto.Atom, EventMask uint32) SelectSelectionInputCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SelectSelectionInput' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2064,7 +2205,9 @@ func selectSelectionInputRequest(c *xgb.Conn, Window xproto.Window, Selection xp
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -2093,6 +2236,8 @@ type SetCursorNameCookie struct {
 // SetCursorName sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetCursorName(c *xgb.Conn, Cursor xproto.Cursor, Nbytes uint16, Name string) SetCursorNameCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SetCursorName' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2104,6 +2249,8 @@ func SetCursorName(c *xgb.Conn, Cursor xproto.Cursor, Nbytes uint16, Name string
 // SetCursorNameChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetCursorNameCookie.Check()
 func SetCursorNameChecked(c *xgb.Conn, Cursor xproto.Cursor, Nbytes uint16, Name string) SetCursorNameCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SetCursorName' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2125,7 +2272,9 @@ func setCursorNameRequest(c *xgb.Conn, Cursor xproto.Cursor, Nbytes uint16, Name
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 23 // request opcode
@@ -2156,6 +2305,8 @@ type SetGCClipRegionCookie struct {
 // SetGCClipRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetGCClipRegion(c *xgb.Conn, Gc xproto.Gcontext, Region Region, XOrigin int16, YOrigin int16) SetGCClipRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SetGCClipRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2167,6 +2318,8 @@ func SetGCClipRegion(c *xgb.Conn, Gc xproto.Gcontext, Region Region, XOrigin int
 // SetGCClipRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetGCClipRegionCookie.Check()
 func SetGCClipRegionChecked(c *xgb.Conn, Gc xproto.Gcontext, Region Region, XOrigin int16, YOrigin int16) SetGCClipRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SetGCClipRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2188,7 +2341,9 @@ func setGCClipRegionRequest(c *xgb.Conn, Gc xproto.Gcontext, Region Region, XOri
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 20 // request opcode
@@ -2220,6 +2375,8 @@ type SetPictureClipRegionCookie struct {
 // SetPictureClipRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetPictureClipRegion(c *xgb.Conn, Picture render.Picture, Region Region, XOrigin int16, YOrigin int16) SetPictureClipRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SetPictureClipRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2231,6 +2388,8 @@ func SetPictureClipRegion(c *xgb.Conn, Picture render.Picture, Region Region, XO
 // SetPictureClipRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetPictureClipRegionCookie.Check()
 func SetPictureClipRegionChecked(c *xgb.Conn, Picture render.Picture, Region Region, XOrigin int16, YOrigin int16) SetPictureClipRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SetPictureClipRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2252,7 +2411,9 @@ func setPictureClipRegionRequest(c *xgb.Conn, Picture render.Picture, Region Reg
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 22 // request opcode
@@ -2284,6 +2445,8 @@ type SetRegionCookie struct {
 // SetRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetRegion(c *xgb.Conn, Region Region, Rectangles []xproto.Rectangle) SetRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SetRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2295,6 +2458,8 @@ func SetRegion(c *xgb.Conn, Region Region, Rectangles []xproto.Rectangle) SetReg
 // SetRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetRegionCookie.Check()
 func SetRegionChecked(c *xgb.Conn, Region Region, Rectangles []xproto.Rectangle) SetRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SetRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2316,7 +2481,9 @@ func setRegionRequest(c *xgb.Conn, Region Region, Rectangles []xproto.Rectangle)
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 11 // request opcode
@@ -2341,6 +2508,8 @@ type SetWindowShapeRegionCookie struct {
 // SetWindowShapeRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetWindowShapeRegion(c *xgb.Conn, Dest xproto.Window, DestKind shape.Kind, XOffset int16, YOffset int16, Region Region) SetWindowShapeRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SetWindowShapeRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2352,6 +2521,8 @@ func SetWindowShapeRegion(c *xgb.Conn, Dest xproto.Window, DestKind shape.Kind, 
 // SetWindowShapeRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetWindowShapeRegionCookie.Check()
 func SetWindowShapeRegionChecked(c *xgb.Conn, Dest xproto.Window, DestKind shape.Kind, XOffset int16, YOffset int16, Region Region) SetWindowShapeRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SetWindowShapeRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2373,7 +2544,9 @@ func setWindowShapeRegionRequest(c *xgb.Conn, Dest xproto.Window, DestKind shape
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 21 // request opcode
@@ -2410,6 +2583,8 @@ type ShowCursorCookie struct {
 // ShowCursor sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ShowCursor(c *xgb.Conn, Window xproto.Window) ShowCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'ShowCursor' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2421,6 +2596,8 @@ func ShowCursor(c *xgb.Conn, Window xproto.Window) ShowCursorCookie {
 // ShowCursorChecked sends a checked request.
 // If an error occurs, it can be retrieved using ShowCursorCookie.Check()
 func ShowCursorChecked(c *xgb.Conn, Window xproto.Window) ShowCursorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'ShowCursor' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2442,7 +2619,9 @@ func showCursorRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 30 // request opcode
@@ -2465,6 +2644,8 @@ type SubtractRegionCookie struct {
 // SubtractRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SubtractRegion(c *xgb.Conn, Source1 Region, Source2 Region, Destination Region) SubtractRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SubtractRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2476,6 +2657,8 @@ func SubtractRegion(c *xgb.Conn, Source1 Region, Source2 Region, Destination Reg
 // SubtractRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using SubtractRegionCookie.Check()
 func SubtractRegionChecked(c *xgb.Conn, Source1 Region, Source2 Region, Destination Region) SubtractRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'SubtractRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2497,7 +2680,9 @@ func subtractRegionRequest(c *xgb.Conn, Source1 Region, Source2 Region, Destinat
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 15 // request opcode
@@ -2526,6 +2711,8 @@ type TranslateRegionCookie struct {
 // TranslateRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func TranslateRegion(c *xgb.Conn, Region Region, Dx int16, Dy int16) TranslateRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'TranslateRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2537,6 +2724,8 @@ func TranslateRegion(c *xgb.Conn, Region Region, Dx int16, Dy int16) TranslateRe
 // TranslateRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using TranslateRegionCookie.Check()
 func TranslateRegionChecked(c *xgb.Conn, Region Region, Dx int16, Dy int16) TranslateRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'TranslateRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2558,7 +2747,9 @@ func translateRegionRequest(c *xgb.Conn, Region Region, Dx int16, Dy int16) []by
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 17 // request opcode
@@ -2587,6 +2778,8 @@ type UnionRegionCookie struct {
 // UnionRegion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func UnionRegion(c *xgb.Conn, Source1 Region, Source2 Region, Destination Region) UnionRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'UnionRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2598,6 +2791,8 @@ func UnionRegion(c *xgb.Conn, Source1 Region, Source2 Region, Destination Region
 // UnionRegionChecked sends a checked request.
 // If an error occurs, it can be retrieved using UnionRegionCookie.Check()
 func UnionRegionChecked(c *xgb.Conn, Source1 Region, Source2 Region, Destination Region) UnionRegionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFIXES"]; !ok {
 		panic("Cannot issue request 'UnionRegion' using the uninitialized extension 'XFIXES'. xfixes.Init(connObj) must be called first.")
 	}
@@ -2619,7 +2814,9 @@ func unionRegionRequest(c *xgb.Conn, Source1 Region, Source2 Region, Destination
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFIXES"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 13 // request opcode

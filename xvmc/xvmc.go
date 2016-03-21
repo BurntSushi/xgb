@@ -20,16 +20,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named XVideo-MotionCompensation could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["XVideo-MotionCompensation"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["XVideo-MotionCompensation"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["XVideo-MotionCompensation"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -203,6 +202,8 @@ type CreateContextCookie struct {
 // CreateContext sends a checked request.
 // If an error occurs, it will be returned with the reply by calling CreateContextCookie.Reply()
 func CreateContext(c *xgb.Conn, ContextId Context, PortId xv.Port, SurfaceId Surface, Width uint16, Height uint16, Flags uint32) CreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'CreateContext' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -214,6 +215,8 @@ func CreateContext(c *xgb.Conn, ContextId Context, PortId xv.Port, SurfaceId Sur
 // CreateContextUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateContextUnchecked(c *xgb.Conn, ContextId Context, PortId xv.Port, SurfaceId Surface, Width uint16, Height uint16, Flags uint32) CreateContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'CreateContext' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -286,7 +289,9 @@ func createContextRequest(c *xgb.Conn, ContextId Context, PortId xv.Port, Surfac
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo-MotionCompensation"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -324,6 +329,8 @@ type CreateSubpictureCookie struct {
 // CreateSubpicture sends a checked request.
 // If an error occurs, it will be returned with the reply by calling CreateSubpictureCookie.Reply()
 func CreateSubpicture(c *xgb.Conn, SubpictureId Subpicture, Context Context, XvimageId uint32, Width uint16, Height uint16) CreateSubpictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'CreateSubpicture' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -335,6 +342,8 @@ func CreateSubpicture(c *xgb.Conn, SubpictureId Subpicture, Context Context, Xvi
 // CreateSubpictureUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateSubpictureUnchecked(c *xgb.Conn, SubpictureId Subpicture, Context Context, XvimageId uint32, Width uint16, Height uint16) CreateSubpictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'CreateSubpicture' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -416,7 +425,9 @@ func createSubpictureRequest(c *xgb.Conn, SubpictureId Subpicture, Context Conte
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo-MotionCompensation"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -451,6 +462,8 @@ type CreateSurfaceCookie struct {
 // CreateSurface sends a checked request.
 // If an error occurs, it will be returned with the reply by calling CreateSurfaceCookie.Reply()
 func CreateSurface(c *xgb.Conn, SurfaceId Surface, ContextId Context) CreateSurfaceCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'CreateSurface' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -462,6 +475,8 @@ func CreateSurface(c *xgb.Conn, SurfaceId Surface, ContextId Context) CreateSurf
 // CreateSurfaceUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func CreateSurfaceUnchecked(c *xgb.Conn, SurfaceId Surface, ContextId Context) CreateSurfaceCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'CreateSurface' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -522,7 +537,9 @@ func createSurfaceRequest(c *xgb.Conn, SurfaceId Surface, ContextId Context) []b
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo-MotionCompensation"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -548,6 +565,8 @@ type DestroyContextCookie struct {
 // DestroyContext sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroyContext(c *xgb.Conn, ContextId Context) DestroyContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'DestroyContext' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -559,6 +578,8 @@ func DestroyContext(c *xgb.Conn, ContextId Context) DestroyContextCookie {
 // DestroyContextChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroyContextCookie.Check()
 func DestroyContextChecked(c *xgb.Conn, ContextId Context) DestroyContextCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'DestroyContext' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -580,7 +601,9 @@ func destroyContextRequest(c *xgb.Conn, ContextId Context) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo-MotionCompensation"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -603,6 +626,8 @@ type DestroySubpictureCookie struct {
 // DestroySubpicture sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroySubpicture(c *xgb.Conn, SubpictureId Subpicture) DestroySubpictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'DestroySubpicture' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -614,6 +639,8 @@ func DestroySubpicture(c *xgb.Conn, SubpictureId Subpicture) DestroySubpictureCo
 // DestroySubpictureChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroySubpictureCookie.Check()
 func DestroySubpictureChecked(c *xgb.Conn, SubpictureId Subpicture) DestroySubpictureCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'DestroySubpicture' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -635,7 +662,9 @@ func destroySubpictureRequest(c *xgb.Conn, SubpictureId Subpicture) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo-MotionCompensation"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -658,6 +687,8 @@ type DestroySurfaceCookie struct {
 // DestroySurface sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DestroySurface(c *xgb.Conn, SurfaceId Surface) DestroySurfaceCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'DestroySurface' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -669,6 +700,8 @@ func DestroySurface(c *xgb.Conn, SurfaceId Surface) DestroySurfaceCookie {
 // DestroySurfaceChecked sends a checked request.
 // If an error occurs, it can be retrieved using DestroySurfaceCookie.Check()
 func DestroySurfaceChecked(c *xgb.Conn, SurfaceId Surface) DestroySurfaceCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'DestroySurface' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -690,7 +723,9 @@ func destroySurfaceRequest(c *xgb.Conn, SurfaceId Surface) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo-MotionCompensation"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -713,6 +748,8 @@ type ListSubpictureTypesCookie struct {
 // ListSubpictureTypes sends a checked request.
 // If an error occurs, it will be returned with the reply by calling ListSubpictureTypesCookie.Reply()
 func ListSubpictureTypes(c *xgb.Conn, PortId xv.Port, SurfaceId Surface) ListSubpictureTypesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'ListSubpictureTypes' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -724,6 +761,8 @@ func ListSubpictureTypes(c *xgb.Conn, PortId xv.Port, SurfaceId Surface) ListSub
 // ListSubpictureTypesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ListSubpictureTypesUnchecked(c *xgb.Conn, PortId xv.Port, SurfaceId Surface) ListSubpictureTypesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'ListSubpictureTypes' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -785,7 +824,9 @@ func listSubpictureTypesRequest(c *xgb.Conn, PortId xv.Port, SurfaceId Surface) 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo-MotionCompensation"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -811,6 +852,8 @@ type ListSurfaceTypesCookie struct {
 // ListSurfaceTypes sends a checked request.
 // If an error occurs, it will be returned with the reply by calling ListSurfaceTypesCookie.Reply()
 func ListSurfaceTypes(c *xgb.Conn, PortId xv.Port) ListSurfaceTypesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'ListSurfaceTypes' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -822,6 +865,8 @@ func ListSurfaceTypes(c *xgb.Conn, PortId xv.Port) ListSurfaceTypesCookie {
 // ListSurfaceTypesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ListSurfaceTypesUnchecked(c *xgb.Conn, PortId xv.Port) ListSurfaceTypesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'ListSurfaceTypes' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -883,7 +928,9 @@ func listSurfaceTypesRequest(c *xgb.Conn, PortId xv.Port) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo-MotionCompensation"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -906,6 +953,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -917,6 +966,8 @@ func QueryVersion(c *xgb.Conn) QueryVersionCookie {
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo-MotionCompensation"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XVideo-MotionCompensation'. xvmc.Init(connObj) must be called first.")
 	}
@@ -975,7 +1026,9 @@ func queryVersionRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo-MotionCompensation"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode

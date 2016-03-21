@@ -20,16 +20,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named XVideo could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["XVideo"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["XVideo"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["XVideo"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -46,7 +45,7 @@ type AdaptorInfo struct {
 	Type       byte
 	// padding: 1 bytes
 	Name string // size: xgb.Pad((int(NameSize) * 1))
-	// alignment gap to multiple of 4
+	// padding: 0 bytes
 	Formats []Format // size: xgb.Pad((int(NumFormats) * 8))
 }
 
@@ -78,7 +77,7 @@ func AdaptorInfoRead(buf []byte, v *AdaptorInfo) int {
 		b += int(v.NameSize)
 	}
 
-	b = (b + 3) & ^3 // alignment gap
+	b += 0 // padding
 
 	v.Formats = make([]Format, v.NumFormats)
 	b += FormatReadList(buf[b:], v.Formats)
@@ -98,7 +97,7 @@ func AdaptorInfoReadList(buf []byte, dest []AdaptorInfo) int {
 
 // Bytes writes a AdaptorInfo value to a byte slice.
 func (v AdaptorInfo) Bytes() []byte {
-	buf := make([]byte, (((12 + xgb.Pad((int(v.NameSize) * 1))) + 4) + xgb.Pad((int(v.NumFormats) * 8))))
+	buf := make([]byte, (((12 + xgb.Pad((int(v.NameSize) * 1))) + 0) + xgb.Pad((int(v.NumFormats) * 8))))
 	b := 0
 
 	xgb.Put32(buf[b:], uint32(v.BaseId))
@@ -121,7 +120,7 @@ func (v AdaptorInfo) Bytes() []byte {
 	copy(buf[b:], v.Name[:v.NameSize])
 	b += int(v.NameSize)
 
-	b = (b + 3) & ^3 // alignment gap
+	b += 0 // padding
 
 	b += FormatListBytes(buf[b:], v.Formats)
 
@@ -144,7 +143,7 @@ func AdaptorInfoListBytes(buf []byte, list []AdaptorInfo) int {
 func AdaptorInfoListSize(list []AdaptorInfo) int {
 	size := 0
 	for _, item := range list {
-		size += (((12 + xgb.Pad((int(item.NameSize) * 1))) + 4) + xgb.Pad((int(item.NumFormats) * 8)))
+		size += (((12 + xgb.Pad((int(item.NameSize) * 1))) + 0) + xgb.Pad((int(item.NumFormats) * 8)))
 	}
 	return size
 }
@@ -1208,6 +1207,8 @@ type GetPortAttributeCookie struct {
 // GetPortAttribute sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetPortAttributeCookie.Reply()
 func GetPortAttribute(c *xgb.Conn, Port Port, Attribute xproto.Atom) GetPortAttributeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'GetPortAttribute' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1219,6 +1220,8 @@ func GetPortAttribute(c *xgb.Conn, Port Port, Attribute xproto.Atom) GetPortAttr
 // GetPortAttributeUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetPortAttributeUnchecked(c *xgb.Conn, Port Port, Attribute xproto.Atom) GetPortAttributeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'GetPortAttribute' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1273,7 +1276,9 @@ func getPortAttributeRequest(c *xgb.Conn, Port Port, Attribute xproto.Atom) []by
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 14 // request opcode
@@ -1299,6 +1304,8 @@ type GetStillCookie struct {
 // GetStill sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetStill(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, VidX int16, VidY int16, VidW uint16, VidH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16) GetStillCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'GetStill' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1310,6 +1317,8 @@ func GetStill(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gconte
 // GetStillChecked sends a checked request.
 // If an error occurs, it can be retrieved using GetStillCookie.Check()
 func GetStillChecked(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, VidX int16, VidY int16, VidW uint16, VidH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16) GetStillCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'GetStill' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1331,7 +1340,9 @@ func getStillRequest(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -1384,6 +1395,8 @@ type GetVideoCookie struct {
 // GetVideo sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetVideo(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, VidX int16, VidY int16, VidW uint16, VidH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16) GetVideoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'GetVideo' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1395,6 +1408,8 @@ func GetVideo(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gconte
 // GetVideoChecked sends a checked request.
 // If an error occurs, it can be retrieved using GetVideoCookie.Check()
 func GetVideoChecked(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, VidX int16, VidY int16, VidW uint16, VidH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16) GetVideoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'GetVideo' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1416,7 +1431,9 @@ func getVideoRequest(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -1469,6 +1486,8 @@ type GrabPortCookie struct {
 // GrabPort sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GrabPortCookie.Reply()
 func GrabPort(c *xgb.Conn, Port Port, Time xproto.Timestamp) GrabPortCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'GrabPort' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1480,6 +1499,8 @@ func GrabPort(c *xgb.Conn, Port Port, Time xproto.Timestamp) GrabPortCookie {
 // GrabPortUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GrabPortUnchecked(c *xgb.Conn, Port Port, Time xproto.Timestamp) GrabPortCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'GrabPort' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1531,7 +1552,9 @@ func grabPortRequest(c *xgb.Conn, Port Port, Time xproto.Timestamp) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -1557,6 +1580,8 @@ type ListImageFormatsCookie struct {
 // ListImageFormats sends a checked request.
 // If an error occurs, it will be returned with the reply by calling ListImageFormatsCookie.Reply()
 func ListImageFormats(c *xgb.Conn, Port Port) ListImageFormatsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'ListImageFormats' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1568,6 +1593,8 @@ func ListImageFormats(c *xgb.Conn, Port Port) ListImageFormatsCookie {
 // ListImageFormatsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ListImageFormatsUnchecked(c *xgb.Conn, Port Port) ListImageFormatsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'ListImageFormats' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1629,7 +1656,9 @@ func listImageFormatsRequest(c *xgb.Conn, Port Port) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 16 // request opcode
@@ -1652,6 +1681,8 @@ type PutImageCookie struct {
 // PutImage sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PutImage(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, Id uint32, SrcX int16, SrcY int16, SrcW uint16, SrcH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16, Width uint16, Height uint16, Data []byte) PutImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'PutImage' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1663,6 +1694,8 @@ func PutImage(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gconte
 // PutImageChecked sends a checked request.
 // If an error occurs, it can be retrieved using PutImageCookie.Check()
 func PutImageChecked(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, Id uint32, SrcX int16, SrcY int16, SrcW uint16, SrcH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16, Width uint16, Height uint16, Data []byte) PutImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'PutImage' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1684,7 +1717,9 @@ func putImageRequest(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 18 // request opcode
@@ -1749,6 +1784,8 @@ type PutStillCookie struct {
 // PutStill sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PutStill(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, VidX int16, VidY int16, VidW uint16, VidH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16) PutStillCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'PutStill' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1760,6 +1797,8 @@ func PutStill(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gconte
 // PutStillChecked sends a checked request.
 // If an error occurs, it can be retrieved using PutStillCookie.Check()
 func PutStillChecked(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, VidX int16, VidY int16, VidW uint16, VidH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16) PutStillCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'PutStill' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1781,7 +1820,9 @@ func putStillRequest(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -1834,6 +1875,8 @@ type PutVideoCookie struct {
 // PutVideo sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func PutVideo(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, VidX int16, VidY int16, VidW uint16, VidH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16) PutVideoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'PutVideo' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1845,6 +1888,8 @@ func PutVideo(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gconte
 // PutVideoChecked sends a checked request.
 // If an error occurs, it can be retrieved using PutVideoCookie.Check()
 func PutVideoChecked(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, VidX int16, VidY int16, VidW uint16, VidH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16) PutVideoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'PutVideo' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1866,7 +1911,9 @@ func putVideoRequest(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -1919,6 +1966,8 @@ type QueryAdaptorsCookie struct {
 // QueryAdaptors sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryAdaptorsCookie.Reply()
 func QueryAdaptors(c *xgb.Conn, Window xproto.Window) QueryAdaptorsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryAdaptors' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1930,6 +1979,8 @@ func QueryAdaptors(c *xgb.Conn, Window xproto.Window) QueryAdaptorsCookie {
 // QueryAdaptorsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryAdaptorsUnchecked(c *xgb.Conn, Window xproto.Window) QueryAdaptorsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryAdaptors' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -1991,7 +2042,9 @@ func queryAdaptorsRequest(c *xgb.Conn, Window xproto.Window) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -2014,6 +2067,8 @@ type QueryBestSizeCookie struct {
 // QueryBestSize sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryBestSizeCookie.Reply()
 func QueryBestSize(c *xgb.Conn, Port Port, VidW uint16, VidH uint16, DrwW uint16, DrwH uint16, Motion bool) QueryBestSizeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryBestSize' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2025,6 +2080,8 @@ func QueryBestSize(c *xgb.Conn, Port Port, VidW uint16, VidH uint16, DrwW uint16
 // QueryBestSizeUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryBestSizeUnchecked(c *xgb.Conn, Port Port, VidW uint16, VidH uint16, DrwW uint16, DrwH uint16, Motion bool) QueryBestSizeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryBestSize' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2083,7 +2140,9 @@ func queryBestSizeRequest(c *xgb.Conn, Port Port, VidW uint16, VidH uint16, DrwW
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 12 // request opcode
@@ -2127,6 +2186,8 @@ type QueryEncodingsCookie struct {
 // QueryEncodings sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryEncodingsCookie.Reply()
 func QueryEncodings(c *xgb.Conn, Port Port) QueryEncodingsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryEncodings' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2138,6 +2199,8 @@ func QueryEncodings(c *xgb.Conn, Port Port) QueryEncodingsCookie {
 // QueryEncodingsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryEncodingsUnchecked(c *xgb.Conn, Port Port) QueryEncodingsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryEncodings' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2199,7 +2262,9 @@ func queryEncodingsRequest(c *xgb.Conn, Port Port) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -2222,6 +2287,8 @@ type QueryExtensionCookie struct {
 // QueryExtension sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryExtensionCookie.Reply()
 func QueryExtension(c *xgb.Conn) QueryExtensionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryExtension' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2233,6 +2300,8 @@ func QueryExtension(c *xgb.Conn) QueryExtensionCookie {
 // QueryExtensionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryExtensionUnchecked(c *xgb.Conn) QueryExtensionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryExtension' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2291,7 +2360,9 @@ func queryExtensionRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -2311,6 +2382,8 @@ type QueryImageAttributesCookie struct {
 // QueryImageAttributes sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryImageAttributesCookie.Reply()
 func QueryImageAttributes(c *xgb.Conn, Port Port, Id uint32, Width uint16, Height uint16) QueryImageAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryImageAttributes' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2322,6 +2395,8 @@ func QueryImageAttributes(c *xgb.Conn, Port Port, Id uint32, Width uint16, Heigh
 // QueryImageAttributesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryImageAttributesUnchecked(c *xgb.Conn, Port Port, Id uint32, Width uint16, Height uint16) QueryImageAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryImageAttributes' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2408,7 +2483,9 @@ func queryImageAttributesRequest(c *xgb.Conn, Port Port, Id uint32, Width uint16
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 17 // request opcode
@@ -2440,6 +2517,8 @@ type QueryPortAttributesCookie struct {
 // QueryPortAttributes sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryPortAttributesCookie.Reply()
 func QueryPortAttributes(c *xgb.Conn, Port Port) QueryPortAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryPortAttributes' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2451,6 +2530,8 @@ func QueryPortAttributes(c *xgb.Conn, Port Port) QueryPortAttributesCookie {
 // QueryPortAttributesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryPortAttributesUnchecked(c *xgb.Conn, Port Port) QueryPortAttributesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'QueryPortAttributes' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2516,7 +2597,9 @@ func queryPortAttributesRequest(c *xgb.Conn, Port Port) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 15 // request opcode
@@ -2539,6 +2622,8 @@ type SelectPortNotifyCookie struct {
 // SelectPortNotify sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SelectPortNotify(c *xgb.Conn, Port Port, Onoff bool) SelectPortNotifyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'SelectPortNotify' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2550,6 +2635,8 @@ func SelectPortNotify(c *xgb.Conn, Port Port, Onoff bool) SelectPortNotifyCookie
 // SelectPortNotifyChecked sends a checked request.
 // If an error occurs, it can be retrieved using SelectPortNotifyCookie.Check()
 func SelectPortNotifyChecked(c *xgb.Conn, Port Port, Onoff bool) SelectPortNotifyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'SelectPortNotify' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2571,7 +2658,9 @@ func selectPortNotifyRequest(c *xgb.Conn, Port Port, Onoff bool) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 11 // request opcode
@@ -2603,6 +2692,8 @@ type SelectVideoNotifyCookie struct {
 // SelectVideoNotify sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SelectVideoNotify(c *xgb.Conn, Drawable xproto.Drawable, Onoff bool) SelectVideoNotifyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'SelectVideoNotify' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2614,6 +2705,8 @@ func SelectVideoNotify(c *xgb.Conn, Drawable xproto.Drawable, Onoff bool) Select
 // SelectVideoNotifyChecked sends a checked request.
 // If an error occurs, it can be retrieved using SelectVideoNotifyCookie.Check()
 func SelectVideoNotifyChecked(c *xgb.Conn, Drawable xproto.Drawable, Onoff bool) SelectVideoNotifyCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'SelectVideoNotify' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2635,7 +2728,9 @@ func selectVideoNotifyRequest(c *xgb.Conn, Drawable xproto.Drawable, Onoff bool)
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 10 // request opcode
@@ -2667,6 +2762,8 @@ type SetPortAttributeCookie struct {
 // SetPortAttribute sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetPortAttribute(c *xgb.Conn, Port Port, Attribute xproto.Atom, Value int32) SetPortAttributeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'SetPortAttribute' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2678,6 +2775,8 @@ func SetPortAttribute(c *xgb.Conn, Port Port, Attribute xproto.Atom, Value int32
 // SetPortAttributeChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetPortAttributeCookie.Check()
 func SetPortAttributeChecked(c *xgb.Conn, Port Port, Attribute xproto.Atom, Value int32) SetPortAttributeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'SetPortAttribute' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2699,7 +2798,9 @@ func setPortAttributeRequest(c *xgb.Conn, Port Port, Attribute xproto.Atom, Valu
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 13 // request opcode
@@ -2728,6 +2829,8 @@ type ShmPutImageCookie struct {
 // ShmPutImage sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ShmPutImage(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, Shmseg shm.Seg, Id uint32, Offset uint32, SrcX int16, SrcY int16, SrcW uint16, SrcH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16, Width uint16, Height uint16, SendEvent byte) ShmPutImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'ShmPutImage' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2739,6 +2842,8 @@ func ShmPutImage(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gco
 // ShmPutImageChecked sends a checked request.
 // If an error occurs, it can be retrieved using ShmPutImageCookie.Check()
 func ShmPutImageChecked(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xproto.Gcontext, Shmseg shm.Seg, Id uint32, Offset uint32, SrcX int16, SrcY int16, SrcW uint16, SrcH uint16, DrwX int16, DrwY int16, DrwW uint16, DrwH uint16, Width uint16, Height uint16, SendEvent byte) ShmPutImageCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'ShmPutImage' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2760,7 +2865,9 @@ func shmPutImageRequest(c *xgb.Conn, Port Port, Drawable xproto.Drawable, Gc xpr
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 19 // request opcode
@@ -2833,6 +2940,8 @@ type StopVideoCookie struct {
 // StopVideo sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func StopVideo(c *xgb.Conn, Port Port, Drawable xproto.Drawable) StopVideoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'StopVideo' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2844,6 +2953,8 @@ func StopVideo(c *xgb.Conn, Port Port, Drawable xproto.Drawable) StopVideoCookie
 // StopVideoChecked sends a checked request.
 // If an error occurs, it can be retrieved using StopVideoCookie.Check()
 func StopVideoChecked(c *xgb.Conn, Port Port, Drawable xproto.Drawable) StopVideoCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'StopVideo' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2865,7 +2976,9 @@ func stopVideoRequest(c *xgb.Conn, Port Port, Drawable xproto.Drawable) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 9 // request opcode
@@ -2891,6 +3004,8 @@ type UngrabPortCookie struct {
 // UngrabPort sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func UngrabPort(c *xgb.Conn, Port Port, Time xproto.Timestamp) UngrabPortCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'UngrabPort' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2902,6 +3017,8 @@ func UngrabPort(c *xgb.Conn, Port Port, Time xproto.Timestamp) UngrabPortCookie 
 // UngrabPortChecked sends a checked request.
 // If an error occurs, it can be retrieved using UngrabPortCookie.Check()
 func UngrabPortChecked(c *xgb.Conn, Port Port, Time xproto.Timestamp) UngrabPortCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XVideo"]; !ok {
 		panic("Cannot issue request 'UngrabPort' using the uninitialized extension 'XVideo'. xv.Init(connObj) must be called first.")
 	}
@@ -2923,7 +3040,9 @@ func ungrabPortRequest(c *xgb.Conn, Port Port, Time xproto.Timestamp) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XVideo"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode

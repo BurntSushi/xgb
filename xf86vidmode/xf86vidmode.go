@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named XFree86-VidModeExtension could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["XFree86-VidModeExtension"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["XFree86-VidModeExtension"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["XFree86-VidModeExtension"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -554,6 +553,8 @@ type AddModeLineCookie struct {
 // AddModeLine sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func AddModeLine(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay uint16, Hsyncstart uint16, Hsyncend uint16, Htotal uint16, Hskew uint16, Vdisplay uint16, Vsyncstart uint16, Vsyncend uint16, Vtotal uint16, Flags uint32, Privsize uint32, AfterDotclock Dotclock, AfterHdisplay uint16, AfterHsyncstart uint16, AfterHsyncend uint16, AfterHtotal uint16, AfterHskew uint16, AfterVdisplay uint16, AfterVsyncstart uint16, AfterVsyncend uint16, AfterVtotal uint16, AfterFlags uint32, Private []byte) AddModeLineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'AddModeLine' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -565,6 +566,8 @@ func AddModeLine(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay uint16,
 // AddModeLineChecked sends a checked request.
 // If an error occurs, it can be retrieved using AddModeLineCookie.Check()
 func AddModeLineChecked(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay uint16, Hsyncstart uint16, Hsyncend uint16, Htotal uint16, Hskew uint16, Vdisplay uint16, Vsyncstart uint16, Vsyncend uint16, Vtotal uint16, Flags uint32, Privsize uint32, AfterDotclock Dotclock, AfterHdisplay uint16, AfterHsyncstart uint16, AfterHsyncend uint16, AfterHtotal uint16, AfterHskew uint16, AfterVdisplay uint16, AfterVsyncstart uint16, AfterVsyncend uint16, AfterVtotal uint16, AfterFlags uint32, Private []byte) AddModeLineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'AddModeLine' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -586,7 +589,9 @@ func addModeLineRequest(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 7 // request opcode
@@ -689,6 +694,8 @@ type DeleteModeLineCookie struct {
 // DeleteModeLine sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func DeleteModeLine(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay uint16, Hsyncstart uint16, Hsyncend uint16, Htotal uint16, Hskew uint16, Vdisplay uint16, Vsyncstart uint16, Vsyncend uint16, Vtotal uint16, Flags uint32, Privsize uint32, Private []byte) DeleteModeLineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'DeleteModeLine' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -700,6 +707,8 @@ func DeleteModeLine(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay uint
 // DeleteModeLineChecked sends a checked request.
 // If an error occurs, it can be retrieved using DeleteModeLineCookie.Check()
 func DeleteModeLineChecked(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay uint16, Hsyncstart uint16, Hsyncend uint16, Htotal uint16, Hskew uint16, Vdisplay uint16, Vsyncstart uint16, Vsyncend uint16, Vtotal uint16, Flags uint32, Privsize uint32, Private []byte) DeleteModeLineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'DeleteModeLine' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -721,7 +730,9 @@ func deleteModeLineRequest(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdispl
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 8 // request opcode
@@ -787,6 +798,8 @@ type GetAllModeLinesCookie struct {
 // GetAllModeLines sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetAllModeLinesCookie.Reply()
 func GetAllModeLines(c *xgb.Conn, Screen uint16) GetAllModeLinesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetAllModeLines' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -798,6 +811,8 @@ func GetAllModeLines(c *xgb.Conn, Screen uint16) GetAllModeLinesCookie {
 // GetAllModeLinesUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetAllModeLinesUnchecked(c *xgb.Conn, Screen uint16) GetAllModeLinesCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetAllModeLines' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -859,7 +874,9 @@ func getAllModeLinesRequest(c *xgb.Conn, Screen uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 6 // request opcode
@@ -884,6 +901,8 @@ type GetDotClocksCookie struct {
 // GetDotClocks sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetDotClocksCookie.Reply()
 func GetDotClocks(c *xgb.Conn, Screen uint16) GetDotClocksCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetDotClocks' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -895,6 +914,8 @@ func GetDotClocks(c *xgb.Conn, Screen uint16) GetDotClocksCookie {
 // GetDotClocksUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetDotClocksUnchecked(c *xgb.Conn, Screen uint16) GetDotClocksCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetDotClocks' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -967,7 +988,9 @@ func getDotClocksRequest(c *xgb.Conn, Screen uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 13 // request opcode
@@ -992,6 +1015,8 @@ type GetGammaCookie struct {
 // GetGamma sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetGammaCookie.Reply()
 func GetGamma(c *xgb.Conn, Screen uint16) GetGammaCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetGamma' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1003,6 +1028,8 @@ func GetGamma(c *xgb.Conn, Screen uint16) GetGammaCookie {
 // GetGammaUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetGammaUnchecked(c *xgb.Conn, Screen uint16) GetGammaCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetGamma' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1068,7 +1095,9 @@ func getGammaRequest(c *xgb.Conn, Screen uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 16 // request opcode
@@ -1093,6 +1122,8 @@ type GetGammaRampCookie struct {
 // GetGammaRamp sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetGammaRampCookie.Reply()
 func GetGammaRamp(c *xgb.Conn, Screen uint16, Size uint16) GetGammaRampCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetGammaRamp' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1104,6 +1135,8 @@ func GetGammaRamp(c *xgb.Conn, Screen uint16, Size uint16) GetGammaRampCookie {
 // GetGammaRampUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetGammaRampUnchecked(c *xgb.Conn, Screen uint16, Size uint16) GetGammaRampCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetGammaRamp' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1188,7 +1221,9 @@ func getGammaRampRequest(c *xgb.Conn, Screen uint16, Size uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 17 // request opcode
@@ -1214,6 +1249,8 @@ type GetGammaRampSizeCookie struct {
 // GetGammaRampSize sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetGammaRampSizeCookie.Reply()
 func GetGammaRampSize(c *xgb.Conn, Screen uint16) GetGammaRampSizeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetGammaRampSize' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1225,6 +1262,8 @@ func GetGammaRampSize(c *xgb.Conn, Screen uint16) GetGammaRampSizeCookie {
 // GetGammaRampSizeUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetGammaRampSizeUnchecked(c *xgb.Conn, Screen uint16) GetGammaRampSizeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetGammaRampSize' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1282,7 +1321,9 @@ func getGammaRampSizeRequest(c *xgb.Conn, Screen uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 19 // request opcode
@@ -1307,6 +1348,8 @@ type GetModeLineCookie struct {
 // GetModeLine sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetModeLineCookie.Reply()
 func GetModeLine(c *xgb.Conn, Screen uint16) GetModeLineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetModeLine' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1318,6 +1361,8 @@ func GetModeLine(c *xgb.Conn, Screen uint16) GetModeLineCookie {
 // GetModeLineUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetModeLineUnchecked(c *xgb.Conn, Screen uint16) GetModeLineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetModeLine' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1427,7 +1472,9 @@ func getModeLineRequest(c *xgb.Conn, Screen uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
@@ -1452,6 +1499,8 @@ type GetMonitorCookie struct {
 // GetMonitor sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetMonitorCookie.Reply()
 func GetMonitor(c *xgb.Conn, Screen uint16) GetMonitorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetMonitor' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1463,6 +1512,8 @@ func GetMonitor(c *xgb.Conn, Screen uint16) GetMonitorCookie {
 // GetMonitorUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetMonitorUnchecked(c *xgb.Conn, Screen uint16) GetMonitorCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetMonitor' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1570,7 +1621,9 @@ func getMonitorRequest(c *xgb.Conn, Screen uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 4 // request opcode
@@ -1595,6 +1648,8 @@ type GetPermissionsCookie struct {
 // GetPermissions sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetPermissionsCookie.Reply()
 func GetPermissions(c *xgb.Conn, Screen uint16) GetPermissionsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetPermissions' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1606,6 +1661,8 @@ func GetPermissions(c *xgb.Conn, Screen uint16) GetPermissionsCookie {
 // GetPermissionsUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetPermissionsUnchecked(c *xgb.Conn, Screen uint16) GetPermissionsCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetPermissions' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1663,7 +1720,9 @@ func getPermissionsRequest(c *xgb.Conn, Screen uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 20 // request opcode
@@ -1688,6 +1747,8 @@ type GetViewPortCookie struct {
 // GetViewPort sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetViewPortCookie.Reply()
 func GetViewPort(c *xgb.Conn, Screen uint16) GetViewPortCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetViewPort' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1699,6 +1760,8 @@ func GetViewPort(c *xgb.Conn, Screen uint16) GetViewPortCookie {
 // GetViewPortUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetViewPortUnchecked(c *xgb.Conn, Screen uint16) GetViewPortCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'GetViewPort' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1760,7 +1823,9 @@ func getViewPortRequest(c *xgb.Conn, Screen uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 11 // request opcode
@@ -1785,6 +1850,8 @@ type LockModeSwitchCookie struct {
 // LockModeSwitch sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func LockModeSwitch(c *xgb.Conn, Screen uint16, Lock uint16) LockModeSwitchCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'LockModeSwitch' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1796,6 +1863,8 @@ func LockModeSwitch(c *xgb.Conn, Screen uint16, Lock uint16) LockModeSwitchCooki
 // LockModeSwitchChecked sends a checked request.
 // If an error occurs, it can be retrieved using LockModeSwitchCookie.Check()
 func LockModeSwitchChecked(c *xgb.Conn, Screen uint16, Lock uint16) LockModeSwitchCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'LockModeSwitch' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1817,7 +1886,9 @@ func lockModeSwitchRequest(c *xgb.Conn, Screen uint16, Lock uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 5 // request opcode
@@ -1843,6 +1914,8 @@ type ModModeLineCookie struct {
 // ModModeLine sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ModModeLine(c *xgb.Conn, Screen uint32, Hdisplay uint16, Hsyncstart uint16, Hsyncend uint16, Htotal uint16, Hskew uint16, Vdisplay uint16, Vsyncstart uint16, Vsyncend uint16, Vtotal uint16, Flags uint32, Privsize uint32, Private []byte) ModModeLineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'ModModeLine' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1854,6 +1927,8 @@ func ModModeLine(c *xgb.Conn, Screen uint32, Hdisplay uint16, Hsyncstart uint16,
 // ModModeLineChecked sends a checked request.
 // If an error occurs, it can be retrieved using ModModeLineCookie.Check()
 func ModModeLineChecked(c *xgb.Conn, Screen uint32, Hdisplay uint16, Hsyncstart uint16, Hsyncend uint16, Htotal uint16, Hskew uint16, Vdisplay uint16, Vsyncstart uint16, Vsyncend uint16, Vtotal uint16, Flags uint32, Privsize uint32, Private []byte) ModModeLineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'ModModeLine' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1875,7 +1950,9 @@ func modModeLineRequest(c *xgb.Conn, Screen uint32, Hdisplay uint16, Hsyncstart 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -1938,6 +2015,8 @@ type QueryVersionCookie struct {
 // QueryVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling QueryVersionCookie.Reply()
 func QueryVersion(c *xgb.Conn) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -1949,6 +2028,8 @@ func QueryVersion(c *xgb.Conn) QueryVersionCookie {
 // QueryVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func QueryVersionUnchecked(c *xgb.Conn) QueryVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'QueryVersion' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2007,7 +2088,9 @@ func queryVersionRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -2027,6 +2110,8 @@ type SetClientVersionCookie struct {
 // SetClientVersion sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetClientVersion(c *xgb.Conn, Major uint16, Minor uint16) SetClientVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SetClientVersion' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2038,6 +2123,8 @@ func SetClientVersion(c *xgb.Conn, Major uint16, Minor uint16) SetClientVersionC
 // SetClientVersionChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetClientVersionCookie.Check()
 func SetClientVersionChecked(c *xgb.Conn, Major uint16, Minor uint16) SetClientVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SetClientVersion' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2059,7 +2146,9 @@ func setClientVersionRequest(c *xgb.Conn, Major uint16, Minor uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 14 // request opcode
@@ -2085,6 +2174,8 @@ type SetGammaCookie struct {
 // SetGamma sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetGamma(c *xgb.Conn, Screen uint16, Red uint32, Green uint32, Blue uint32) SetGammaCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SetGamma' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2096,6 +2187,8 @@ func SetGamma(c *xgb.Conn, Screen uint16, Red uint32, Green uint32, Blue uint32)
 // SetGammaChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetGammaCookie.Check()
 func SetGammaChecked(c *xgb.Conn, Screen uint16, Red uint32, Green uint32, Blue uint32) SetGammaCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SetGamma' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2117,7 +2210,9 @@ func setGammaRequest(c *xgb.Conn, Screen uint16, Red uint32, Green uint32, Blue 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 15 // request opcode
@@ -2153,6 +2248,8 @@ type SetGammaRampCookie struct {
 // SetGammaRamp sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetGammaRamp(c *xgb.Conn, Screen uint16, Size uint16, Red []uint16, Green []uint16, Blue []uint16) SetGammaRampCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SetGammaRamp' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2164,6 +2261,8 @@ func SetGammaRamp(c *xgb.Conn, Screen uint16, Size uint16, Red []uint16, Green [
 // SetGammaRampChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetGammaRampCookie.Check()
 func SetGammaRampChecked(c *xgb.Conn, Screen uint16, Size uint16, Red []uint16, Green []uint16, Blue []uint16) SetGammaRampCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SetGammaRamp' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2185,7 +2284,9 @@ func setGammaRampRequest(c *xgb.Conn, Screen uint16, Size uint16, Red []uint16, 
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 18 // request opcode
@@ -2232,6 +2333,8 @@ type SetViewPortCookie struct {
 // SetViewPort sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SetViewPort(c *xgb.Conn, Screen uint16, X uint32, Y uint32) SetViewPortCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SetViewPort' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2243,6 +2346,8 @@ func SetViewPort(c *xgb.Conn, Screen uint16, X uint32, Y uint32) SetViewPortCook
 // SetViewPortChecked sends a checked request.
 // If an error occurs, it can be retrieved using SetViewPortCookie.Check()
 func SetViewPortChecked(c *xgb.Conn, Screen uint16, X uint32, Y uint32) SetViewPortCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SetViewPort' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2264,7 +2369,9 @@ func setViewPortRequest(c *xgb.Conn, Screen uint16, X uint32, Y uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 12 // request opcode
@@ -2295,6 +2402,8 @@ type SwitchModeCookie struct {
 // SwitchMode sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SwitchMode(c *xgb.Conn, Screen uint16, Zoom uint16) SwitchModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SwitchMode' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2306,6 +2415,8 @@ func SwitchMode(c *xgb.Conn, Screen uint16, Zoom uint16) SwitchModeCookie {
 // SwitchModeChecked sends a checked request.
 // If an error occurs, it can be retrieved using SwitchModeCookie.Check()
 func SwitchModeChecked(c *xgb.Conn, Screen uint16, Zoom uint16) SwitchModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SwitchMode' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2327,7 +2438,9 @@ func switchModeRequest(c *xgb.Conn, Screen uint16, Zoom uint16) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 3 // request opcode
@@ -2353,6 +2466,8 @@ type SwitchToModeCookie struct {
 // SwitchToMode sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func SwitchToMode(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay uint16, Hsyncstart uint16, Hsyncend uint16, Htotal uint16, Hskew uint16, Vdisplay uint16, Vsyncstart uint16, Vsyncend uint16, Vtotal uint16, Flags uint32, Privsize uint32, Private []byte) SwitchToModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SwitchToMode' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2364,6 +2479,8 @@ func SwitchToMode(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay uint16
 // SwitchToModeChecked sends a checked request.
 // If an error occurs, it can be retrieved using SwitchToModeCookie.Check()
 func SwitchToModeChecked(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay uint16, Hsyncstart uint16, Hsyncend uint16, Htotal uint16, Hskew uint16, Vdisplay uint16, Vsyncstart uint16, Vsyncend uint16, Vtotal uint16, Flags uint32, Privsize uint32, Private []byte) SwitchToModeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'SwitchToMode' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2385,7 +2502,9 @@ func switchToModeRequest(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 10 // request opcode
@@ -2451,6 +2570,8 @@ type ValidateModeLineCookie struct {
 // ValidateModeLine sends a checked request.
 // If an error occurs, it will be returned with the reply by calling ValidateModeLineCookie.Reply()
 func ValidateModeLine(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay uint16, Hsyncstart uint16, Hsyncend uint16, Htotal uint16, Hskew uint16, Vdisplay uint16, Vsyncstart uint16, Vsyncend uint16, Vtotal uint16, Flags uint32, Privsize uint32, Private []byte) ValidateModeLineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'ValidateModeLine' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2462,6 +2583,8 @@ func ValidateModeLine(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay ui
 // ValidateModeLineUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func ValidateModeLineUnchecked(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdisplay uint16, Hsyncstart uint16, Hsyncend uint16, Htotal uint16, Hskew uint16, Vdisplay uint16, Vsyncstart uint16, Vsyncend uint16, Vtotal uint16, Flags uint32, Privsize uint32, Private []byte) ValidateModeLineCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XFree86-VidModeExtension"]; !ok {
 		panic("Cannot issue request 'ValidateModeLine' using the uninitialized extension 'XFree86-VidModeExtension'. xf86vidmode.Init(connObj) must be called first.")
 	}
@@ -2519,7 +2642,9 @@ func validateModeLineRequest(c *xgb.Conn, Screen uint32, Dotclock Dotclock, Hdis
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XFree86-VidModeExtension"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 9 // request opcode

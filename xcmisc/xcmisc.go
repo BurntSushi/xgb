@@ -19,16 +19,15 @@ func Init(c *xgb.Conn) error {
 		return xgb.Errorf("No extension named XC-MISC could be found on on the server.")
 	}
 
-	xgb.ExtLock.Lock()
+	c.ExtLock.Lock()
 	c.Extensions["XC-MISC"] = reply.MajorOpcode
+	c.ExtLock.Unlock()
 	for evNum, fun := range xgb.NewExtEventFuncs["XC-MISC"] {
 		xgb.NewEventFuncs[int(reply.FirstEvent)+evNum] = fun
 	}
 	for errNum, fun := range xgb.NewExtErrorFuncs["XC-MISC"] {
 		xgb.NewErrorFuncs[int(reply.FirstError)+errNum] = fun
 	}
-	xgb.ExtLock.Unlock()
-
 	return nil
 }
 
@@ -69,6 +68,8 @@ type GetVersionCookie struct {
 // GetVersion sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetVersionCookie.Reply()
 func GetVersion(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint16) GetVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XC-MISC"]; !ok {
 		panic("Cannot issue request 'GetVersion' using the uninitialized extension 'XC-MISC'. xcmisc.Init(connObj) must be called first.")
 	}
@@ -80,6 +81,8 @@ func GetVersion(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint1
 // GetVersionUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetVersionUnchecked(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersion uint16) GetVersionCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XC-MISC"]; !ok {
 		panic("Cannot issue request 'GetVersion' using the uninitialized extension 'XC-MISC'. xcmisc.Init(connObj) must be called first.")
 	}
@@ -138,7 +141,9 @@ func getVersionRequest(c *xgb.Conn, ClientMajorVersion uint16, ClientMinorVersio
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XC-MISC"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 0 // request opcode
@@ -164,6 +169,8 @@ type GetXIDListCookie struct {
 // GetXIDList sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetXIDListCookie.Reply()
 func GetXIDList(c *xgb.Conn, Count uint32) GetXIDListCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XC-MISC"]; !ok {
 		panic("Cannot issue request 'GetXIDList' using the uninitialized extension 'XC-MISC'. xcmisc.Init(connObj) must be called first.")
 	}
@@ -175,6 +182,8 @@ func GetXIDList(c *xgb.Conn, Count uint32) GetXIDListCookie {
 // GetXIDListUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetXIDListUnchecked(c *xgb.Conn, Count uint32) GetXIDListCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XC-MISC"]; !ok {
 		panic("Cannot issue request 'GetXIDList' using the uninitialized extension 'XC-MISC'. xcmisc.Init(connObj) must be called first.")
 	}
@@ -239,7 +248,9 @@ func getXIDListRequest(c *xgb.Conn, Count uint32) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XC-MISC"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 2 // request opcode
@@ -262,6 +273,8 @@ type GetXIDRangeCookie struct {
 // GetXIDRange sends a checked request.
 // If an error occurs, it will be returned with the reply by calling GetXIDRangeCookie.Reply()
 func GetXIDRange(c *xgb.Conn) GetXIDRangeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XC-MISC"]; !ok {
 		panic("Cannot issue request 'GetXIDRange' using the uninitialized extension 'XC-MISC'. xcmisc.Init(connObj) must be called first.")
 	}
@@ -273,6 +286,8 @@ func GetXIDRange(c *xgb.Conn) GetXIDRangeCookie {
 // GetXIDRangeUnchecked sends an unchecked request.
 // If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
 func GetXIDRangeUnchecked(c *xgb.Conn) GetXIDRangeCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
 	if _, ok := c.Extensions["XC-MISC"]; !ok {
 		panic("Cannot issue request 'GetXIDRange' using the uninitialized extension 'XC-MISC'. xcmisc.Init(connObj) must be called first.")
 	}
@@ -331,7 +346,9 @@ func getXIDRangeRequest(c *xgb.Conn) []byte {
 	b := 0
 	buf := make([]byte, size)
 
+	c.ExtLock.RLock()
 	buf[b] = c.Extensions["XC-MISC"]
+	c.ExtLock.RUnlock()
 	b += 1
 
 	buf[b] = 1 // request opcode
