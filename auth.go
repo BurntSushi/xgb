@@ -25,6 +25,7 @@ func readAuthority(hostname, display string) (
 
 	// As per /usr/include/X11/Xauth.h.
 	const familyLocal = 256
+	const familyWild = 65535
 
 	if len(hostname) == 0 || hostname == "localhost" {
 		hostname, err = os.Hostname()
@@ -75,7 +76,10 @@ func readAuthority(hostname, display string) (
 			return "", nil, err
 		}
 
-		if family == familyLocal && addr == hostname && disp == display {
+		addrmatch := (family == familyWild) || (family == familyLocal && addr == hostname)
+		dispmatch := (disp == "") || (disp == display)
+
+		if addrmatch && dispmatch {
 			return name0, data0, nil
 		}
 	}
