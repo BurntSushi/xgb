@@ -283,7 +283,7 @@ func ResourceIdSpecListBytes(buf []byte, list []ResourceIdSpec) int {
 
 type ResourceSizeSpec struct {
 	Spec     ResourceIdSpec
-	Bytes    uint32
+	Bytes_   uint32
 	RefCount uint32
 	UseCount uint32
 }
@@ -295,7 +295,7 @@ func ResourceSizeSpecRead(buf []byte, v *ResourceSizeSpec) int {
 	v.Spec = ResourceIdSpec{}
 	b += ResourceIdSpecRead(buf[b:], &v.Spec)
 
-	v.Bytes = xgb.Get32(buf[b:])
+	v.Bytes_ = xgb.Get32(buf[b:])
 	b += 4
 
 	v.RefCount = xgb.Get32(buf[b:])
@@ -328,7 +328,7 @@ func (v ResourceSizeSpec) Bytes() []byte {
 		b += len(structBytes)
 	}
 
-	xgb.Put32(buf[b:], v.Bytes)
+	xgb.Put32(buf[b:], v.Bytes_)
 	b += 4
 
 	xgb.Put32(buf[b:], v.RefCount)
@@ -641,7 +641,7 @@ type QueryClientPixmapBytesReply struct {
 	Sequence uint16 // sequence number of the request for this reply
 	Length   uint32 // number of bytes in this reply
 	// padding: 1 bytes
-	Bytes         uint32
+	Bytes_        uint32
 	BytesOverflow uint32
 }
 
@@ -670,7 +670,7 @@ func queryClientPixmapBytesReply(buf []byte) *QueryClientPixmapBytesReply {
 	v.Length = xgb.Get32(buf[b:]) // 4-byte units
 	b += 4
 
-	v.Bytes = xgb.Get32(buf[b:])
+	v.Bytes_ = xgb.Get32(buf[b:])
 	b += 4
 
 	v.BytesOverflow = xgb.Get32(buf[b:])

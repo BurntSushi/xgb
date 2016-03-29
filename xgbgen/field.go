@@ -87,6 +87,9 @@ func (f *SingleField) Initialize(p *Protocol) {
 }
 
 func (f *SingleField) SrcName() string {
+	if f.srcName == "Bytes" {
+		return "Bytes_"
+	}
 	return f.srcName
 }
 
