@@ -64,7 +64,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("%v, X: %d, Y: %d, Width: %d, Height: %d\n",
+		fmt.Printf("X: %d, Y: %d, Width: %d, Height: %d\n",
 			info.X, info.Y, info.Width, info.Height)
 	}
 
