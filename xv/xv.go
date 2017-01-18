@@ -45,7 +45,7 @@ type AdaptorInfo struct {
 	Type       byte
 	// padding: 1 bytes
 	Name string // size: xgb.Pad((int(NameSize) * 1))
-	// padding: 0 bytes
+	// alignment gap to multiple of 4
 	Formats []Format // size: xgb.Pad((int(NumFormats) * 8))
 }
 
@@ -77,7 +77,7 @@ func AdaptorInfoRead(buf []byte, v *AdaptorInfo) int {
 		b += int(v.NameSize)
 	}
 
-	b += 0 // padding
+	b = (b + 3) & ^3 // alignment gap
 
 	v.Formats = make([]Format, v.NumFormats)
 	b += FormatReadList(buf[b:], v.Formats)
@@ -97,7 +97,7 @@ func AdaptorInfoReadList(buf []byte, dest []AdaptorInfo) int {
 
 // Bytes writes a AdaptorInfo value to a byte slice.
 func (v AdaptorInfo) Bytes() []byte {
-	buf := make([]byte, (((12 + xgb.Pad((int(v.NameSize) * 1))) + 0) + xgb.Pad((int(v.NumFormats) * 8))))
+	buf := make([]byte, (((12 + xgb.Pad((int(v.NameSize) * 1))) + 4) + xgb.Pad((int(v.NumFormats) * 8))))
 	b := 0
 
 	xgb.Put32(buf[b:], uint32(v.BaseId))
@@ -120,7 +120,7 @@ func (v AdaptorInfo) Bytes() []byte {
 	copy(buf[b:], v.Name[:v.NameSize])
 	b += int(v.NameSize)
 
-	b += 0 // padding
+	b = (b + 3) & ^3 // alignment gap
 
 	b += FormatListBytes(buf[b:], v.Formats)
 
@@ -143,7 +143,7 @@ func AdaptorInfoListBytes(buf []byte, list []AdaptorInfo) int {
 func AdaptorInfoListSize(list []AdaptorInfo) int {
 	size := 0
 	for _, item := range list {
-		size += (((12 + xgb.Pad((int(item.NameSize) * 1))) + 0) + xgb.Pad((int(item.NumFormats) * 8)))
+		size += (((12 + xgb.Pad((int(item.NameSize) * 1))) + 4) + xgb.Pad((int(item.NumFormats) * 8)))
 	}
 	return size
 }
@@ -159,6 +159,7 @@ type AttributeInfo struct {
 	Max   int32
 	Size  uint32
 	Name  string // size: xgb.Pad((int(Size) * 1))
+	// alignment gap to multiple of 4
 }
 
 // AttributeInfoRead reads a byte slice into a AttributeInfo value.
@@ -184,6 +185,8 @@ func AttributeInfoRead(buf []byte, v *AttributeInfo) int {
 		b += int(v.Size)
 	}
 
+	b = (b + 3) & ^3 // alignment gap
+
 	return b
 }
 
@@ -199,7 +202,7 @@ func AttributeInfoReadList(buf []byte, dest []AttributeInfo) int {
 
 // Bytes writes a AttributeInfo value to a byte slice.
 func (v AttributeInfo) Bytes() []byte {
-	buf := make([]byte, (16 + xgb.Pad((int(v.Size) * 1))))
+	buf := make([]byte, ((16 + xgb.Pad((int(v.Size) * 1))) + 4))
 	b := 0
 
 	xgb.Put32(buf[b:], v.Flags)
@@ -216,6 +219,8 @@ func (v AttributeInfo) Bytes() []byte {
 
 	copy(buf[b:], v.Name[:v.Size])
 	b += int(v.Size)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	return buf[:b]
 }
@@ -236,7 +241,7 @@ func AttributeInfoListBytes(buf []byte, list []AttributeInfo) int {
 func AttributeInfoListSize(list []AttributeInfo) int {
 	size := 0
 	for _, item := range list {
-		size += (16 + xgb.Pad((int(item.Size) * 1)))
+		size += ((16 + xgb.Pad((int(item.Size) * 1))) + 4)
 	}
 	return size
 }
@@ -397,6 +402,7 @@ type EncodingInfo struct {
 	// padding: 2 bytes
 	Rate Rational
 	Name string // size: xgb.Pad((int(NameSize) * 1))
+	// alignment gap to multiple of 4
 }
 
 // EncodingInfoRead reads a byte slice into a EncodingInfo value.
@@ -427,6 +433,8 @@ func EncodingInfoRead(buf []byte, v *EncodingInfo) int {
 		b += int(v.NameSize)
 	}
 
+	b = (b + 3) & ^3 // alignment gap
+
 	return b
 }
 
@@ -442,7 +450,7 @@ func EncodingInfoReadList(buf []byte, dest []EncodingInfo) int {
 
 // Bytes writes a EncodingInfo value to a byte slice.
 func (v EncodingInfo) Bytes() []byte {
-	buf := make([]byte, (20 + xgb.Pad((int(v.NameSize) * 1))))
+	buf := make([]byte, ((20 + xgb.Pad((int(v.NameSize) * 1))) + 4))
 	b := 0
 
 	xgb.Put32(buf[b:], uint32(v.Encoding))
@@ -468,6 +476,8 @@ func (v EncodingInfo) Bytes() []byte {
 	copy(buf[b:], v.Name[:v.NameSize])
 	b += int(v.NameSize)
 
+	b = (b + 3) & ^3 // alignment gap
+
 	return buf[:b]
 }
 
@@ -487,7 +497,7 @@ func EncodingInfoListBytes(buf []byte, list []EncodingInfo) int {
 func EncodingInfoListSize(list []EncodingInfo) int {
 	size := 0
 	for _, item := range list {
-		size += (20 + xgb.Pad((int(item.NameSize) * 1)))
+		size += ((20 + xgb.Pad((int(item.NameSize) * 1))) + 4)
 	}
 	return size
 }
@@ -567,9 +577,8 @@ type Image struct {
 	DataSize  uint32
 	NumPlanes uint32
 	Pitches   []uint32 // size: xgb.Pad((int(NumPlanes) * 4))
-	// alignment gap to multiple of 4
-	Offsets []uint32 // size: xgb.Pad((int(NumPlanes) * 4))
-	Data    []byte   // size: xgb.Pad((int(DataSize) * 1))
+	Offsets   []uint32 // size: xgb.Pad((int(NumPlanes) * 4))
+	Data      []byte   // size: xgb.Pad((int(DataSize) * 1))
 }
 
 // ImageRead reads a byte slice into a Image value.
@@ -597,8 +606,6 @@ func ImageRead(buf []byte, v *Image) int {
 		b += 4
 	}
 
-	b = (b + 3) & ^3 // alignment gap
-
 	v.Offsets = make([]uint32, v.NumPlanes)
 	for i := 0; i < int(v.NumPlanes); i++ {
 		v.Offsets[i] = xgb.Get32(buf[b:])
@@ -624,7 +631,7 @@ func ImageReadList(buf []byte, dest []Image) int {
 
 // Bytes writes a Image value to a byte slice.
 func (v Image) Bytes() []byte {
-	buf := make([]byte, ((((16 + xgb.Pad((int(v.NumPlanes) * 4))) + 4) + xgb.Pad((int(v.NumPlanes) * 4))) + xgb.Pad((int(v.DataSize) * 1))))
+	buf := make([]byte, (((16 + xgb.Pad((int(v.NumPlanes) * 4))) + xgb.Pad((int(v.NumPlanes) * 4))) + xgb.Pad((int(v.DataSize) * 1))))
 	b := 0
 
 	xgb.Put32(buf[b:], v.Id)
@@ -646,8 +653,6 @@ func (v Image) Bytes() []byte {
 		xgb.Put32(buf[b:], v.Pitches[i])
 		b += 4
 	}
-
-	b = (b + 3) & ^3 // alignment gap
 
 	for i := 0; i < int(v.NumPlanes); i++ {
 		xgb.Put32(buf[b:], v.Offsets[i])
@@ -676,7 +681,7 @@ func ImageListBytes(buf []byte, list []Image) int {
 func ImageListSize(list []Image) int {
 	size := 0
 	for _, item := range list {
-		size += ((((16 + xgb.Pad((int(item.NumPlanes) * 4))) + 4) + xgb.Pad((int(item.NumPlanes) * 4))) + xgb.Pad((int(item.DataSize) * 1)))
+		size += (((16 + xgb.Pad((int(item.NumPlanes) * 4))) + xgb.Pad((int(item.NumPlanes) * 4))) + xgb.Pad((int(item.DataSize) * 1)))
 	}
 	return size
 }
@@ -2416,7 +2421,6 @@ type QueryImageAttributesReply struct {
 	Height    uint16
 	// padding: 12 bytes
 	Pitches []uint32 // size: xgb.Pad((int(NumPlanes) * 4))
-	// alignment gap to multiple of 4
 	Offsets []uint32 // size: xgb.Pad((int(NumPlanes) * 4))
 }
 
@@ -2464,8 +2468,6 @@ func queryImageAttributesReply(buf []byte) *QueryImageAttributesReply {
 		v.Pitches[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-
-	b = (b + 3) & ^3 // alignment gap
 
 	v.Offsets = make([]uint32, v.NumPlanes)
 	for i := 0; i < int(v.NumPlanes); i++ {

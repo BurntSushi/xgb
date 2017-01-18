@@ -76,7 +76,7 @@ func (p *PadField) Size() Size {
 type RequiredStartAlign struct {
 }
 
-func (f *RequiredStartAlign) Initialize(p *Protocol) { }
+func (f *RequiredStartAlign) Initialize(p *Protocol) {}
 
 func (f *RequiredStartAlign) SrcName() string {
 	panic("illegal to take source name of a required_start_align field")
@@ -94,10 +94,10 @@ func (f *RequiredStartAlign) Size() Size {
 	return newFixedSize(0, true)
 }
 
-func (f *RequiredStartAlign) Define(c *Context) { }
+func (f *RequiredStartAlign) Define(c *Context) {}
 
-func (f *RequiredStartAlign) Read(c *Context, prefix string) { }
-func (f *RequiredStartAlign) Write(c *Context, prefix string) { }
+func (f *RequiredStartAlign) Read(c *Context, prefix string)  {}
+func (f *RequiredStartAlign) Write(c *Context, prefix string) {}
 
 // SingleField represents most of the fields in an XML protocol description.
 // It corresponds to any single value.
@@ -317,9 +317,9 @@ func (f *ValueField) Initialize(p *Protocol) {
 // SwitchField represents a 'switch' element in the XML protocol description
 // file.
 // Currently we translate this to a slice of uint32 and let the user sort
-// through it. 
+// through it.
 type SwitchField struct {
-	xmlName string
+	xmlName  string
 	Name     string
 	MaskName string
 	Expr     Expression
@@ -342,6 +342,7 @@ func (f *SwitchField) Size() Size {
 	// TODO: size expression used here is not correct unless every element of
 	// the switch is 32 bit long. This assumption holds for xproto but may not
 	// hold for other protocols (xkb?)
+
 	listSize := newExpressionSize(&Function{
 		Name: "xgb.Pad",
 		Expr: &BinaryOp{
@@ -357,7 +358,7 @@ func (f *SwitchField) Size() Size {
 			},
 		},
 	}, true)
-	
+
 	return listSize
 }
 
