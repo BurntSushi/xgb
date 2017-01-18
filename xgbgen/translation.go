@@ -325,12 +325,14 @@ func (x *XMLField) Translate(parent interface{}) Field {
 	case "pad":
 		return &PadField{
 			Bytes: x.Bytes,
+			Align: x.Align,
 		}
 	case "field":
-		return &SingleField{
+		s := &SingleField{
 			xmlName: x.Name,
 			Type:    newTranslation(x.Type),
 		}
+		return s
 	case "list":
 		return &ListField{
 			xmlName:    x.Name,
@@ -365,6 +367,8 @@ func (x *XMLField) Translate(parent interface{}) Field {
 			swtch.Bitcases[i] = bitcase.Translate()
 		}
 		return swtch
+	case "required_start_align":
+		return &RequiredStartAlign{}
 	}
 
 	log.Panicf("Unrecognized field element: %s", x.XMLName.Local)

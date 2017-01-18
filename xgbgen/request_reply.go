@@ -105,17 +105,15 @@ func (r *Request) Size(c *Context) Size {
 	}
 
 	for _, field := range r.Fields {
-		switch field.(type) {
+		switch field := field.(type) {
 		case *LocalField: // local fields don't go over the wire
 			continue
 		case *SingleField:
-			// mofos!!!
-			if r.SrcName() == "ConfigureWindow" &&
-				field.SrcName() == "ValueMask" {
-
-				continue
+			fsz := field.Size()
+			if _, isstruct := field.Type.(*Struct); isstruct {
+				fsz.Expression = fsz.Expression.Specialize(field.SrcName())
 			}
-			size = size.Add(field.Size())
+			size = size.Add(fsz)
 		default:
 			size = size.Add(field.Size())
 		}

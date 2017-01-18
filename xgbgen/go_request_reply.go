@@ -205,10 +205,7 @@ func (r *Request) ParamNames() string {
 	for _, field := range r.Fields {
 		switch f := field.(type) {
 		case *ValueField:
-			// mofos...
-			if r.SrcName() != "ConfigureWindow" {
-				names = append(names, f.MaskName)
-			}
+			names = append(names, f.MaskName)
 			names = append(names, f.ListName)
 		case *PadField:
 			continue
@@ -226,16 +223,15 @@ func (r *Request) ParamNameTypes() string {
 	for _, field := range r.Fields {
 		switch f := field.(type) {
 		case *ValueField:
-			// mofos...
-			if r.SrcName() != "ConfigureWindow" {
-				nameTypes = append(nameTypes,
-					fmt.Sprintf("%s %s", f.MaskName, f.MaskType.SrcName()))
-			}
+			nameTypes = append(nameTypes,
+				fmt.Sprintf("%s %s", f.MaskName, f.MaskType.SrcName()))
 			nameTypes = append(nameTypes,
 				fmt.Sprintf("%s []uint32", f.ListName))
 		case *PadField:
 			continue
 		case *ExprField:
+			continue
+		case *RequiredStartAlign:
 			continue
 		default:
 			nameTypes = append(nameTypes,

@@ -49,8 +49,23 @@ func (c *Context) Morph(xmlBytes []byte) {
 
 	// Translate XML types to nice types
 	c.protocol = parsedXml.Translate(nil)
-
-	c.protocol.AddAlignGaps()
+	
+	// For backwards compatibility we patch the type of the send_event field of
+	// PutImage to be byte
+	if c.protocol.Name == "shm" {
+		for _, req := range c.protocol.Requests {
+			if req.xmlName != "PutImage" {
+				continue
+			}
+			for _, ifield := range req.Fields {
+				field, ok := ifield.(*SingleField)
+				if !ok || field.xmlName != "send_event" {
+					continue
+				}
+				field.Type = &Base{ srcName: "byte", xmlName: "CARD8", size: newFixedSize(1, true) }
+			}
+		}
+	}
 
 	// Start with Go header.
 	c.Putln("// Package %s is the X client API for the %s extension.",
