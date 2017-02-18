@@ -337,6 +337,7 @@ func (c *Conn) sendRequests() {
 			}
 		}
 		req.cookie.Sequence = c.newSequenceId()
+		close(req.seq)
 		c.cookieChan <- req.cookie
 		c.writeBuffer(req.buf)
 		close(req.seq)
