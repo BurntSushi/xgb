@@ -102,7 +102,7 @@ func NewConnDisplay(display string) (*Conn, error) {
 	return postNewConn(conn)
 }
 
-// NewConnDisplay is just like NewConn, but allows a specific net.Conn
+// NewConnNet is just like NewConn, but allows a specific net.Conn
 // to be used.
 func NewConnNet(netConn net.Conn) (*Conn, error) {
 	conn := &Conn{}
@@ -126,7 +126,7 @@ func postNewConn(conn *Conn) (*Conn, error) {
 	conn.seqChan = make(chan uint16, seqBuffer)
 	conn.reqChan = make(chan *request, reqBuffer)
 	conn.eventChan = make(chan eventOrError, eventBuffer)
-	conn.done = make(chan chan struct{}, 1)
+	conn.done = make(chan chan struct{})
 
 	conn.wg.Add(4)
 	go conn.generateXIds()
@@ -139,12 +139,13 @@ func postNewConn(conn *Conn) (*Conn, error) {
 
 // Close gracefully closes the connection to the X server.
 func (c *Conn) Close() {
-	c.close()
+	c.broadcastDone()
 	c.wg.Wait()
 	c.conn.Close()
+	c.conn = nil
 }
 
-func (c *Conn) close() {
+func (c *Conn) broadcastDone() {
 	select {
 	case <-c.done:
 		return
@@ -343,9 +344,8 @@ func (c *Conn) NewRequest(buf []byte, cookie *Cookie) {
 func (c *Conn) sendRequests() {
 	defer close(c.cookieChan)
 	defer func() {
-		c.wg.Done()
 		c.noop() // Flush the response reading goroutine, ignore error.
-		c.Close()
+		c.wg.Done()
 	}()
 
 	for {
@@ -423,7 +423,7 @@ func (c *Conn) readResponses() {
 		if _, err := io.ReadFull(c.conn, buf); err != nil {
 			Logger.Printf("A read error is unrecoverable: %s", err)
 			c.eventChan <- err
-			c.close()
+			c.broadcastDone()
 			continue
 		}
 		switch buf[0] {
@@ -453,7 +453,7 @@ func (c *Conn) readResponses() {
 				if _, err := io.ReadFull(c.conn, biggerBuf[32:]); err != nil {
 					Logger.Printf("A read error is unrecoverable: %s", err)
 					c.eventChan <- err
-					c.close()
+					c.broadcastDone()
 					continue
 				}
 				replyBytes = biggerBuf

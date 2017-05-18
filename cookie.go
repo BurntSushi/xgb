@@ -98,6 +98,8 @@ func (c Cookie) replyChecked() ([]byte, error) {
 		return reply, nil
 	case err := <-c.errorChan:
 		return nil, err
+	case <-c.conn.done:
+		return nil, errors.New("Connection closed while waiting in 'replyChecked'")
 	}
 }
 
@@ -121,6 +123,8 @@ func (c Cookie) replyUnchecked() ([]byte, error) {
 		return reply, nil
 	case <-c.pingChan:
 		return nil, nil
+	case <-c.conn.done:
+		return nil, errors.New("Connection closed while waiting in 'replyChecked'")
 	}
 }
 
@@ -161,5 +165,7 @@ func (c Cookie) Check() error {
 		return err
 	case <-c.pingChan:
 		return nil
+	case <-c.conn.done:
+		return errors.New("Connection closed while waiting in 'Check'")
 	}
 }
