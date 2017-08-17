@@ -333,18 +333,17 @@ type request struct {
 // In all likelihood, you should be able to copy and paste with some minor
 // edits the generated code for the request you want to issue.
 func (c *Conn) NewRequest(buf []byte, cookie *Cookie) {
-	select {
-	case <-c.done:
-		// If connection was broken, the goroutine that processes c.reqChan will be closed
-		// This will cause NewRequest to block forever in <-seq
-		// We can't close c.reqChan since NewRequest will panic, potentially crashing the app
-		return
-	default:
-	}
-
 	seq := make(chan struct{})
-	c.reqChan <- &request{buf: buf, cookie: cookie, seq: seq}
-	<-seq
+	select {
+	case c.reqChan <- &request{buf: buf, cookie: cookie, seq: seq}:
+	case <-seq:
+		return
+	case <-c.done:
+		// If connection was broken, all goroutines, including `sendRequests`, will be closed.
+		// This prevents NewRequest from blocking forever in <-seq or in c.reqChan <- &request if reqChan is full.
+		// We can't close c.reqChan since NewRequest will panic when sending to it.
+		return
+	}
 }
 
 // sendRequests is run as a single goroutine that takes requests and writes
