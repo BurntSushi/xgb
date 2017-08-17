@@ -333,6 +333,15 @@ type request struct {
 // In all likelihood, you should be able to copy and paste with some minor
 // edits the generated code for the request you want to issue.
 func (c *Conn) NewRequest(buf []byte, cookie *Cookie) {
+	select {
+	case <-c.done:
+		// If connection was broken, the goroutine that processes c.reqChan will be closed
+		// This will cause NewRequest to block forever in <-seq
+		// We can't close c.reqChan since NewRequest will panic, potentially crashing the app
+		return
+	default:
+	}
+
 	seq := make(chan struct{})
 	c.reqChan <- &request{buf: buf, cookie: cookie, seq: seq}
 	<-seq
