@@ -60,7 +60,7 @@ type Conn struct {
 	xidChan    chan xid
 	seqChan    chan uint16
 	reqChan    chan *request
-	done       chan chan struct{}
+	done       chan struct{}
 	wg         sync.WaitGroup
 
 	// ExtLock is a lock used whenever new extensions are initialized.
@@ -126,7 +126,7 @@ func postNewConn(conn *Conn) (*Conn, error) {
 	conn.seqChan = make(chan uint16, seqBuffer)
 	conn.reqChan = make(chan *request, reqBuffer)
 	conn.eventChan = make(chan eventOrError, eventBuffer)
-	conn.done = make(chan chan struct{})
+	conn.done = make(chan struct{})
 
 	conn.wg.Add(4)
 	go conn.generateXIds()
@@ -334,15 +334,19 @@ type request struct {
 // edits the generated code for the request you want to issue.
 func (c *Conn) NewRequest(buf []byte, cookie *Cookie) {
 	seq := make(chan struct{})
+
 	select {
 	case c.reqChan <- &request{buf: buf, cookie: cookie, seq: seq}:
-	case <-seq:
-		return
 	case <-c.done:
 		// If connection was broken, all goroutines, including `sendRequests`, will be closed.
-		// This prevents NewRequest from blocking forever in <-seq or in c.reqChan <- &request if reqChan is full.
+		// This prevents NewRequest from blocking forever in c.reqChan <- &request if reqChan is full.
 		// We can't close c.reqChan since NewRequest will panic when sending to it.
 		return
+	}
+
+	select {
+	case <-seq:
+	case <-c.done:
 	}
 }
 
