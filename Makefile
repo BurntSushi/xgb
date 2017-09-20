@@ -9,8 +9,10 @@
 # necessary, but it's a good idea to make sure each sub-package is a valid
 # Go package.
 
-# My path to the X protocol XML descriptions.
+ifndef XPROTO
+# Path to the X protocol XML descriptions.
 XPROTO=/usr/share/xcb
+endif
 
 # All of the XML files in my /usr/share/xcb directory EXCEPT XKB. -_-
 # This is intended to build xgbgen and generate Go code for each supported
