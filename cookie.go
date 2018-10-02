@@ -2,6 +2,7 @@ package xgb
 
 import (
 	"errors"
+	"io"
 )
 
 // Cookie is the internal representation of a cookie, where one is generated
@@ -80,6 +81,7 @@ func (c Cookie) Reply() ([]byte, error) {
 // channels. If the former arrives, the bytes are returned with a nil error.
 // If the latter arrives, no bytes are returned (nil) and the error received
 // is returned.
+// Returns (nil, io.EOF) when the connection is closed.
 //
 // Unless you're building requests from bytes by hand, this method should
 // not be used.
@@ -98,6 +100,9 @@ func (c Cookie) replyChecked() ([]byte, error) {
 		return reply, nil
 	case err := <-c.errorChan:
 		return nil, err
+	case <-c.conn.doneRead:
+		// c.conn.readResponses is no more, there will be no replys or errors
+		return nil, io.EOF
 	}
 }
 
@@ -106,6 +111,7 @@ func (c Cookie) replyChecked() ([]byte, error) {
 // If the latter arrives, no bytes are returned (nil) and a nil error
 // is returned. (In the latter case, the corresponding error can be retrieved
 // from (Wait|Poll)ForEvent asynchronously.)
+// Returns (nil, io.EOF) when the connection is closed.
 // In all honesty, you *probably* don't want to use this method.
 //
 // Unless you're building requests from bytes by hand, this method should
@@ -121,6 +127,9 @@ func (c Cookie) replyUnchecked() ([]byte, error) {
 		return reply, nil
 	case <-c.pingChan:
 		return nil, nil
+	case <-c.conn.doneRead:
+		// c.conn.readResponses is no more, there will be no replys or pings
+		return nil, io.EOF
 	}
 }
 
@@ -132,6 +141,7 @@ func (c Cookie) replyUnchecked() ([]byte, error) {
 // Thus, pingChan is sent a value when the *next* reply is read.
 // If no more replies are being processed, we force a round trip request with
 // GetInputFocus.
+// Returns io.EOF error when the connection is closed.
 //
 // Unless you're building requests from bytes by hand, this method should
 // not be used.
@@ -161,5 +171,8 @@ func (c Cookie) Check() error {
 		return err
 	case <-c.pingChan:
 		return nil
+	case <-c.conn.doneRead:
+		// c.conn.readResponses is no more, there will be no errors or pings
+		return io.EOF
 	}
 }
