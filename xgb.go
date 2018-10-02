@@ -89,50 +89,50 @@ func NewConn() (*Conn, error) {
 //	NewConn("hostname:2.1") -> net.Dial("tcp", "", "hostname:6002")
 //	NewConn("tcp/hostname:1.0") -> net.Dial("tcp", "", "hostname:6001")
 func NewConnDisplay(display string) (*Conn, error) {
-	conn := &Conn{}
+	c := &Conn{}
 
 	// First connect. This reads authority, checks DISPLAY environment
 	// variable, and loads the initial Setup info.
-	err := conn.connect(display)
+	err := c.connect(display)
 	if err != nil {
 		return nil, err
 	}
 
-	return postNewConn(conn)
+	return postNewConn(c)
 }
 
-// NewConnDisplay is just like NewConn, but allows a specific net.Conn
+// NewConnNet is just like NewConn, but allows a specific net.Conn
 // to be used.
 func NewConnNet(netConn net.Conn) (*Conn, error) {
-	conn := &Conn{}
+	c := &Conn{}
 
 	// First connect. This reads authority, checks DISPLAY environment
 	// variable, and loads the initial Setup info.
-	err := conn.connectNet(netConn)
+	err := c.connectNet(netConn)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return postNewConn(conn)
+	return postNewConn(c)
 }
 
-func postNewConn(conn *Conn) (*Conn, error) {
-	conn.Extensions = make(map[string]byte)
+func postNewConn(c *Conn) (*Conn, error) {
+	c.Extensions = make(map[string]byte)
 
-	conn.cookieChan = make(chan *Cookie, cookieBuffer)
-	conn.xidChan = make(chan xid, xidBuffer)
-	conn.seqChan = make(chan uint16, seqBuffer)
-	conn.reqChan = make(chan *request, reqBuffer)
-	conn.eventChan = make(chan eventOrError, eventBuffer)
-	conn.closing = make(chan chan struct{}, 1)
+	c.cookieChan = make(chan *Cookie, cookieBuffer)
+	c.xidChan = make(chan xid, xidBuffer)
+	c.seqChan = make(chan uint16, seqBuffer)
+	c.reqChan = make(chan *request, reqBuffer)
+	c.eventChan = make(chan eventOrError, eventBuffer)
+	c.closing = make(chan chan struct{}, 1)
 
-	go conn.generateXIds()
-	go conn.generateSeqIds()
-	go conn.sendRequests()
-	go conn.readResponses()
+	go c.generateXIds()
+	go c.generateSeqIds()
+	go c.sendRequests()
+	go c.readResponses()
 
-	return conn, nil
+	return c, nil
 }
 
 // Close gracefully closes the connection to the X server.
@@ -217,8 +217,8 @@ type xid struct {
 // This needs to be updated to use the XC Misc extension once we run out of
 // new ids.
 // Thanks to libxcb/src/xcb_xid.c. This code is greatly inspired by it.
-func (conn *Conn) generateXIds() {
-	defer close(conn.xidChan)
+func (c *Conn) generateXIds() {
+	defer close(c.xidChan)
 
 	// This requires some explanation. From the horse's mouth:
 	// "The resource-id-mask contains a single contiguous set of bits (at least
@@ -236,13 +236,13 @@ func (conn *Conn) generateXIds() {
 	// 00111000 & 11001000 = 00001000.
 	// And we use that value to increment the last resource id to get a new one.
 	// (And then, of course, we OR it with resource-id-base.)
-	inc := conn.setupResourceIdMask & -conn.setupResourceIdMask
-	max := conn.setupResourceIdMask
+	inc := c.setupResourceIdMask & -c.setupResourceIdMask
+	max := c.setupResourceIdMask
 	last := uint32(0)
 	for {
 		// TODO: Use the XC Misc extension to look for released ids.
 		if last > 0 && last >= max-inc+1 {
-			conn.xidChan <- xid{
+			c.xidChan <- xid{
 				id: 0,
 				err: errors.New("There are no more available resource" +
 					"identifiers."),
@@ -250,8 +250,8 @@ func (conn *Conn) generateXIds() {
 		}
 
 		last += inc
-		conn.xidChan <- xid{
-			id:  last | conn.setupResourceIdBase,
+		c.xidChan <- xid{
+			id:  last | c.setupResourceIdBase,
 			err: nil,
 		}
 	}
