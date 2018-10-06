@@ -154,20 +154,20 @@ func (l leaks) checkTesting(t *testing.T) {
 		if _, ok := l.goroutines[id]; ok {
 			continue
 		}
-		t.Error(gr.name)
+		t.Log(gr.name, "\n", string(gr.stack))
 	}
 }
 
 func TestConnOpenClose(t *testing.T) {
 
-	t.Logf("creating new dummy blocking server")
+	//t.Logf("creating new dummy blocking server")
 	s := newServer()
 	defer func() {
 		if err := s.Close(); err != nil {
 			t.Errorf("server closing error: %v", err)
 		}
 	}()
-	t.Logf("new server created: %v", s)
+	//t.Logf("new server created: %v", s)
 
 	defer leaksMonitor().checkTesting(t)
 
@@ -175,17 +175,18 @@ func TestConnOpenClose(t *testing.T) {
 	if err != nil {
 		t.Fatalf("connect error: %v", err)
 	}
-	t.Logf("connection to server created: %v", c)
+	//t.Logf("connection to server created: %v", c)
 
-	closeErr := make(chan error, 1)
+	closeErr := make(chan struct{})
+	go func() {
+		//t.Logf("closing connection to server")
+		c.Close()
+		close(closeErr)
+	}()
 	closeTimeout := time.Second
 	select {
-	case closeErr <- func() error {
-		t.Logf("closing connection to server")
-		c.Close()
-		t.Logf("connection to server closed")
-		return nil
-	}():
+	case <-closeErr:
+		//t.Logf("connection to server closed")
 	case <-time.After(closeTimeout):
 		t.Errorf("*Conn.Close() not responded for %v", closeTimeout)
 	}
