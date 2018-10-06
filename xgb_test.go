@@ -13,18 +13,22 @@ import (
 	"time"
 )
 
-type addr struct{}
+type addr struct {
+	s string
+}
 
-func (_ addr) Network() string { return "" }
-func (_ addr) String() string  { return "" }
+func (_ addr) Network() string { return "dummy" }
+func (a addr) String() string  { return a.s }
 
-type server struct {
+type serverBlocking struct {
+	addr    addr
 	control chan interface{}
 	done    chan struct{}
 }
 
-func newServer() net.Conn {
-	s := &server{
+func newServerBlocking() net.Conn {
+	s := &serverBlocking{
+		addr{"blocking server"},
 		make(chan interface{}),
 		make(chan struct{}),
 	}
@@ -42,27 +46,27 @@ func newServer() net.Conn {
 	return s
 }
 
-func (_ *server) errClosed() error {
+func (_ *serverBlocking) errClosed() error {
 	return errors.New("closed")
 }
-func (_ *server) errEOF() error {
+func (_ *serverBlocking) errEOF() error {
 	return io.EOF
 }
 
-func (s *server) Write(b []byte) (int, error) {
+func (s *serverBlocking) Write(b []byte) (int, error) {
 	select {
 	case <-s.done:
 	}
 	return 0, s.errClosed()
 }
 
-func (s *server) Read(b []byte) (int, error) {
+func (s *serverBlocking) Read(b []byte) (int, error) {
 	select {
 	case <-s.done:
 	}
 	return 0, s.errEOF()
 }
-func (s *server) Close() error {
+func (s *serverBlocking) Close() error {
 	select {
 	case s.control <- nil:
 		<-s.done
@@ -71,24 +75,32 @@ func (s *server) Close() error {
 		return s.errClosed()
 	}
 }
-func (s *server) LocalAddr() net.Addr                { return addr{} }
-func (s *server) RemoteAddr() net.Addr               { return addr{} }
-func (s *server) SetDeadline(t time.Time) error      { return nil }
-func (s *server) SetReadDeadline(t time.Time) error  { return nil }
-func (s *server) SetWriteDeadline(t time.Time) error { return nil }
+func (s *serverBlocking) LocalAddr() net.Addr                { return s.addr }
+func (s *serverBlocking) RemoteAddr() net.Addr               { return s.addr }
+func (s *serverBlocking) SetDeadline(t time.Time) error      { return nil }
+func (s *serverBlocking) SetReadDeadline(t time.Time) error  { return nil }
+func (s *serverBlocking) SetWriteDeadline(t time.Time) error { return nil }
 
-// ispired by https://golang.org/src/runtime/debug/stack.go?s=587:606#L21
-// stack returns a formatted stack trace of all goroutines.
-// It calls runtime.Stack with a large enough buffer to capture the entire trace.
-func stack() []byte {
-	buf := make([]byte, 1024)
-	for {
-		n := runtime.Stack(buf, true)
-		if n < len(buf) {
-			return buf[:n]
-		}
-		buf = make([]byte, 2*len(buf))
+type serverWriteError struct {
+	*serverBlocking
+}
+
+func newServerWriteError() net.Conn {
+	s := &serverWriteError{newServerBlocking().(*serverBlocking)}
+	s.addr.s = "server write error"
+	return s
+}
+
+func (s *serverWriteError) Write(b []byte) (int, error) {
+	select {
+	case <-s.done:
+		return 0, s.errClosed()
+	default:
 	}
+	return 0, s.errWrite()
+}
+func (_ *serverWriteError) errWrite() error {
+	return errors.New("write failed")
 }
 
 type goroutine struct {
@@ -107,9 +119,23 @@ func leaksMonitor() leaks {
 	}
 }
 
-func (_ leaks) collectGoroutines() map[int]goroutine {
+// ispired by https://golang.org/src/runtime/debug/stack.go?s=587:606#L21
+// stack returns a formatted stack trace of all goroutines.
+// It calls runtime.Stack with a large enough buffer to capture the entire trace.
+func (_ leaks) stack() []byte {
+	buf := make([]byte, 1024)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, 2*len(buf))
+	}
+}
+
+func (l leaks) collectGoroutines() map[int]goroutine {
 	res := make(map[int]goroutine)
-	stacks := bytes.Split(stack(), []byte{'\n', '\n'})
+	stacks := bytes.Split(l.stack(), []byte{'\n', '\n'})
 
 	regexpId := regexp.MustCompile(`^\s*goroutine\s*(\d+)`)
 	for _, st := range stacks {
@@ -129,9 +155,14 @@ func (_ leaks) collectGoroutines() map[int]goroutine {
 		if _, ok := res[id]; ok {
 			panic("2 goroutines with same id: " + strconv.Itoa(id))
 		}
+		name := strings.TrimSpace(string(lines[1]))
 
-		//TODO filter out test routines, stack routine
-		res[id] = goroutine{id, strings.TrimSpace(string(lines[1])), st}
+		//filter out our stack routine
+		if strings.Contains(name, "xgb.leaks.stacks") {
+			continue
+		}
+
+		res[id] = goroutine{id, name, st}
 	}
 	return res
 }
@@ -144,7 +175,8 @@ func (l leaks) checkTesting(t *testing.T) {
 		}
 	}
 	leakTimeout := time.Second
-	t.Logf("possible goroutine leakage, waiting %v", leakTimeout)
+	time.Sleep(leakTimeout)
+	//t.Logf("possible goroutine leakage, waiting %v", leakTimeout)
 	goroutines := l.collectGoroutines()
 	if len(l.goroutines) == len(goroutines) {
 		return
@@ -160,35 +192,38 @@ func (l leaks) checkTesting(t *testing.T) {
 
 func TestConnOpenClose(t *testing.T) {
 
-	//t.Logf("creating new dummy blocking server")
-	s := newServer()
-	defer func() {
-		if err := s.Close(); err != nil {
-			t.Errorf("server closing error: %v", err)
-		}
-	}()
-	//t.Logf("new server created: %v", s)
-
-	defer leaksMonitor().checkTesting(t)
-
-	c, err := postNewConn(&Conn{conn: s})
-	if err != nil {
-		t.Fatalf("connect error: %v", err)
+	testCases := []func() net.Conn{
+		// newServerBlocking, // i'm not ready to handle this yet
+		newServerWriteError,
 	}
-	//t.Logf("connection to server created: %v", c)
+	for _, tc := range testCases {
+		lm := leaksMonitor()
+		serverConn := tc()
 
-	closeErr := make(chan struct{})
-	go func() {
-		//t.Logf("closing connection to server")
-		c.Close()
-		close(closeErr)
-	}()
-	closeTimeout := time.Second
-	select {
-	case <-closeErr:
-		//t.Logf("connection to server closed")
-	case <-time.After(closeTimeout):
-		t.Errorf("*Conn.Close() not responded for %v", closeTimeout)
+		t.Run(serverConn.LocalAddr().String(), func(t *testing.T) {
+			c, err := postNewConn(&Conn{conn: serverConn})
+			if err != nil {
+				t.Fatalf("connect error: %v", err)
+			}
+			//t.Logf("connection to server created: %v", c)
+
+			closeErr := make(chan struct{})
+			go func() {
+				//t.Logf("closing connection to server")
+				c.Close()
+				close(closeErr)
+			}()
+			closeTimeout := time.Second
+			select {
+			case <-closeErr:
+				//t.Logf("connection to server closed")
+			case <-time.After(closeTimeout):
+				t.Errorf("*Conn.Close() not responded for %v", closeTimeout)
+			}
+		})
+
+		serverConn.Close()
+		lm.checkTesting(t)
 	}
 
 }
