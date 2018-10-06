@@ -32,7 +32,9 @@ func newServerBlocking() net.Conn {
 		make(chan interface{}),
 		make(chan struct{}),
 	}
+	runned := make(chan struct{})
 	go func() {
+		close(runned)
 		defer close(s.done)
 		for {
 			select {
@@ -43,11 +45,12 @@ func newServerBlocking() net.Conn {
 			}
 		}
 	}()
+	<-runned
 	return s
 }
 
 func (_ *serverBlocking) errClosed() error {
-	return errors.New("closed")
+	return errors.New("server closed")
 }
 func (_ *serverBlocking) errEOF() error {
 	return io.EOF
@@ -197,10 +200,10 @@ func TestConnOpenClose(t *testing.T) {
 		newServerWriteError,
 	}
 	for _, tc := range testCases {
-		lm := leaksMonitor()
 		serverConn := tc()
 
 		t.Run(serverConn.LocalAddr().String(), func(t *testing.T) {
+			defer leaksMonitor().checkTesting(t)
 			c, err := postNewConn(&Conn{conn: serverConn})
 			if err != nil {
 				t.Fatalf("connect error: %v", err)
@@ -223,7 +226,6 @@ func TestConnOpenClose(t *testing.T) {
 		})
 
 		serverConn.Close()
-		lm.checkTesting(t)
 	}
 
 }
