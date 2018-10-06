@@ -1,10 +1,14 @@
 package xgb
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"net"
+	"regexp"
 	"runtime"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -73,8 +77,88 @@ func (s *server) SetDeadline(t time.Time) error      { return nil }
 func (s *server) SetReadDeadline(t time.Time) error  { return nil }
 func (s *server) SetWriteDeadline(t time.Time) error { return nil }
 
+// ispired by https://golang.org/src/runtime/debug/stack.go?s=587:606#L21
+// stack returns a formatted stack trace of all goroutines.
+// It calls runtime.Stack with a large enough buffer to capture the entire trace.
+func stack() []byte {
+	buf := make([]byte, 1024)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, 2*len(buf))
+	}
+}
+
+type goroutine struct {
+	id    int
+	name  string
+	stack []byte
+}
+
+type leaks struct {
+	goroutines map[int]goroutine
+}
+
+func leaksMonitor() leaks {
+	return leaks{
+		leaks{}.collectGoroutines(),
+	}
+}
+
+func (_ leaks) collectGoroutines() map[int]goroutine {
+	res := make(map[int]goroutine)
+	stacks := bytes.Split(stack(), []byte{'\n', '\n'})
+
+	regexpId := regexp.MustCompile(`^\s*goroutine\s*(\d+)`)
+	for _, st := range stacks {
+		lines := bytes.Split(st, []byte{'\n'})
+		if len(lines) < 2 {
+			panic("routine stach has less tnan two lines: " + string(st))
+		}
+
+		idMatches := regexpId.FindSubmatch(lines[0])
+		if len(idMatches) < 2 {
+			panic("no id found in goroutine stack's first line: " + string(lines[0]))
+		}
+		id, err := strconv.Atoi(string(idMatches[1]))
+		if err != nil {
+			panic("converting goroutine id to number error: " + err.Error())
+		}
+		if _, ok := res[id]; ok {
+			panic("2 goroutines with same id: " + strconv.Itoa(id))
+		}
+
+		//TODO filter out test routines, stack routine
+		res[id] = goroutine{id, strings.TrimSpace(string(lines[1])), st}
+	}
+	return res
+}
+
+func (l leaks) checkTesting(t *testing.T) {
+	{
+		goroutines := l.collectGoroutines()
+		if len(l.goroutines) == len(goroutines) {
+			return
+		}
+	}
+	leakTimeout := time.Second
+	t.Logf("possible goroutine leakage, waiting %v", leakTimeout)
+	goroutines := l.collectGoroutines()
+	if len(l.goroutines) == len(goroutines) {
+		return
+	}
+	t.Errorf("%d goroutine leaks: start(%d) != end(%d)", len(goroutines)-len(l.goroutines), len(l.goroutines), len(goroutines))
+	for id, gr := range goroutines {
+		if _, ok := l.goroutines[id]; ok {
+			continue
+		}
+		t.Error(gr.name)
+	}
+}
+
 func TestConnOpenClose(t *testing.T) {
-	ngrs := runtime.NumGoroutine()
 
 	t.Logf("creating new dummy blocking server")
 	s := newServer()
@@ -85,16 +169,7 @@ func TestConnOpenClose(t *testing.T) {
 	}()
 	t.Logf("new server created: %v", s)
 
-	leakTimeout := time.Second
-	defer func() {
-		if ngre := runtime.NumGoroutine(); ngrs != ngre {
-			t.Logf("possible goroutine leakage, waiting %v", leakTimeout)
-			time.Sleep(time.Second)
-			if ngre := runtime.NumGoroutine(); ngrs != ngre {
-				t.Errorf("goroutine leaks: start(%d) != end(%d)", ngrs, ngre)
-			}
-		}
-	}()
+	defer leaksMonitor().checkTesting(t)
 
 	c, err := postNewConn(&Conn{conn: s})
 	if err != nil {
