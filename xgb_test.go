@@ -26,9 +26,9 @@ type serverBlocking struct {
 	done    chan struct{}
 }
 
-func newServerBlocking() net.Conn {
+func newServerBlocking(name string) *serverBlocking {
 	s := &serverBlocking{
-		addr{"blocking server"},
+		addr{name},
 		make(chan interface{}),
 		make(chan struct{}),
 	}
@@ -48,21 +48,18 @@ func newServerBlocking() net.Conn {
 	<-runned
 	return s
 }
-
 func (_ *serverBlocking) errClosed() error {
 	return errors.New("server closed")
 }
 func (_ *serverBlocking) errEOF() error {
 	return io.EOF
 }
-
 func (s *serverBlocking) Write(b []byte) (int, error) {
 	select {
 	case <-s.done:
 	}
 	return 0, s.errClosed()
 }
-
 func (s *serverBlocking) Read(b []byte) (int, error) {
 	select {
 	case <-s.done:
@@ -88,12 +85,9 @@ type serverWriteError struct {
 	*serverBlocking
 }
 
-func newServerWriteError() net.Conn {
-	s := &serverWriteError{newServerBlocking().(*serverBlocking)}
-	s.addr.s = "server write error"
-	return s
+func newServerWriteError(name string) *serverWriteError {
+	return &serverWriteError{newServerBlocking(name)}
 }
-
 func (s *serverWriteError) Write(b []byte) (int, error) {
 	select {
 	case <-s.done:
@@ -161,7 +155,7 @@ func (l leaks) collectGoroutines() map[int]goroutine {
 		name := strings.TrimSpace(string(lines[1]))
 
 		//filter out our stack routine
-		if strings.Contains(name, "xgb.leaks.stacks") {
+		if strings.Contains(name, "xgb.leaks.stack") {
 			continue
 		}
 
@@ -173,7 +167,7 @@ func (l leaks) collectGoroutines() map[int]goroutine {
 func (l leaks) checkTesting(t *testing.T) {
 	{
 		goroutines := l.collectGoroutines()
-		if len(l.goroutines) == len(goroutines) {
+		if len(l.goroutines) >= len(goroutines) {
 			return
 		}
 	}
@@ -181,7 +175,7 @@ func (l leaks) checkTesting(t *testing.T) {
 	time.Sleep(leakTimeout)
 	//t.Logf("possible goroutine leakage, waiting %v", leakTimeout)
 	goroutines := l.collectGoroutines()
-	if len(l.goroutines) == len(goroutines) {
+	if len(l.goroutines) >= len(goroutines) {
 		return
 	}
 	t.Errorf("%d goroutine leaks: start(%d) != end(%d)", len(goroutines)-len(l.goroutines), len(l.goroutines), len(goroutines))
@@ -195,15 +189,20 @@ func (l leaks) checkTesting(t *testing.T) {
 
 func TestConnOpenClose(t *testing.T) {
 
-	testCases := []func() net.Conn{
-		// newServerBlocking, // i'm not ready to handle this yet
-		newServerWriteError,
+	testCases := []struct {
+		name             string
+		serverConstuctor func(string) net.Conn
+	}{
+		//{"blocking server", func(n string) net.Conn { return newServerBlocking(n) }}, // i'm not ready to handle this yet
+		{"write error server", func(n string) net.Conn { return newServerWriteError(n) }},
 	}
 	for _, tc := range testCases {
-		serverConn := tc()
+		t.Run(tc.name, func(t *testing.T) {
+			serverConn := tc.serverConstuctor(tc.name)
+			defer serverConn.Close()
 
-		t.Run(serverConn.LocalAddr().String(), func(t *testing.T) {
 			defer leaksMonitor().checkTesting(t)
+
 			c, err := postNewConn(&Conn{conn: serverConn})
 			if err != nil {
 				t.Fatalf("connect error: %v", err)
@@ -224,8 +223,6 @@ func TestConnOpenClose(t *testing.T) {
 				t.Errorf("*Conn.Close() not responded for %v", closeTimeout)
 			}
 		})
-
-		serverConn.Close()
 	}
 
 }
