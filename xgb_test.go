@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -19,6 +20,13 @@ type addr struct {
 
 func (_ addr) Network() string { return "dummy" }
 func (a addr) String() string  { return a.s }
+
+var (
+	serverErrEOF    = io.EOF
+	serverErrClosed = errors.New("server closed")
+	serverErrWrite  = errors.New("server write failed")
+	serverErrRead   = errors.New("server read failed")
+)
 
 type serverBlocking struct {
 	addr    addr
@@ -48,23 +56,18 @@ func newServerBlocking(name string) *serverBlocking {
 	<-runned
 	return s
 }
-func (_ *serverBlocking) errClosed() error {
-	return errors.New("server closed")
-}
-func (_ *serverBlocking) errEOF() error {
-	return io.EOF
-}
+
 func (s *serverBlocking) Write(b []byte) (int, error) {
 	select {
 	case <-s.done:
 	}
-	return 0, s.errClosed()
+	return 0, serverErrClosed
 }
 func (s *serverBlocking) Read(b []byte) (int, error) {
 	select {
 	case <-s.done:
 	}
-	return 0, s.errEOF()
+	return 0, serverErrEOF
 }
 func (s *serverBlocking) Close() error {
 	select {
@@ -72,7 +75,7 @@ func (s *serverBlocking) Close() error {
 		<-s.done
 		return nil
 	case <-s.done:
-		return s.errClosed()
+		return serverErrClosed
 	}
 }
 func (s *serverBlocking) LocalAddr() net.Addr                { return s.addr }
@@ -81,23 +84,110 @@ func (s *serverBlocking) SetDeadline(t time.Time) error      { return nil }
 func (s *serverBlocking) SetReadDeadline(t time.Time) error  { return nil }
 func (s *serverBlocking) SetWriteDeadline(t time.Time) error { return nil }
 
-type serverWriteError struct {
+type serverWriteErrorReadError struct {
 	*serverBlocking
 }
 
-func newServerWriteError(name string) *serverWriteError {
-	return &serverWriteError{newServerBlocking(name)}
+func newServerWriteErrorReadError(name string) *serverWriteErrorReadError {
+	return &serverWriteErrorReadError{newServerBlocking(name)}
 }
-func (s *serverWriteError) Write(b []byte) (int, error) {
+func (s *serverWriteErrorReadError) Write(b []byte) (int, error) {
 	select {
 	case <-s.done:
-		return 0, s.errClosed()
+		return 0, serverErrClosed
 	default:
 	}
-	return 0, s.errWrite()
+	return 0, serverErrWrite
 }
-func (_ *serverWriteError) errWrite() error {
-	return errors.New("write failed")
+func (s *serverWriteErrorReadError) Read(b []byte) (int, error) {
+	select {
+	case <-s.done:
+		return 0, serverErrClosed
+	default:
+	}
+	return 0, serverErrRead
+}
+
+type serverWriteErrorReadBlocking struct {
+	*serverBlocking
+}
+
+func newServerWriteErrorReadBlocking(name string) *serverWriteErrorReadBlocking {
+	return &serverWriteErrorReadBlocking{newServerBlocking(name)}
+}
+func (s *serverWriteErrorReadBlocking) Write(b []byte) (int, error) {
+	select {
+	case <-s.done:
+		return 0, serverErrClosed
+	default:
+	}
+	return 0, serverErrWrite
+}
+
+type serverWriteSuccessReadBlocking struct {
+	*serverBlocking
+}
+
+func newServerWriteSuccessReadBlocking(name string) *serverWriteSuccessReadBlocking {
+	return &serverWriteSuccessReadBlocking{newServerBlocking(name)}
+}
+func (s *serverWriteSuccessReadBlocking) Write(b []byte) (int, error) {
+	select {
+	case <-s.done:
+		return 0, serverErrClosed
+	default:
+	}
+	return len(b), nil
+}
+
+type serverWriteSuccessReadErrorAfterWrite struct {
+	*serverBlocking
+	out chan struct{}
+	wg  *sync.WaitGroup
+}
+
+func newServerWriteSuccessReadErrorAfterWrite(name string) *serverWriteSuccessReadErrorAfterWrite {
+	return &serverWriteSuccessReadErrorAfterWrite{
+		newServerBlocking(name),
+		make(chan struct{}),
+		&sync.WaitGroup{},
+	}
+}
+func (s *serverWriteSuccessReadErrorAfterWrite) Write(b []byte) (int, error) {
+	select {
+	case <-s.done:
+		return 0, serverErrClosed
+	default:
+	}
+	s.wg.Add(1)
+	go func() {
+		select {
+		case s.out <- struct{}{}:
+		case <-s.done:
+		}
+		s.wg.Done()
+	}()
+	return len(b), nil
+}
+func (s *serverWriteSuccessReadErrorAfterWrite) Read(b []byte) (int, error) {
+	select {
+	case <-s.done:
+		return 0, serverErrClosed
+	default:
+	}
+	select {
+	case <-s.out:
+		return 0, serverErrRead
+	case <-s.done:
+	}
+	return 0, serverErrClosed
+}
+func (s *serverWriteSuccessReadErrorAfterWrite) Close() error {
+	if err := s.serverBlocking.Close(); err != nil {
+		return err
+	}
+	s.wg.Wait()
+	return nil
 }
 
 type goroutine struct {
@@ -187,6 +277,62 @@ func (l leaks) checkTesting(t *testing.T) {
 	}
 }
 
+func TestDummyServersRunClose(t *testing.T) {
+
+	testCases := []struct {
+		name             string
+		serverConstuctor func(string) net.Conn
+	}{
+		{"write blocking,read blocking server", func(n string) net.Conn { return newServerBlocking(n) }},
+		{"write error,read error server", func(n string) net.Conn { return newServerWriteErrorReadError(n) }},
+		{"write error,read blocking server", func(n string) net.Conn { return newServerWriteErrorReadBlocking(n) }},
+		{"write success,read blocking server", func(n string) net.Conn { return newServerWriteSuccessReadBlocking(n) }},
+		{"write success,read error afer write server", func(n string) net.Conn { return newServerWriteSuccessReadErrorAfterWrite(n) }},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer leaksMonitor().checkTesting(t)
+
+			serverConn := tc.serverConstuctor(tc.name)
+
+			{
+				closeErr := make(chan error)
+				go func() {
+					closeErr <- serverConn.Close()
+					close(closeErr)
+				}()
+				closeTimeout := time.Second
+				select {
+				case err := <-closeErr:
+					want := error(nil)
+					if err != want {
+						t.Errorf("(net.Conn).Close()=%v, want %v", err, want)
+					}
+				case <-time.After(closeTimeout):
+					t.Errorf("*Conn.Close() not responded for %v", closeTimeout)
+				}
+			}
+			{
+				closeErr := make(chan error)
+				go func() {
+					closeErr <- serverConn.Close()
+					close(closeErr)
+				}()
+				closeTimeout := time.Second
+				select {
+				case err := <-closeErr:
+					want := serverErrClosed
+					if err != want {
+						t.Errorf("(net.Conn).Close()=%v, want %v", err, want)
+					}
+				case <-time.After(closeTimeout):
+					t.Errorf("*Conn.Close() not responded for %v", closeTimeout)
+				}
+			}
+		})
+	}
+}
+
 func TestConnOpenClose(t *testing.T) {
 
 	testCases := []struct {
@@ -194,7 +340,10 @@ func TestConnOpenClose(t *testing.T) {
 		serverConstuctor func(string) net.Conn
 	}{
 		//{"blocking server", func(n string) net.Conn { return newServerBlocking(n) }}, // i'm not ready to handle this yet
-		{"write error server", func(n string) net.Conn { return newServerWriteError(n) }},
+		{"write error,read error server", func(n string) net.Conn { return newServerWriteErrorReadError(n) }},
+		{"write error,read blocking server", func(n string) net.Conn { return newServerWriteErrorReadBlocking(n) }},
+		{"write success,read blocking server", func(n string) net.Conn { return newServerWriteSuccessReadBlocking(n) }},
+		{"write success,read error afer write server", func(n string) net.Conn { return newServerWriteSuccessReadErrorAfterWrite(n) }},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
