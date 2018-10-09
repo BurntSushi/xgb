@@ -3,6 +3,7 @@ package xgb
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"regexp"
@@ -21,12 +22,132 @@ type addr struct {
 func (_ addr) Network() string { return "dummy" }
 func (a addr) String() string  { return a.s }
 
+type errTimeout struct{ error }
+
+func (_ errTimeout) Timeout() bool { return true }
+
 var (
-	serverErrEOF    = io.EOF
-	serverErrClosed = errors.New("server closed")
-	serverErrWrite  = errors.New("server write failed")
-	serverErrRead   = errors.New("server read failed")
+	serverErrNotImplemented = errors.New("command not implemented")
+	serverErrEOF            = io.EOF
+	serverErrClosed         = errors.New("server closed")
+	serverErrWrite          = errors.New("server write failed")
+	serverErrRead           = errors.New("server read failed")
 )
+
+type dXIoResult struct {
+	n   int
+	err error
+}
+type dXIo struct {
+	b      []byte
+	result chan dXIoResult
+}
+
+// dumm server implementing net.Conn interface,
+// Read blocks until Write, pipes Write to Read, than Read blocks again.
+type dX struct {
+	addr    addr
+	in, out chan dXIo
+	control chan interface{}
+	done    chan struct{}
+}
+
+func newDX(name string) *dX {
+	s := &dX{
+		addr{name},
+		make(chan dXIo), make(chan dXIo),
+		make(chan interface{}),
+		make(chan struct{}),
+	}
+
+	seqId := uint16(1)
+	incrementSequenceId := func() {
+		// this has to be the same algorithm as in (*Conn).generateSeqIds
+		if seqId == uint16((1<<16)-1) {
+			seqId = 0
+		} else {
+			seqId++
+		}
+	}
+
+	in, out := s.in, chan dXIo(nil)
+	buf := &bytes.Buffer{}
+
+	go func() {
+		defer close(s.done)
+		for {
+			select {
+			case dxsio := <-in:
+				response := make([]byte, 32)
+				response[0] = 1            // not error reply
+				Put16(response[2:], seqId) // sequence number
+
+				buf.Write(response)
+				incrementSequenceId()
+				dxsio.result <- dXIoResult{len(dxsio.b), nil}
+
+				if out == nil && buf.Len() > 0 {
+					out = s.out
+				}
+			case dxsio := <-out:
+				n, err := buf.Read(dxsio.b)
+				dxsio.result <- dXIoResult{n, err}
+
+				if buf.Len() == 0 {
+					out = nil
+				}
+			case ci := <-s.control:
+				if ci == nil {
+					return
+				}
+			}
+		}
+	}()
+	return s
+}
+func (s *dX) Close() error {
+	select {
+	case s.control <- nil:
+		<-s.done
+		return nil
+	case <-s.done:
+	}
+	return serverErrClosed
+}
+func (s *dX) Write(b []byte) (int, error) {
+	resChan := make(chan dXIoResult)
+	fmt.Printf("(*dX).Write: got write request: %v\n", b)
+	select {
+	case s.in <- dXIo{b, resChan}:
+		fmt.Printf("(*dX).Write: input channel has accepted request\n")
+		res := <-resChan
+		fmt.Printf("(*dX).Write: got result: %v\n", res)
+		return res.n, res.err
+	case <-s.done:
+	}
+	fmt.Printf("(*dX).Write: server was closed\n")
+	return 0, serverErrClosed
+}
+func (s *dX) Read(b []byte) (int, error) {
+	resChan := make(chan dXIoResult)
+	fmt.Printf("(*dX).Read: got read request of length: %v\n", len(b))
+	select {
+	case s.out <- dXIo{b, resChan}:
+		fmt.Printf("(*dX).Read: output channel has accepted request\n")
+		res := <-resChan
+		fmt.Printf("(*dX).Read: got result: %v\n", res)
+		fmt.Printf("(*dX).Read: result bytes: %v\n", b)
+		return res.n, res.err
+	case <-s.done:
+		fmt.Printf("(*dX).Read: server was closed\n")
+	}
+	return 0, serverErrClosed
+}
+func (s *dX) LocalAddr() net.Addr                { return s.addr }
+func (s *dX) RemoteAddr() net.Addr               { return s.addr }
+func (s *dX) SetDeadline(t time.Time) error      { return serverErrNotImplemented }
+func (s *dX) SetReadDeadline(t time.Time) error  { return serverErrNotImplemented }
+func (s *dX) SetWriteDeadline(t time.Time) error { return serverErrNotImplemented }
 
 type serverBlocking struct {
 	addr    addr
@@ -288,6 +409,7 @@ func TestDummyServersRunClose(t *testing.T) {
 		{"write error,read blocking server", func(n string) net.Conn { return newServerWriteErrorReadBlocking(n) }},
 		{"write success,read blocking server", func(n string) net.Conn { return newServerWriteSuccessReadBlocking(n) }},
 		{"write success,read error afer write server", func(n string) net.Conn { return newServerWriteSuccessReadErrorAfterWrite(n) }},
+		{"write success,read success afer write server", func(n string) net.Conn { return newDX(n) }},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -340,10 +462,11 @@ func TestConnOpenClose(t *testing.T) {
 		serverConstuctor func(string) net.Conn
 	}{
 		//{"blocking server", func(n string) net.Conn { return newServerBlocking(n) }}, // i'm not ready to handle this yet
-		{"write error,read error server", func(n string) net.Conn { return newServerWriteErrorReadError(n) }},
-		{"write error,read blocking server", func(n string) net.Conn { return newServerWriteErrorReadBlocking(n) }},
-		{"write success,read blocking server", func(n string) net.Conn { return newServerWriteSuccessReadBlocking(n) }},
-		{"write success,read error afer write server", func(n string) net.Conn { return newServerWriteSuccessReadErrorAfterWrite(n) }},
+		//{"write error,read error server", func(n string) net.Conn { return newServerWriteErrorReadError(n) }},
+		//{"write error,read blocking server", func(n string) net.Conn { return newServerWriteErrorReadBlocking(n) }},
+		//{"write success,read blocking server", func(n string) net.Conn { return newServerWriteSuccessReadBlocking(n) }},
+		//{"write success,read error afer write server", func(n string) net.Conn { return newServerWriteSuccessReadErrorAfterWrite(n) }},
+		{"write success,read success afer write server", func(n string) net.Conn { return newDX(n) }},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
