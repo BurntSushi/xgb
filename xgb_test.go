@@ -288,6 +288,17 @@ func TestConnOnNonBlockingDummyXServer(t *testing.T) {
 				waitEvent(false),
 			},
 		},
+		{"unexpected conn close",
+			[]func(*Conn) error{
+				func(c *Conn) error {
+					c.conn.Close()
+					if ev, err := c.WaitForEvent(); ev != nil || err != nil {
+						return fmt.Errorf("after conn close WaitForEvent() = (%v, %v), want (nil, nil)", ev, err)
+					}
+					return nil
+				},
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
