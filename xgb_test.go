@@ -217,6 +217,17 @@ func TestConnOnNonBlockingDummyXServer(t *testing.T) {
 			return nil
 		}
 	}
+	checkClosed := func(c *Conn) error {
+		select {
+		case eoe, ok := <-c.eventChan:
+			if ok {
+				return fmt.Errorf("(*Conn).eventChan should be closed, but is not and returns %v", eoe)
+			}
+		case <-time.After(timeout):
+			return fmt.Errorf("(*Conn).eventChan should be closed, but is not and was blocking for %v", timeout)
+		}
+		return nil
+	}
 
 	testCases := []struct {
 		description string
@@ -224,6 +235,14 @@ func TestConnOnNonBlockingDummyXServer(t *testing.T) {
 	}{
 		{"close",
 			[]func(*Conn) error{},
+		},
+		{"double close",
+			[]func(*Conn) error{
+				func(c *Conn) error {
+					c.Close()
+					return nil
+				},
+			},
 		},
 		{"checked requests with reply",
 			[]func(*Conn) error{
@@ -261,23 +280,28 @@ func TestConnOnNonBlockingDummyXServer(t *testing.T) {
 				waitEvent(false),
 			},
 		},
+		{"close with pending requests",
+			[]func(*Conn) error{
+				func(c *Conn) error {
+					c.conn.(*dNC).ReadLock()
+					defer c.conn.(*dNC).ReadUnlock()
+					c.NewRequest([]byte("reply"), c.NewCookie(false, true))
+					c.Close()
+					return nil
+				},
+				checkClosed,
+			},
+		},
 		{"unexpected conn close",
 			[]func(*Conn) error{
 				func(c *Conn) error {
 					c.conn.Close()
 					if ev, err := c.WaitForEvent(); ev != nil || err != nil {
-						return fmt.Errorf("after conn close WaitForEvent() = (%v, %v), want (nil, nil)", ev, err)
-					}
-					select {
-					case eoe, ok := <-c.eventChan:
-						if ok {
-							return fmt.Errorf("(*Conn).eventChan should be closed by now, but is not and returns %v", eoe)
-						}
-					case <-time.After(timeout):
-						return fmt.Errorf("(*Conn).eventChan should be closed by now, but is not and was blocking for %v", timeout)
+						return fmt.Errorf("WaitForEvent() = (%v, %v), want (nil, nil)", ev, err)
 					}
 					return nil
 				},
+				checkClosed,
 			},
 		},
 	}
@@ -338,14 +362,20 @@ func TestConnOnNonBlockingDummyXServer(t *testing.T) {
 				}
 			}
 
-			c.Close()
-			select {
-			case eoe, ok := <-c.eventChan:
-				if ok {
-					t.Errorf("(*Conn).eventChan should be closed after (*Conn),Close(), but is not and returned %v", eoe)
+			recovered := false
+			func() {
+				defer func() {
+					if err := recover(); err != nil {
+						t.Errorf("(*Conn).Close() panic recover: %v", err)
+						recovered = true
+					}
+				}()
+				c.Close()
+			}()
+			if !recovered {
+				if err := checkClosed(c); err != nil {
+					t.Error(err)
 				}
-			case <-time.After(timeout):
-				t.Errorf("(*Conn).eventChan should be closed after (*Conn),Close(), but is not and was blocking for %v", timeout)
 			}
 
 			rlm.checkTesting(t)
