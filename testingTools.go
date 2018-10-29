@@ -5,8 +5,118 @@ import (
 	"errors"
 	"io"
 	"net"
+	"regexp"
+	"runtime"
+	"strconv"
+	"strings"
+	"testing"
 	"time"
 )
+
+// Leaks monitor
+
+type goroutine struct {
+	id    int
+	name  string
+	stack []byte
+}
+
+type leaks struct {
+	name       string
+	goroutines map[int]goroutine
+	report     []*leaks
+}
+
+func leaksMonitor(name string, monitors ...*leaks) *leaks {
+	return &leaks{
+		name,
+		leaks{}.collectGoroutines(),
+		monitors,
+	}
+}
+
+// ispired by https://golang.org/src/runtime/debug/stack.go?s=587:606#L21
+// stack returns a formatted stack trace of all goroutines.
+// It calls runtime.Stack with a large enough buffer to capture the entire trace.
+func (_ leaks) stack() []byte {
+	buf := make([]byte, 1024)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, 2*len(buf))
+	}
+}
+
+func (l leaks) collectGoroutines() map[int]goroutine {
+	res := make(map[int]goroutine)
+	stacks := bytes.Split(l.stack(), []byte{'\n', '\n'})
+
+	regexpId := regexp.MustCompile(`^\s*goroutine\s*(\d+)`)
+	for _, st := range stacks {
+		lines := bytes.Split(st, []byte{'\n'})
+		if len(lines) < 2 {
+			panic("routine stach has less tnan two lines: " + string(st))
+		}
+
+		idMatches := regexpId.FindSubmatch(lines[0])
+		if len(idMatches) < 2 {
+			panic("no id found in goroutine stack's first line: " + string(lines[0]))
+		}
+		id, err := strconv.Atoi(string(idMatches[1]))
+		if err != nil {
+			panic("converting goroutine id to number error: " + err.Error())
+		}
+		if _, ok := res[id]; ok {
+			panic("2 goroutines with same id: " + strconv.Itoa(id))
+		}
+		name := strings.TrimSpace(string(lines[1]))
+
+		//filter out our stack routine
+		if strings.Contains(name, "xgb.leaks.stack") {
+			continue
+		}
+
+		res[id] = goroutine{id, name, st}
+	}
+	return res
+}
+
+func (l leaks) leakingGoroutines() []goroutine {
+	goroutines := l.collectGoroutines()
+	res := []goroutine{}
+	for id, gr := range goroutines {
+		if _, ok := l.goroutines[id]; ok {
+			continue
+		}
+		res = append(res, gr)
+	}
+	return res
+}
+func (l leaks) checkTesting(t *testing.T) {
+	if len(l.leakingGoroutines()) == 0 {
+		return
+	}
+	leakTimeout := 10 * time.Millisecond
+	time.Sleep(leakTimeout)
+	//t.Logf("possible goroutine leakage, waiting %v", leakTimeout)
+	grs := l.leakingGoroutines()
+	for _, gr := range grs {
+		t.Errorf("%s: %s is leaking", l.name, gr.name)
+		//t.Errorf("%s: %s is leaking\n%v", l.name, gr.name, string(gr.stack))
+	}
+	for _, rl := range l.report {
+		rl.ignoreLeak(grs...)
+	}
+}
+func (l *leaks) ignoreLeak(grs ...goroutine) {
+	for _, gr := range grs {
+		l.goroutines[gr.id] = gr
+	}
+}
+
+// dummy net.Conn
 
 type dAddr struct {
 	s string
@@ -258,4 +368,59 @@ func (s *dNC) ReadSuccess() error {
 		return err
 	}
 	return s.Control(dNCCReadSuccess{})
+}
+
+// dummy X server replier for dummy net.Conn
+
+type dXSEvent struct{}
+
+func (_ dXSEvent) Bytes() []byte  { return nil }
+func (_ dXSEvent) String() string { return "dummy X server event" }
+
+type dXSError struct {
+	seqId uint16
+}
+
+func (e dXSError) SequenceId() uint16 { return e.seqId }
+func (_ dXSError) BadId() uint32      { return 0 }
+func (_ dXSError) Error() string      { return "dummy X server error reply" }
+
+func newDummyXServerReplier() func([]byte) []byte {
+	// register xgb error & event replies
+	NewErrorFuncs[255] = func(buf []byte) Error {
+		return dXSError{Get16(buf[2:])}
+	}
+	NewEventFuncs[128&127] = func(buf []byte) Event {
+		return dXSEvent{}
+	}
+
+	// sequence number generator
+	seqId := uint16(1)
+	incrementSequenceId := func() {
+		// this has to be the same algorithm as in (*Conn).generateSeqIds
+		if seqId == uint16((1<<16)-1) {
+			seqId = 0
+		} else {
+			seqId++
+		}
+	}
+	return func(request []byte) []byte {
+		res := make([]byte, 32)
+		switch string(request) {
+		case "event":
+			res[0] = 128
+			return res
+		case "error":
+			res[0] = 0   // error
+			res[1] = 255 // error function
+		default:
+			res[0] = 1 // reply
+		}
+		Put16(res[2:], seqId) // sequence number
+		incrementSequenceId()
+		if string(request) == "noreply" {
+			return nil
+		}
+		return res
+	}
 }

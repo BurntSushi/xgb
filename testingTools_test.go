@@ -1,13 +1,55 @@
 package xgb
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 )
+
+func TestLeaks(t *testing.T) {
+	lm := leaksMonitor("lm")
+	if lgrs := lm.leakingGoroutines(); len(lgrs) != 0 {
+		t.Errorf("leakingGoroutines returned %d leaking goroutines, want 0", len(lgrs))
+	}
+
+	done := make(chan struct{})
+	wg := &sync.WaitGroup{}
+
+	wg.Add(1)
+	go func() {
+		<-done
+		wg.Done()
+	}()
+
+	if lgrs := lm.leakingGoroutines(); len(lgrs) != 1 {
+		t.Errorf("leakingGoroutines returned %d leaking goroutines, want 1", len(lgrs))
+	}
+
+	wg.Add(1)
+	go func() {
+		<-done
+		wg.Done()
+	}()
+
+	if lgrs := lm.leakingGoroutines(); len(lgrs) != 2 {
+		t.Errorf("leakingGoroutines returned %d leaking goroutines, want 2", len(lgrs))
+	}
+
+	close(done)
+	wg.Wait()
+
+	if lgrs := lm.leakingGoroutines(); len(lgrs) != 0 {
+		t.Errorf("leakingGoroutines returned %d leaking goroutines, want 0", len(lgrs))
+	}
+
+	lm.checkTesting(t)
+	//TODO multiple leak monitors with report ignore tests
+}
 
 func TestDummyNetConn(t *testing.T) {
 	ioStatesPairGenerator := func(writeStates, readStates []string) []func() (*dNC, error) {
@@ -57,7 +99,7 @@ func TestDummyNetConn(t *testing.T) {
 		return res
 	}
 
-	timeout := time.Millisecond
+	timeout := 10 * time.Millisecond
 	wantResponse := func(action func(*dNC) error, want, block error) func(*dNC) error {
 		return func(s *dNC) error {
 			actionResult := make(chan error)
@@ -269,5 +311,40 @@ func TestDummyNetConn(t *testing.T) {
 				})
 			}
 		})
+	}
+}
+
+func TestDummyXServerReplier(t *testing.T) {
+	testCases := [][][2][]byte{
+		{
+			[2][]byte{[]byte("reply"), []byte{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("eply"), []byte{1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("ply"), []byte{1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("event"), []byte{128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("ly"), []byte{1, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("y"), []byte{1, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte(""), []byte{1, 0, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("event"), []byte{128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("reply"), []byte{1, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("error"), []byte{0, 255, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("ply"), []byte{1, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("event"), []byte{128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("ly"), []byte{1, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("noreply"), nil},
+			[2][]byte{[]byte("error"), []byte{0, 255, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+			[2][]byte{[]byte("noreply"), nil},
+			[2][]byte{[]byte(""), []byte{1, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		},
+	}
+
+	for tci, tc := range testCases {
+		replier := newDummyXServerReplier()
+		for ai, ioPair := range tc {
+			in, want := ioPair[0], ioPair[1]
+			if out := replier(in); !bytes.Equal(out, want) {
+				t.Errorf("testCase %d, action %d, replier(%s) = %v, want %v", tci, ai, string(in), out, want)
+				break
+			}
+		}
 	}
 }
