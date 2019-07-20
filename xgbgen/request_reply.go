@@ -27,9 +27,6 @@ func (rs Requests) Less(i, j int) bool { return rs[i].xmlName < rs[j].xmlName }
 // It also initializes the reply if one exists, and all fields in this request.
 func (r *Request) Initialize(p *Protocol) {
 	r.srcName = SrcName(p, r.xmlName)
-	if p.isExt() {
-		r.srcName = r.srcName
-	}
 
 	if r.Reply != nil {
 		r.Reply.Initialize(p)
