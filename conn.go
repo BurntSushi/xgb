@@ -84,7 +84,7 @@ func (c *Conn) postConnect() error {
 		return fmt.Errorf("x protocol version mismatch: %d.%d", major, minor)
 	}
 
-	buf = make([]byte, int(dataLen)*4+8, int(dataLen)*4+8)
+	buf = make([]byte, int(dataLen)*4+8)
 	copy(buf, head)
 	if _, err = io.ReadFull(c.conn, buf[8:]); err != nil {
 		return err
@@ -138,7 +138,7 @@ func (c *Conn) dial(display string) error {
 		}
 	}
 
-	display = display[colonIdx+1 : len(display)]
+	display = display[colonIdx+1:]
 	if len(display) == 0 {
 		return errors.New("bad display string: " + display0)
 	}
