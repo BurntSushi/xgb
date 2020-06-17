@@ -170,6 +170,22 @@ type Error interface {
 	Error() string
 }
 
+// WrappedInternalError allows existing system errors (like IO read/write errors) to be propagated.
+type WrappedInternalError struct {
+	error
+
+	sequenceId	uint16
+	badId		uint32
+}
+
+func (w *WrappedInternalError) SequenceId() uint16 {
+       return w.sequenceId
+}
+
+func (w *WrappedInternalError) BadId() uint32 {
+       return w.badId
+}
+
 // NewErrorFun is the type of function use to construct errors from raw bytes.
 // It should not be used. It is exported for use in the extension sub-packages.
 type NewErrorFun func(buf []byte) Error
@@ -403,7 +419,7 @@ func (c *Conn) readResponses() {
 			Logger.Printf("A read error is unrecoverable: %s", err)
 			c.eventChan <- err
 			c.Close()
-			continue
+			break
 		}
 		switch buf[0] {
 		case 0: // This is an error
@@ -522,6 +538,8 @@ func processEventOrError(everr eventOrError) (Event, Error) {
 		return ee, nil
 	case Error:
 		return nil, ee
+	case error:
+		return nil, &WrappedInternalError{error: ee}
 	default:
 		Logger.Printf("Invalid event/error type: %T", everr)
 		return nil, nil
