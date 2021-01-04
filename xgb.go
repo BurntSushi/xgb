@@ -239,6 +239,7 @@ func (conn *Conn) generateXIds() {
 	inc := conn.setupResourceIdMask & -conn.setupResourceIdMask
 	max := conn.setupResourceIdMask
 	last := uint32(0)
+	// TODO loop should be stopped when conn is closed (possible memory leak)
 	for {
 		// TODO: Use the XC Misc extension to look for released ids.
 		if last > 0 && last >= max-inc+1 {
@@ -274,6 +275,7 @@ func (c *Conn) generateSeqIds() {
 	defer close(c.seqChan)
 
 	seqid := uint16(1)
+	// TODO loop should be stopped when conn is closed (possible memory leak)
 	for {
 		c.seqChan <- seqid
 		if seqid == uint16((1<<16)-1) {
