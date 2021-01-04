@@ -61,6 +61,7 @@ type Conn struct {
 	seqChan    chan uint16
 	reqChan    chan *request
 	closing    chan chan struct{}
+	closed     chan bool
 
 	// ExtLock is a lock used whenever new extensions are initialized.
 	// It should not be used. It is exported for use in the extension
@@ -126,6 +127,7 @@ func postNewConn(conn *Conn) (*Conn, error) {
 	conn.reqChan = make(chan *request, reqBuffer)
 	conn.eventChan = make(chan eventOrError, eventBuffer)
 	conn.closing = make(chan chan struct{}, 1)
+	conn.closed = make(chan bool, 1)
 
 	go conn.generateXIds()
 	go conn.generateSeqIds()
@@ -137,6 +139,15 @@ func postNewConn(conn *Conn) (*Conn, error) {
 
 // Close gracefully closes the connection to the X server.
 func (c *Conn) Close() {
+	defer func() {
+		// Suppress panic when X conn was closed by X server
+		// There is not reason why to panic app on second close try
+		err := recover()
+		if err != nil {
+			Logger.Printf("Connection was closed already: %s", err)
+		}
+		<-c.closed
+	}()
 	close(c.reqChan)
 }
 
@@ -348,6 +359,7 @@ func (c *Conn) sendRequests() {
 	c.noop() // Flush the response reading goroutine, ignore error.
 	<-response
 	c.conn.Close()
+	c.closed <- true
 }
 
 // noop circumvents the usual request sending goroutines and forces a round
@@ -405,7 +417,7 @@ func (c *Conn) readResponses() {
 			Logger.Printf("A read error is unrecoverable: %s", err)
 			c.eventChan <- err
 			c.Close()
-			continue
+			return
 		}
 		switch buf[0] {
 		case 0: // This is an error
@@ -435,7 +447,7 @@ func (c *Conn) readResponses() {
 					Logger.Printf("A read error is unrecoverable: %s", err)
 					c.eventChan <- err
 					c.Close()
-					continue
+					return
 				}
 				replyBytes = biggerBuf
 			} else {
