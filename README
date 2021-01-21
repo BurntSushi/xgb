@@ -1,3 +1,8 @@
+Note that this project is largely unmaintained as I don't have the time to do
+or support more development. Please consider using this fork instead:
+https://github.com/jezek/xgb
+
+
 XGB is the X Go Binding, which is a low-level API to communicate with the
 core X protocol and many of the X extensions. It is closely modeled after
 XCB and xpyb.
