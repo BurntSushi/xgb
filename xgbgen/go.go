@@ -186,11 +186,8 @@ func (f *ValueField) Read(c *Context, prefix string) {
 }
 
 func (f *ValueField) Write(c *Context, prefix string) {
-	// big time mofos
-	if rq, ok := f.Parent.(*Request); !ok || rq.SrcName() != "ConfigureWindow" {
-		WriteSimpleSingleField(c,
-			fmt.Sprintf("%s%s", prefix, f.MaskName), f.MaskType)
-	}
+	WriteSimpleSingleField(c,
+		fmt.Sprintf("%s%s", prefix, f.MaskName), f.MaskType)
 	c.Putln("for i := 0; i < %s; i++ {", f.ListLength().Reduce(prefix))
 	c.Putln("xgb.Put32(buf[b:], %s%s[i])", prefix, f.ListName)
 	c.Putln("b += 4")
@@ -200,16 +197,24 @@ func (f *ValueField) Write(c *Context, prefix string) {
 
 // Switch field
 func (f *SwitchField) Define(c *Context) {
-	c.Putln("// switch field: %s (%s)", f.Name, f.Expr)
-	panic("todo")
+	c.Putln("%s []uint32", f.Name)
 }
 
 func (f *SwitchField) Read(c *Context, prefix string) {
-	c.Putln("// reading switch field: %s (%s)", f.Name, f.Expr)
-	panic("todo")
+	c.Putln("")
+	c.Putln("%s%s = make([]uint32, %s)",
+		prefix, f.Name, f.ListLength().Reduce(prefix))
+	c.Putln("for i := 0; i < %s; i++ {", f.ListLength().Reduce(prefix))
+	c.Putln("%s%s[i] = xgb.Get32(buf[b:])", prefix, f.Name)
+	c.Putln("b += 4")
+	c.Putln("}")
+	c.Putln("b = xgb.Pad(b)")
 }
 
 func (f *SwitchField) Write(c *Context, prefix string) {
-	c.Putln("// writing switch field: %s (%s)", f.Name, f.Expr)
-	panic("todo")
+	c.Putln("for i := 0; i < %s; i++ {", f.ListLength().Reduce(prefix))
+	c.Putln("xgb.Put32(buf[b:], %s%s[i])", prefix, f.Name)
+	c.Putln("b += 4")
+	c.Putln("}")
+	c.Putln("b = xgb.Pad(b)")
 }

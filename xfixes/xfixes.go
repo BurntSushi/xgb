@@ -1524,9 +1524,8 @@ type GetCursorImageAndNameReply struct {
 	CursorAtom   xproto.Atom
 	Nbytes       uint16
 	// padding: 2 bytes
-	Name string // size: xgb.Pad((int(Nbytes) * 1))
-	// alignment gap to multiple of 4
 	CursorImage []uint32 // size: xgb.Pad(((int(Width) * int(Height)) * 4))
+	Name        string   // size: xgb.Pad((int(Nbytes) * 1))
 }
 
 // Reply blocks and returns the reply data for a GetCursorImageAndName request.
@@ -1583,19 +1582,17 @@ func getCursorImageAndNameReply(buf []byte) *GetCursorImageAndNameReply {
 
 	b += 2 // padding
 
+	v.CursorImage = make([]uint32, (int(v.Width) * int(v.Height)))
+	for i := 0; i < int((int(v.Width) * int(v.Height))); i++ {
+		v.CursorImage[i] = xgb.Get32(buf[b:])
+		b += 4
+	}
+
 	{
 		byteString := make([]byte, v.Nbytes)
 		copy(byteString[:v.Nbytes], buf[b:])
 		v.Name = string(byteString)
 		b += int(v.Nbytes)
-	}
-
-	b = (b + 3) & ^3 // alignment gap
-
-	v.CursorImage = make([]uint32, (int(v.Width) * int(v.Height)))
-	for i := 0; i < int((int(v.Width) * int(v.Height))); i++ {
-		v.CursorImage[i] = xgb.Get32(buf[b:])
-		b += 4
 	}
 
 	return v

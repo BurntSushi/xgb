@@ -1152,11 +1152,9 @@ type GetGammaRampReply struct {
 	// padding: 1 bytes
 	Size uint16
 	// padding: 22 bytes
-	Red []uint16 // size: xgb.Pad((((int(Size) + 1) & -2) * 2))
-	// alignment gap to multiple of 2
+	Red   []uint16 // size: xgb.Pad((((int(Size) + 1) & -2) * 2))
 	Green []uint16 // size: xgb.Pad((((int(Size) + 1) & -2) * 2))
-	// alignment gap to multiple of 2
-	Blue []uint16 // size: xgb.Pad((((int(Size) + 1) & -2) * 2))
+	Blue  []uint16 // size: xgb.Pad((((int(Size) + 1) & -2) * 2))
 }
 
 // Reply blocks and returns the reply data for a GetGammaRamp request.
@@ -1195,15 +1193,11 @@ func getGammaRampReply(buf []byte) *GetGammaRampReply {
 		b += 2
 	}
 
-	b = (b + 1) & ^1 // alignment gap
-
 	v.Green = make([]uint16, ((int(v.Size) + 1) & -2))
 	for i := 0; i < int(((int(v.Size) + 1) & -2)); i++ {
 		v.Green[i] = xgb.Get16(buf[b:])
 		b += 2
 	}
-
-	b = (b + 1) & ^1 // alignment gap
 
 	v.Blue = make([]uint16, ((int(v.Size) + 1) & -2))
 	for i := 0; i < int(((int(v.Size) + 1) & -2)); i++ {
@@ -1532,8 +1526,7 @@ type GetMonitorReply struct {
 	NumHsync     byte
 	NumVsync     byte
 	// padding: 20 bytes
-	Hsync []Syncrange // size: xgb.Pad((int(NumHsync) * 4))
-	// alignment gap to multiple of 4
+	Hsync        []Syncrange // size: xgb.Pad((int(NumHsync) * 4))
 	Vsync        []Syncrange // size: xgb.Pad((int(NumVsync) * 4))
 	Vendor       string      // size: xgb.Pad((int(VendorLength) * 1))
 	AlignmentPad []byte      // size: xgb.Pad(((((int(VendorLength) + 3) & -4) - int(VendorLength)) * 1))
@@ -1584,8 +1577,6 @@ func getMonitorReply(buf []byte) *GetMonitorReply {
 		v.Hsync[i] = Syncrange(xgb.Get32(buf[b:]))
 		b += 4
 	}
-
-	b = (b + 3) & ^3 // alignment gap
 
 	v.Vsync = make([]Syncrange, v.NumVsync)
 	for i := 0; i < int(v.NumVsync); i++ {
@@ -2280,7 +2271,7 @@ func (cook SetGammaRampCookie) Check() error {
 // Write request to wire for SetGammaRamp
 // setGammaRampRequest writes a SetGammaRamp request to a byte slice.
 func setGammaRampRequest(c *xgb.Conn, Screen uint16, Size uint16, Red []uint16, Green []uint16, Blue []uint16) []byte {
-	size := xgb.Pad((((((8 + xgb.Pad((((int(Size) + 1) & -2) * 2))) + 2) + xgb.Pad((((int(Size) + 1) & -2) * 2))) + 2) + xgb.Pad((((int(Size) + 1) & -2) * 2))))
+	size := xgb.Pad((((8 + xgb.Pad((((int(Size) + 1) & -2) * 2))) + xgb.Pad((((int(Size) + 1) & -2) * 2))) + xgb.Pad((((int(Size) + 1) & -2) * 2))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -2292,7 +2283,7 @@ func setGammaRampRequest(c *xgb.Conn, Screen uint16, Size uint16, Red []uint16, 
 	buf[b] = 18 // request opcode
 	b += 1
 
-	blen := b
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
 	b += 2
 
 	xgb.Put16(buf[b:], Screen)
@@ -2306,23 +2297,17 @@ func setGammaRampRequest(c *xgb.Conn, Screen uint16, Size uint16, Red []uint16, 
 		b += 2
 	}
 
-	b = (b + 1) & ^1 // alignment gap
-
 	for i := 0; i < int(((int(Size) + 1) & -2)); i++ {
 		xgb.Put16(buf[b:], Green[i])
 		b += 2
 	}
-
-	b = (b + 1) & ^1 // alignment gap
 
 	for i := 0; i < int(((int(Size) + 1) & -2)); i++ {
 		xgb.Put16(buf[b:], Blue[i])
 		b += 2
 	}
 
-	b = xgb.Pad(b)
-	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
-	return buf[:b]
+	return buf
 }
 
 // SetViewPortCookie is a cookie used only for SetViewPort requests.

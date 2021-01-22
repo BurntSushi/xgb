@@ -32,6 +32,9 @@ type Expression interface {
 	// Initialize makes sure all names in this expression and any subexpressions
 	// have been translated to Go source names.
 	Initialize(p *Protocol)
+
+	// Makes all field references relative to path
+	Specialize(path string) Expression
 }
 
 // Function is a custom expression not found in the XML. It's simply used
@@ -60,6 +63,12 @@ func (e *Function) String() string {
 
 func (e *Function) Initialize(p *Protocol) {
 	e.Expr.Initialize(p)
+}
+
+func (e *Function) Specialize(path string) Expression {
+	r := *e
+	r.Expr = r.Expr.Specialize(path)
+	return &r
 }
 
 // BinaryOp is an expression that performs some operation (defined in the XML
@@ -150,6 +159,13 @@ func (e *BinaryOp) Initialize(p *Protocol) {
 	e.Expr2.Initialize(p)
 }
 
+func (e *BinaryOp) Specialize(path string) Expression {
+	r := *e
+	r.Expr1 = r.Expr1.Specialize(path)
+	r.Expr2 = r.Expr2.Specialize(path)
+	return &r
+}
+
 // UnaryOp is the same as BinaryOp, except it's a unary operator with only
 // one sub-expression.
 type UnaryOp struct {
@@ -186,6 +202,12 @@ func (e *UnaryOp) Initialize(p *Protocol) {
 	e.Expr.Initialize(p)
 }
 
+func (e *UnaryOp) Specialize(path string) Expression {
+	r := *e
+	r.Expr = r.Expr.Specialize(path)
+	return &r
+}
+
 // Padding represents the application of the 'pad' function to some
 // sub-expression.
 type Padding struct {
@@ -213,6 +235,12 @@ func (e *Padding) String() string {
 
 func (e *Padding) Initialize(p *Protocol) {
 	e.Expr.Initialize(p)
+}
+
+func (e *Padding) Specialize(path string) Expression {
+	r := *e
+	r.Expr = r.Expr.Specialize(path)
+	return &r
 }
 
 // PopCount represents the application of the 'PopCount' function to
@@ -244,6 +272,12 @@ func (e *PopCount) Initialize(p *Protocol) {
 	e.Expr.Initialize(p)
 }
 
+func (e *PopCount) Specialize(path string) Expression {
+	r := *e
+	r.Expr = r.Expr.Specialize(path)
+	return &r
+}
+
 // Value represents some constant integer.
 type Value struct {
 	v int
@@ -267,6 +301,10 @@ func (e *Value) String() string {
 
 func (e *Value) Initialize(p *Protocol) {}
 
+func (e *Value) Specialize(path string) Expression {
+	return e
+}
+
 // Bit represents some bit whose value is computed by '1 << bit'.
 type Bit struct {
 	b int
@@ -289,6 +327,10 @@ func (e *Bit) String() string {
 }
 
 func (e *Bit) Initialize(p *Protocol) {}
+
+func (e *Bit) Specialize(path string) Expression {
+	return e
+}
 
 // FieldRef represents a reference to some variable in the generated code
 // with name Name.
@@ -321,6 +363,10 @@ func (e *FieldRef) Initialize(p *Protocol) {
 	e.Name = SrcName(p, e.Name)
 }
 
+func (e *FieldRef) Specialize(path string) Expression {
+	return &FieldRef{Name: path + "." + e.Name}
+}
+
 // EnumRef represents a reference to some enumeration field.
 // EnumKind is the "group" an EnumItem is the name of the specific enumeration
 // value inside that group.
@@ -351,6 +397,10 @@ func (e *EnumRef) Initialize(p *Protocol) {
 	e.EnumItem = SrcName(p, e.EnumItem)
 }
 
+func (e *EnumRef) Specialize(path string) Expression {
+	return e
+}
+
 // SumOf represents a summation of the variable in the generated code named by
 // Name. It is not currently used. (It's XKB voodoo.)
 type SumOf struct {
@@ -379,4 +429,8 @@ func (e *SumOf) String() string {
 
 func (e *SumOf) Initialize(p *Protocol) {
 	e.Name = SrcName(p, e.Name)
+}
+
+func (e *SumOf) Specialize(path string) Expression {
+	return e
 }

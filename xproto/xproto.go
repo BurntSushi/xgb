@@ -343,6 +343,8 @@ const (
 	BlankingDefault      = 2
 )
 
+type Bool32 uint32
+
 type Button byte
 
 const (
@@ -1204,6 +1206,10 @@ func NewColormapId(c *xgb.Conn) (Colormap, error) {
 	return Colormap(id), nil
 }
 
+const (
+	ColormapNone = 0
+)
+
 // BadColormap is the error number for a BadColormap.
 const BadColormap = 12
 
@@ -1241,10 +1247,6 @@ func (err ColormapError) Error() string {
 func init() {
 	xgb.NewErrorFuncs[12] = ColormapErrorNew
 }
-
-const (
-	ColormapNone = 0
-)
 
 const (
 	ColormapAllocNone = 0
@@ -2474,6 +2476,10 @@ func NewFontId(c *xgb.Conn) (Font, error) {
 	return Font(id), nil
 }
 
+const (
+	FontNone = 0
+)
+
 // BadFont is the error number for a BadFont.
 const BadFont = 7
 
@@ -2511,10 +2517,6 @@ func (err FontError) Error() string {
 func init() {
 	xgb.NewErrorFuncs[7] = FontErrorNew
 }
-
-const (
-	FontNone = 0
-)
 
 const (
 	FontDrawLeftToRight = 0
@@ -3046,6 +3048,7 @@ type Host struct {
 	// padding: 1 bytes
 	AddressLen uint16
 	Address    []byte // size: xgb.Pad((int(AddressLen) * 1))
+	// alignment gap to multiple of 4
 }
 
 // HostRead reads a byte slice into a Host value.
@@ -3064,6 +3067,8 @@ func HostRead(buf []byte, v *Host) int {
 	copy(v.Address[:v.AddressLen], buf[b:])
 	b += int(v.AddressLen)
 
+	b = (b + 3) & ^3 // alignment gap
+
 	return b
 }
 
@@ -3079,7 +3084,7 @@ func HostReadList(buf []byte, dest []Host) int {
 
 // Bytes writes a Host value to a byte slice.
 func (v Host) Bytes() []byte {
-	buf := make([]byte, (4 + xgb.Pad((int(v.AddressLen) * 1))))
+	buf := make([]byte, ((4 + xgb.Pad((int(v.AddressLen) * 1))) + 4))
 	b := 0
 
 	buf[b] = v.Family
@@ -3092,6 +3097,8 @@ func (v Host) Bytes() []byte {
 
 	copy(buf[b:], v.Address[:v.AddressLen])
 	b += int(v.AddressLen)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	return buf[:b]
 }
@@ -3112,7 +3119,7 @@ func HostListBytes(buf []byte, list []Host) int {
 func HostListSize(list []Host) int {
 	size := 0
 	for _, item := range list {
-		size += (4 + xgb.Pad((int(item.AddressLen) * 1)))
+		size += ((4 + xgb.Pad((int(item.AddressLen) * 1))) + 4)
 	}
 	return size
 }
@@ -3444,6 +3451,8 @@ func init() {
 }
 
 type Keycode byte
+
+type Keycode32 uint32
 
 // KeymapNotify is the event number for a KeymapNotifyEvent.
 const KeymapNotify = 11
@@ -5568,9 +5577,8 @@ type SetupInfo struct {
 	// padding: 4 bytes
 	Vendor string // size: xgb.Pad((int(VendorLen) * 1))
 	// alignment gap to multiple of 4
-	PixmapFormats []Format // size: xgb.Pad((int(PixmapFormatsLen) * 8))
-	// alignment gap to multiple of 4
-	Roots []ScreenInfo // size: ScreenInfoListSize(Roots)
+	PixmapFormats []Format     // size: xgb.Pad((int(PixmapFormatsLen) * 8))
+	Roots         []ScreenInfo // size: ScreenInfoListSize(Roots)
 }
 
 // SetupInfoRead reads a byte slice into a SetupInfo value.
@@ -5647,8 +5655,6 @@ func SetupInfoRead(buf []byte, v *SetupInfo) int {
 	v.PixmapFormats = make([]Format, v.PixmapFormatsLen)
 	b += FormatReadList(buf[b:], v.PixmapFormats)
 
-	b = (b + 3) & ^3 // alignment gap
-
 	v.Roots = make([]ScreenInfo, v.RootsLen)
 	b += ScreenInfoReadList(buf[b:], v.Roots)
 
@@ -5667,7 +5673,7 @@ func SetupInfoReadList(buf []byte, dest []SetupInfo) int {
 
 // Bytes writes a SetupInfo value to a byte slice.
 func (v SetupInfo) Bytes() []byte {
-	buf := make([]byte, (((((40 + xgb.Pad((int(v.VendorLen) * 1))) + 4) + xgb.Pad((int(v.PixmapFormatsLen) * 8))) + 4) + ScreenInfoListSize(v.Roots)))
+	buf := make([]byte, ((((40 + xgb.Pad((int(v.VendorLen) * 1))) + 4) + xgb.Pad((int(v.PixmapFormatsLen) * 8))) + ScreenInfoListSize(v.Roots)))
 	b := 0
 
 	buf[b] = v.Status
@@ -5735,8 +5741,6 @@ func (v SetupInfo) Bytes() []byte {
 
 	b += FormatListBytes(buf[b:], v.PixmapFormats)
 
-	b = (b + 3) & ^3 // alignment gap
-
 	b += ScreenInfoListBytes(buf[b:], v.Roots)
 
 	return buf[:b]
@@ -5758,7 +5762,7 @@ func SetupInfoListBytes(buf []byte, list []SetupInfo) int {
 func SetupInfoListSize(list []SetupInfo) int {
 	size := 0
 	for _, item := range list {
-		size += (((((40 + xgb.Pad((int(item.VendorLen) * 1))) + 4) + xgb.Pad((int(item.PixmapFormatsLen) * 8))) + 4) + ScreenInfoListSize(item.Roots))
+		size += ((((40 + xgb.Pad((int(item.VendorLen) * 1))) + 4) + xgb.Pad((int(item.PixmapFormatsLen) * 8))) + ScreenInfoListSize(item.Roots))
 	}
 	return size
 }
@@ -6588,8 +6592,7 @@ type AllocColorCellsReply struct {
 	MasksLen  uint16
 	// padding: 20 bytes
 	Pixels []uint32 // size: xgb.Pad((int(PixelsLen) * 4))
-	// alignment gap to multiple of 4
-	Masks []uint32 // size: xgb.Pad((int(MasksLen) * 4))
+	Masks  []uint32 // size: xgb.Pad((int(MasksLen) * 4))
 }
 
 // Reply blocks and returns the reply data for a AllocColorCells request.
@@ -6630,8 +6633,6 @@ func allocColorCellsReply(buf []byte) *AllocColorCellsReply {
 		v.Pixels[i] = xgb.Get32(buf[b:])
 		b += 4
 	}
-
-	b = (b + 3) & ^3 // alignment gap
 
 	v.Masks = make([]uint32, v.MasksLen)
 	for i := 0; i < int(v.MasksLen); i++ {
@@ -7091,7 +7092,7 @@ func (cook ChangeGCCookie) Check() error {
 // Write request to wire for ChangeGC
 // changeGCRequest writes a ChangeGC request to a byte slice.
 func changeGCRequest(c *xgb.Conn, Gc Gcontext, ValueMask uint32, ValueList []uint32) []byte {
-	size := xgb.Pad((8 + (4 + xgb.Pad((4 * xgb.PopCount(int(ValueMask)))))))
+	size := xgb.Pad((12 + xgb.Pad((4 * xgb.PopCount(int(ValueMask))))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -7108,6 +7109,7 @@ func changeGCRequest(c *xgb.Conn, Gc Gcontext, ValueMask uint32, ValueList []uin
 
 	xgb.Put32(buf[b:], ValueMask)
 	b += 4
+
 	for i := 0; i < xgb.PopCount(int(ValueMask)); i++ {
 		xgb.Put32(buf[b:], ValueList[i])
 		b += 4
@@ -7204,7 +7206,7 @@ func (cook ChangeKeyboardControlCookie) Check() error {
 // Write request to wire for ChangeKeyboardControl
 // changeKeyboardControlRequest writes a ChangeKeyboardControl request to a byte slice.
 func changeKeyboardControlRequest(c *xgb.Conn, ValueMask uint32, ValueList []uint32) []byte {
-	size := xgb.Pad((4 + (4 + xgb.Pad((4 * xgb.PopCount(int(ValueMask)))))))
+	size := xgb.Pad((8 + xgb.Pad((4 * xgb.PopCount(int(ValueMask))))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -7218,6 +7220,7 @@ func changeKeyboardControlRequest(c *xgb.Conn, ValueMask uint32, ValueList []uin
 
 	xgb.Put32(buf[b:], ValueMask)
 	b += 4
+
 	for i := 0; i < xgb.PopCount(int(ValueMask)); i++ {
 		xgb.Put32(buf[b:], ValueList[i])
 		b += 4
@@ -7499,7 +7502,7 @@ func (cook ChangeWindowAttributesCookie) Check() error {
 // Write request to wire for ChangeWindowAttributes
 // changeWindowAttributesRequest writes a ChangeWindowAttributes request to a byte slice.
 func changeWindowAttributesRequest(c *xgb.Conn, Window Window, ValueMask uint32, ValueList []uint32) []byte {
-	size := xgb.Pad((8 + (4 + xgb.Pad((4 * xgb.PopCount(int(ValueMask)))))))
+	size := xgb.Pad((12 + xgb.Pad((4 * xgb.PopCount(int(ValueMask))))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -7516,6 +7519,7 @@ func changeWindowAttributesRequest(c *xgb.Conn, Window Window, ValueMask uint32,
 
 	xgb.Put32(buf[b:], ValueMask)
 	b += 4
+
 	for i := 0; i < xgb.PopCount(int(ValueMask)); i++ {
 		xgb.Put32(buf[b:], ValueList[i])
 		b += 4
@@ -7717,7 +7721,7 @@ func (cook ConfigureWindowCookie) Check() error {
 // Write request to wire for ConfigureWindow
 // configureWindowRequest writes a ConfigureWindow request to a byte slice.
 func configureWindowRequest(c *xgb.Conn, Window Window, ValueMask uint16, ValueList []uint32) []byte {
-	size := xgb.Pad((10 + (2 + xgb.Pad((4 * xgb.PopCount(int(ValueMask)))))))
+	size := xgb.Pad((12 + xgb.Pad((4 * xgb.PopCount(int(ValueMask))))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -8221,7 +8225,7 @@ func (cook CreateGCCookie) Check() error {
 // Write request to wire for CreateGC
 // createGCRequest writes a CreateGC request to a byte slice.
 func createGCRequest(c *xgb.Conn, Cid Gcontext, Drawable Drawable, ValueMask uint32, ValueList []uint32) []byte {
-	size := xgb.Pad((12 + (4 + xgb.Pad((4 * xgb.PopCount(int(ValueMask)))))))
+	size := xgb.Pad((16 + xgb.Pad((4 * xgb.PopCount(int(ValueMask))))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -8241,6 +8245,7 @@ func createGCRequest(c *xgb.Conn, Cid Gcontext, Drawable Drawable, ValueMask uin
 
 	xgb.Put32(buf[b:], ValueMask)
 	b += 4
+
 	for i := 0; i < xgb.PopCount(int(ValueMask)); i++ {
 		xgb.Put32(buf[b:], ValueList[i])
 		b += 4
@@ -8416,7 +8421,7 @@ func (cook CreateWindowCookie) Check() error {
 // Write request to wire for CreateWindow
 // createWindowRequest writes a CreateWindow request to a byte slice.
 func createWindowRequest(c *xgb.Conn, Depth byte, Wid Window, Parent Window, X int16, Y int16, Width uint16, Height uint16, BorderWidth uint16, Class uint16, Visual Visualid, ValueMask uint32, ValueList []uint32) []byte {
-	size := xgb.Pad((28 + (4 + xgb.Pad((4 * xgb.PopCount(int(ValueMask)))))))
+	size := xgb.Pad((32 + xgb.Pad((4 * xgb.PopCount(int(ValueMask))))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -8458,6 +8463,7 @@ func createWindowRequest(c *xgb.Conn, Depth byte, Wid Window, Parent Window, X i
 
 	xgb.Put32(buf[b:], ValueMask)
 	b += 4
+
 	for i := 0; i < xgb.PopCount(int(ValueMask)); i++ {
 		xgb.Put32(buf[b:], ValueList[i])
 		b += 4
@@ -12904,8 +12910,7 @@ type QueryFontReply struct {
 	FontDescent    int16
 	CharInfosLen   uint32
 	Properties     []Fontprop // size: xgb.Pad((int(PropertiesLen) * 8))
-	// alignment gap to multiple of 4
-	CharInfos []Charinfo // size: xgb.Pad((int(CharInfosLen) * 12))
+	CharInfos      []Charinfo // size: xgb.Pad((int(CharInfosLen) * 12))
 }
 
 // Reply blocks and returns the reply data for a QueryFont request.
@@ -12982,8 +12987,6 @@ func queryFontReply(buf []byte) *QueryFontReply {
 
 	v.Properties = make([]Fontprop, v.PropertiesLen)
 	b += FontpropReadList(buf[b:], v.Properties)
-
-	b = (b + 3) & ^3 // alignment gap
 
 	v.CharInfos = make([]Charinfo, v.CharInfosLen)
 	b += CharinfoReadList(buf[b:], v.CharInfos)

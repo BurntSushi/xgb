@@ -41,7 +41,9 @@ type ListItem struct {
 	ObjectContextLen uint32
 	DataContextLen   uint32
 	ObjectContext    string // size: xgb.Pad((int(ObjectContextLen) * 1))
-	DataContext      string // size: xgb.Pad((int(DataContextLen) * 1))
+	// alignment gap to multiple of 4
+	DataContext string // size: xgb.Pad((int(DataContextLen) * 1))
+	// alignment gap to multiple of 4
 }
 
 // ListItemRead reads a byte slice into a ListItem value.
@@ -64,12 +66,16 @@ func ListItemRead(buf []byte, v *ListItem) int {
 		b += int(v.ObjectContextLen)
 	}
 
+	b = (b + 3) & ^3 // alignment gap
+
 	{
 		byteString := make([]byte, v.DataContextLen)
 		copy(byteString[:v.DataContextLen], buf[b:])
 		v.DataContext = string(byteString)
 		b += int(v.DataContextLen)
 	}
+
+	b = (b + 3) & ^3 // alignment gap
 
 	return b
 }
@@ -86,7 +92,7 @@ func ListItemReadList(buf []byte, dest []ListItem) int {
 
 // Bytes writes a ListItem value to a byte slice.
 func (v ListItem) Bytes() []byte {
-	buf := make([]byte, ((12 + xgb.Pad((int(v.ObjectContextLen) * 1))) + xgb.Pad((int(v.DataContextLen) * 1))))
+	buf := make([]byte, ((((12 + xgb.Pad((int(v.ObjectContextLen) * 1))) + 4) + xgb.Pad((int(v.DataContextLen) * 1))) + 4))
 	b := 0
 
 	xgb.Put32(buf[b:], uint32(v.Name))
@@ -101,8 +107,12 @@ func (v ListItem) Bytes() []byte {
 	copy(buf[b:], v.ObjectContext[:v.ObjectContextLen])
 	b += int(v.ObjectContextLen)
 
+	b = (b + 3) & ^3 // alignment gap
+
 	copy(buf[b:], v.DataContext[:v.DataContextLen])
 	b += int(v.DataContextLen)
+
+	b = (b + 3) & ^3 // alignment gap
 
 	return buf[:b]
 }
@@ -123,7 +133,7 @@ func ListItemListBytes(buf []byte, list []ListItem) int {
 func ListItemListSize(list []ListItem) int {
 	size := 0
 	for _, item := range list {
-		size += ((12 + xgb.Pad((int(item.ObjectContextLen) * 1))) + xgb.Pad((int(item.DataContextLen) * 1)))
+		size += ((((12 + xgb.Pad((int(item.ObjectContextLen) * 1))) + 4) + xgb.Pad((int(item.DataContextLen) * 1))) + 4)
 	}
 	return size
 }

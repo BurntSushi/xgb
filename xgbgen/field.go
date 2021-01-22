@@ -73,6 +73,32 @@ func (p *PadField) Size() Size {
 	}
 }
 
+type RequiredStartAlign struct {
+}
+
+func (f *RequiredStartAlign) Initialize(p *Protocol) {}
+
+func (f *RequiredStartAlign) SrcName() string {
+	panic("illegal to take source name of a required_start_align field")
+}
+
+func (f *RequiredStartAlign) XmlName() string {
+	panic("illegal to take XML name of a required_start_align field")
+}
+
+func (f *RequiredStartAlign) SrcType() string {
+	panic("it is illegal to call SrcType on a required_start_align field")
+}
+
+func (f *RequiredStartAlign) Size() Size {
+	return newFixedSize(0, true)
+}
+
+func (f *RequiredStartAlign) Define(c *Context) {}
+
+func (f *RequiredStartAlign) Read(c *Context, prefix string)  {}
+func (f *RequiredStartAlign) Write(c *Context, prefix string) {}
+
 // SingleField represents most of the fields in an XML protocol description.
 // It corresponds to any single value.
 type SingleField struct {
@@ -289,35 +315,73 @@ func (f *ValueField) Initialize(p *Protocol) {
 }
 
 // SwitchField represents a 'switch' element in the XML protocol description
-// file. It is not currently used. (i.e., it is XKB voodoo.)
+// file.
+// Currently we translate this to a slice of uint32 and let the user sort
+// through it.
 type SwitchField struct {
+	xmlName  string
 	Name     string
+	MaskName string
 	Expr     Expression
 	Bitcases []*Bitcase
 }
 
 func (f *SwitchField) SrcName() string {
-	panic("it is illegal to call SrcName on a SwitchField field")
+	return f.Name
 }
 
 func (f *SwitchField) XmlName() string {
-	panic("it is illegal to call XmlName on a SwitchField field")
+	return f.xmlName
 }
 
 func (f *SwitchField) SrcType() string {
-	panic("it is illegal to call SrcType on a SwitchField field")
+	return "[]uint32"
 }
 
-// XXX: This is a bit tricky. The size has to be represented as a non-concrete
-// expression that finds *which* bitcase fields are included, and sums the
-// sizes of those fields.
 func (f *SwitchField) Size() Size {
-	return newFixedSize(0, true)
+	// TODO: size expression used here is not correct unless every element of
+	// the switch is 32 bit long. This assumption holds for xproto but may not
+	// hold for other protocols (xkb?)
+
+	listSize := newExpressionSize(&Function{
+		Name: "xgb.Pad",
+		Expr: &BinaryOp{
+			Op:    "*",
+			Expr1: &Value{v: 4},
+			Expr2: &PopCount{
+				Expr: &Function{
+					Name: "int",
+					Expr: &FieldRef{
+						Name: f.MaskName,
+					},
+				},
+			},
+		},
+	}, true)
+
+	return listSize
+}
+
+func (f *SwitchField) ListLength() Size {
+	return newExpressionSize(&PopCount{
+		Expr: &Function{
+			Name: "int",
+			Expr: &FieldRef{
+				Name: f.MaskName,
+			},
+		},
+	}, true)
 }
 
 func (f *SwitchField) Initialize(p *Protocol) {
+	f.xmlName = f.Name
 	f.Name = SrcName(p, f.Name)
 	f.Expr.Initialize(p)
+	fieldref, ok := f.Expr.(*FieldRef)
+	if !ok {
+		panic("switch field's expression not a fieldref")
+	}
+	f.MaskName = SrcName(p, fieldref.Name)
 	for _, bitcase := range f.Bitcases {
 		bitcase.Expr.Initialize(p)
 		for _, field := range bitcase.Fields {

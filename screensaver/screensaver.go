@@ -513,7 +513,7 @@ func (cook SetAttributesCookie) Check() error {
 // Write request to wire for SetAttributes
 // setAttributesRequest writes a SetAttributes request to a byte slice.
 func setAttributesRequest(c *xgb.Conn, Drawable xproto.Drawable, X int16, Y int16, Width uint16, Height uint16, BorderWidth uint16, Class byte, Depth byte, Visual xproto.Visualid, ValueMask uint32, ValueList []uint32) []byte {
-	size := xgb.Pad((24 + (4 + xgb.Pad((4 * xgb.PopCount(int(ValueMask)))))))
+	size := xgb.Pad((28 + xgb.Pad((4 * xgb.PopCount(int(ValueMask))))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -557,6 +557,7 @@ func setAttributesRequest(c *xgb.Conn, Drawable xproto.Drawable, X int16, Y int1
 
 	xgb.Put32(buf[b:], ValueMask)
 	b += 4
+
 	for i := 0; i < xgb.PopCount(int(ValueMask)); i++ {
 		xgb.Put32(buf[b:], ValueList[i])
 		b += 4

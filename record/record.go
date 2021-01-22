@@ -554,7 +554,7 @@ func (cook CreateContextCookie) Check() error {
 // Write request to wire for CreateContext
 // createContextRequest writes a CreateContext request to a byte slice.
 func createContextRequest(c *xgb.Conn, Context Context, ElementHeader ElementHeader, NumClientSpecs uint32, NumRanges uint32, ClientSpecs []ClientSpec, Ranges []Range) []byte {
-	size := xgb.Pad((((20 + xgb.Pad((int(NumClientSpecs) * 4))) + 4) + xgb.Pad((int(NumRanges) * 24))))
+	size := xgb.Pad(((20 + xgb.Pad((int(NumClientSpecs) * 4))) + xgb.Pad((int(NumRanges) * 24))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -566,7 +566,7 @@ func createContextRequest(c *xgb.Conn, Context Context, ElementHeader ElementHea
 	buf[b] = 1 // request opcode
 	b += 1
 
-	blen := b
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Context))
@@ -588,13 +588,9 @@ func createContextRequest(c *xgb.Conn, Context Context, ElementHeader ElementHea
 		b += 4
 	}
 
-	b = (b + 3) & ^3 // alignment gap
-
 	b += RangeListBytes(buf[b:], Ranges)
 
-	b = xgb.Pad(b)
-	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
-	return buf[:b]
+	return buf
 }
 
 // DisableContextCookie is a cookie used only for DisableContext requests.
@@ -1099,7 +1095,7 @@ func (cook RegisterClientsCookie) Check() error {
 // Write request to wire for RegisterClients
 // registerClientsRequest writes a RegisterClients request to a byte slice.
 func registerClientsRequest(c *xgb.Conn, Context Context, ElementHeader ElementHeader, NumClientSpecs uint32, NumRanges uint32, ClientSpecs []ClientSpec, Ranges []Range) []byte {
-	size := xgb.Pad((((20 + xgb.Pad((int(NumClientSpecs) * 4))) + 4) + xgb.Pad((int(NumRanges) * 24))))
+	size := xgb.Pad(((20 + xgb.Pad((int(NumClientSpecs) * 4))) + xgb.Pad((int(NumRanges) * 24))))
 	b := 0
 	buf := make([]byte, size)
 
@@ -1111,7 +1107,7 @@ func registerClientsRequest(c *xgb.Conn, Context Context, ElementHeader ElementH
 	buf[b] = 2 // request opcode
 	b += 1
 
-	blen := b
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Context))
@@ -1133,13 +1129,9 @@ func registerClientsRequest(c *xgb.Conn, Context Context, ElementHeader ElementH
 		b += 4
 	}
 
-	b = (b + 3) & ^3 // alignment gap
-
 	b += RangeListBytes(buf[b:], Ranges)
 
-	b = xgb.Pad(b)
-	xgb.Put16(buf[blen:], uint16(b/4)) // write request size in 4-byte units
-	return buf[:b]
+	return buf
 }
 
 // UnregisterClientsCookie is a cookie used only for UnregisterClients requests.

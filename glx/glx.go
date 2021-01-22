@@ -3165,13 +3165,13 @@ func getClipPlaneReply(buf []byte) *GetClipPlaneReply {
 	v := new(GetClipPlaneReply)
 	b := 1 // skip reply determinant
 
-	b += 1 // padding
-
 	v.Sequence = xgb.Get16(buf[b:])
 	b += 2
 
 	v.Length = xgb.Get32(buf[b:]) // 4-byte units
 	b += 4
+
+	b += 1 // padding
 
 	b += 24 // padding
 
@@ -4096,13 +4096,13 @@ func getDoublevReply(buf []byte) *GetDoublevReply {
 	v := new(GetDoublevReply)
 	b := 1 // skip reply determinant
 
-	b += 1 // padding
-
 	v.Sequence = xgb.Get16(buf[b:])
 	b += 2
 
 	v.Length = xgb.Get32(buf[b:]) // 4-byte units
 	b += 4
+
+	b += 1 // padding
 
 	b += 4 // padding
 
@@ -5340,13 +5340,13 @@ func getMapdvReply(buf []byte) *GetMapdvReply {
 	v := new(GetMapdvReply)
 	b := 1 // skip reply determinant
 
-	b += 1 // padding
-
 	v.Sequence = xgb.Get16(buf[b:])
 	b += 2
 
 	v.Length = xgb.Get32(buf[b:]) // 4-byte units
 	b += 4
+
+	b += 1 // padding
 
 	b += 4 // padding
 
@@ -7548,13 +7548,13 @@ func getTexGendvReply(buf []byte) *GetTexGendvReply {
 	v := new(GetTexGendvReply)
 	b := 1 // skip reply determinant
 
-	b += 1 // padding
-
 	v.Sequence = xgb.Get16(buf[b:])
 	b += 2
 
 	v.Length = xgb.Get32(buf[b:]) // 4-byte units
 	b += 4
+
+	b += 1 // padding
 
 	b += 4 // padding
 
@@ -8649,6 +8649,103 @@ func isDirectRequest(c *xgb.Conn, Context Context) []byte {
 	b += 2
 
 	xgb.Put32(buf[b:], uint32(Context))
+	b += 4
+
+	return buf
+}
+
+// IsEnabledCookie is a cookie used only for IsEnabled requests.
+type IsEnabledCookie struct {
+	*xgb.Cookie
+}
+
+// IsEnabled sends a checked request.
+// If an error occurs, it will be returned with the reply by calling IsEnabledCookie.Reply()
+func IsEnabled(c *xgb.Conn, ContextTag ContextTag, Capability uint32) IsEnabledCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
+	if _, ok := c.Extensions["GLX"]; !ok {
+		panic("Cannot issue request 'IsEnabled' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(true, true)
+	c.NewRequest(isEnabledRequest(c, ContextTag, Capability), cookie)
+	return IsEnabledCookie{cookie}
+}
+
+// IsEnabledUnchecked sends an unchecked request.
+// If an error occurs, it can only be retrieved using xgb.WaitForEvent or xgb.PollForEvent.
+func IsEnabledUnchecked(c *xgb.Conn, ContextTag ContextTag, Capability uint32) IsEnabledCookie {
+	c.ExtLock.RLock()
+	defer c.ExtLock.RUnlock()
+	if _, ok := c.Extensions["GLX"]; !ok {
+		panic("Cannot issue request 'IsEnabled' using the uninitialized extension 'GLX'. glx.Init(connObj) must be called first.")
+	}
+	cookie := c.NewCookie(false, true)
+	c.NewRequest(isEnabledRequest(c, ContextTag, Capability), cookie)
+	return IsEnabledCookie{cookie}
+}
+
+// IsEnabledReply represents the data returned from a IsEnabled request.
+type IsEnabledReply struct {
+	Sequence uint16 // sequence number of the request for this reply
+	Length   uint32 // number of bytes in this reply
+	// padding: 1 bytes
+	RetVal Bool32
+}
+
+// Reply blocks and returns the reply data for a IsEnabled request.
+func (cook IsEnabledCookie) Reply() (*IsEnabledReply, error) {
+	buf, err := cook.Cookie.Reply()
+	if err != nil {
+		return nil, err
+	}
+	if buf == nil {
+		return nil, nil
+	}
+	return isEnabledReply(buf), nil
+}
+
+// isEnabledReply reads a byte slice into a IsEnabledReply value.
+func isEnabledReply(buf []byte) *IsEnabledReply {
+	v := new(IsEnabledReply)
+	b := 1 // skip reply determinant
+
+	b += 1 // padding
+
+	v.Sequence = xgb.Get16(buf[b:])
+	b += 2
+
+	v.Length = xgb.Get32(buf[b:]) // 4-byte units
+	b += 4
+
+	v.RetVal = Bool32(xgb.Get32(buf[b:]))
+	b += 4
+
+	return v
+}
+
+// Write request to wire for IsEnabled
+// isEnabledRequest writes a IsEnabled request to a byte slice.
+func isEnabledRequest(c *xgb.Conn, ContextTag ContextTag, Capability uint32) []byte {
+	size := 12
+	b := 0
+	buf := make([]byte, size)
+
+	c.ExtLock.RLock()
+	buf[b] = c.Extensions["GLX"]
+	c.ExtLock.RUnlock()
+	b += 1
+
+	buf[b] = 140 // request opcode
+	b += 1
+
+	xgb.Put16(buf[b:], uint16(size/4)) // write request size in 4-byte units
+	b += 2
+
+	xgb.Put32(buf[b:], uint32(ContextTag))
+	b += 4
+
+	xgb.Put32(buf[b:], Capability)
 	b += 4
 
 	return buf
