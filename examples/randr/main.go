@@ -56,7 +56,7 @@ func main() {
 		}
 	}
 
-	fmt.Println("\n")
+	fmt.Print("\n\n")
 
 	// Iterate through all of the crtcs and show some of their info.
 	for _, crtc := range resources.Crtcs {
